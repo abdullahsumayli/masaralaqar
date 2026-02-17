@@ -24,8 +24,8 @@ const contactMethods = [
   {
     icon: MessageCircle,
     title: 'واتساب',
-    value: '+966 50 XXX XXXX',
-    href: 'https://wa.me/966501234567',
+    value: '+966 54 537 4069',
+    href: 'https://wa.me/966545374069',
     description: 'تواصل مباشر وسريع',
   },
   {
@@ -312,7 +312,7 @@ export default function ContactPage() {
                   <Twitter className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://wa.me/966501234567"
+                  href="https://wa.me/966545374069"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-lg bg-background border border-border flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary transition-all"
@@ -332,7 +332,7 @@ export default function ContactPage() {
                 نحن متواجدون للإجابة على أسئلتك
               </p>
               <a
-                href="https://wa.me/966501234567"
+                href="https://wa.me/966545374069"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary inline-flex items-center gap-2 w-full justify-center"
