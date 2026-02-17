@@ -308,7 +308,7 @@ export default function AcademyPage() {
               >
                 <Quote className="w-10 h-10 text-primary/30 mb-4" />
                 <p className="text-text-secondary mb-6 leading-relaxed">
-                  "{testimonial.quote}"
+                  &quot;{testimonial.quote}&quot;
                 </p>
                 <div>
                   <p className="font-cairo font-bold text-text-primary">
