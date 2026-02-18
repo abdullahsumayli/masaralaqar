@@ -14,10 +14,20 @@ import {
   Save,
   X,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2,
+  Database,
+  HardDrive
 } from 'lucide-react'
 import Link from 'next/link'
 import { FileUpload } from '@/components/admin/file-upload'
+import { 
+  getAllBlogPosts, 
+  createBlogPost, 
+  updateBlogPost, 
+  deleteBlogPost as deleteSupabasePost,
+  supabase 
+} from '@/lib/supabase'
 
 interface BlogPost {
   id: string
@@ -28,12 +38,10 @@ interface BlogPost {
   category: string
   date: string
   readingTime: number
+  reading_time?: number
   image?: string
   published: boolean
 }
-
-// Initial posts data - empty array (start fresh)
-const initialPosts: BlogPost[] = []
 
 const categories = ['استراتيجية', 'أتمتة', 'ذكاء اصطناعي', 'تقنية عقارية', 'تسويق', 'مبيعات']
 
@@ -44,34 +52,62 @@ export default function AdminBlogPage() {
   const [showEditor, setShowEditor] = useState(false)
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [useSupabase, setUseSupabase] = useState(false)
+  const [supabaseConnected, setSupabaseConnected] = useState(false)
 
-  // Load posts from localStorage or use initial data
+  // Check Supabase connection and load posts
   useEffect(() => {
-    const savedPosts = localStorage.getItem('blogPosts')
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts))
-    } else {
-      setPosts(initialPosts)
-      localStorage.setItem('blogPosts', JSON.stringify(initialPosts))
+    async function init() {
+      // Check if Supabase is configured
+      const isConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && 
+                          process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your_supabase_url_here'
+      
+      if (isConfigured) {
+        try {
+          const supabasePosts = await getAllBlogPosts(false)
+          if (supabasePosts && Array.isArray(supabasePosts)) {
+            setSupabaseConnected(true)
+            setUseSupabase(true)
+            const mappedPosts = supabasePosts.map((p: any) => ({
+              ...p,
+              readingTime: p.reading_time || 5,
+            }))
+            setPosts(mappedPosts)
+            setLoading(false)
+            return
+          }
+        } catch (e) {
+          console.log('Supabase not available, using localStorage')
+        }
+      }
+      
+      // Fallback to localStorage
+      const savedPosts = localStorage.getItem('blogPosts')
+      if (savedPosts) {
+        setPosts(JSON.parse(savedPosts))
+      }
+      setLoading(false)
     }
+    
+    init()
   }, [])
 
-  // Save posts to localStorage
-  const savePosts = (newPosts: BlogPost[]) => {
+  // Save posts to localStorage (fallback)
+  const savePostsLocal = (newPosts: BlogPost[]) => {
     setPosts(newPosts)
     try {
-      // First try to clear space by removing uploadedFiles
       localStorage.removeItem('uploadedFiles')
       localStorage.setItem('blogPosts', JSON.stringify(newPosts))
     } catch (err) {
-      // Still full - try saving without images
       try {
         const postsWithoutImages = newPosts.map(p => ({
           ...p,
           image: undefined
         }))
         localStorage.setItem('blogPosts', JSON.stringify(postsWithoutImages))
-        alert('تم حفظ المقال بدون صورة لتوفير المساحة. يرجى استخدام صورة أصغر حجماً.')
+        alert('تم حفظ المقال بدون صورة لتوفير المساحة.')
       } catch {
         alert('تعذر حفظ المقال. يرجى مسح بيانات المتصفح.')
       }
@@ -88,7 +124,7 @@ export default function AdminBlogPage() {
   // Add new post
   const handleAddPost = () => {
     setEditingPost({
-      id: Date.now().toString(),
+      id: '',
       slug: '',
       title: '',
       excerpt: '',
@@ -108,43 +144,110 @@ export default function AdminBlogPage() {
   }
 
   // Save post
-  const handleSavePost = () => {
+  const handleSavePost = async () => {
     if (!editingPost) return
+    
+    setSaving(true)
 
     // Generate slug if empty - handle Arabic titles
     if (!editingPost.slug) {
-      // Use timestamp + random string for Arabic titles
       editingPost.slug = `post-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
     }
 
-    const existingIndex = posts.findIndex(p => p.id === editingPost.id)
-    let newPosts: BlogPost[]
+    try {
+      if (useSupabase && supabaseConnected) {
+        const postData = {
+          slug: editingPost.slug,
+          title: editingPost.title,
+          excerpt: editingPost.excerpt,
+          content: editingPost.content,
+          category: editingPost.category,
+          date: editingPost.date,
+          reading_time: editingPost.readingTime,
+          image: editingPost.image,
+          published: editingPost.published,
+        }
 
-    if (existingIndex >= 0) {
-      newPosts = [...posts]
-      newPosts[existingIndex] = editingPost
-    } else {
-      newPosts = [editingPost, ...posts]
+        if (editingPost.id) {
+          // Update existing
+          await updateBlogPost(editingPost.id, postData)
+        } else {
+          // Create new
+          await createBlogPost(postData)
+        }
+        
+        // Reload posts
+        const supabasePosts = await getAllBlogPosts(false)
+        const mappedPosts = supabasePosts.map((p: any) => ({
+          ...p,
+          readingTime: p.reading_time || 5,
+        }))
+        setPosts(mappedPosts)
+      } else {
+        // Use localStorage
+        const existingIndex = posts.findIndex(p => p.id === editingPost.id)
+        let newPosts: BlogPost[]
+
+        if (existingIndex >= 0) {
+          newPosts = [...posts]
+          newPosts[existingIndex] = editingPost
+        } else {
+          editingPost.id = Date.now().toString()
+          newPosts = [editingPost, ...posts]
+        }
+
+        savePostsLocal(newPosts)
+      }
+    } catch (error) {
+      console.error('Error saving post:', error)
+      alert('حدث خطأ أثناء الحفظ')
+    } finally {
+      setSaving(false)
+      setShowEditor(false)
+      setEditingPost(null)
     }
-
-    savePosts(newPosts)
-    setShowEditor(false)
-    setEditingPost(null)
   }
 
   // Delete post
-  const handleDeletePost = (id: string) => {
+  const handleDeletePost = async (id: string) => {
+    try {
+      // Try Supabase first
+      const success = await deleteSupabasePost(id)
+      if (!success) throw new Error('Delete failed')
+    } catch {
+      // Fallback to localStorage
+      console.log('Supabase delete failed, using localStorage')
+    }
+    
+    // Update local state
     const newPosts = posts.filter(p => p.id !== id)
-    savePosts(newPosts)
+    savePostsLocal(newPosts)
     setShowDeleteConfirm(null)
   }
 
   // Toggle publish status
-  const togglePublish = (id: string) => {
+  const togglePublish = async (id: string) => {
+    const post = posts.find(p => p.id === id)
+    if (!post) return
+    
+    const updatedPost = { ...post, published: !post.published }
+    
+    try {
+      // Try Supabase first
+      const result = await updateBlogPost(id, {
+        published: updatedPost.published
+      })
+      if (!result) throw new Error('Update failed')
+    } catch {
+      // Fallback to localStorage
+      console.log('Supabase update failed, using localStorage')
+    }
+    
+    // Update local state
     const newPosts = posts.map(p => 
-      p.id === id ? { ...p, published: !p.published } : p
+      p.id === id ? updatedPost : p
     )
-    savePosts(newPosts)
+    savePostsLocal(newPosts)
   }
 
   return (

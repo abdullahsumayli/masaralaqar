@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blog-card'
-import { FileText } from 'lucide-react'
+import { FileText, Loader2 } from 'lucide-react'
+import { getAllBlogPosts } from '@/lib/supabase'
 
 const categories = [
   'الكل',
@@ -22,6 +23,7 @@ interface BlogPost {
   category: string
   date: string
   readingTime: number
+  reading_time?: number
   image?: string
   published?: boolean
 }
@@ -86,26 +88,42 @@ const defaultPosts: BlogPost[] = [
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('الكل')
   const [posts, setPosts] = useState<BlogPost[]>(defaultPosts)
+  const [loading, setLoading] = useState(true)
 
-  // Load posts from localStorage (from admin) and merge with defaults
+  // Load posts from Supabase, fallback to defaults
   useEffect(() => {
-    const savedPosts = localStorage.getItem('blogPosts')
-    if (savedPosts) {
+    async function loadPosts() {
       try {
-        const adminPosts = JSON.parse(savedPosts)
-        // Filter published posts from admin
-        const publishedAdminPosts = adminPosts.filter((p: any) => p.published)
+        const supabasePosts = await getAllBlogPosts(true)
         
-        if (publishedAdminPosts.length > 0) {
-          // Merge: admin posts take priority, then add defaults that don't exist in admin
-          const adminSlugs = publishedAdminPosts.map((p: any) => p.slug)
-          const defaultsNotInAdmin = defaultPosts.filter(p => !adminSlugs.includes(p.slug))
-          setPosts([...publishedAdminPosts, ...defaultsNotInAdmin])
+        if (supabasePosts && supabasePosts.length > 0) {
+          // Map Supabase fields to component fields
+          const mappedPosts = supabasePosts.map((p: any) => ({
+            ...p,
+            readingTime: p.reading_time || p.readingTime || 5,
+          }))
+          setPosts(mappedPosts)
+        } else {
+          // Fallback to localStorage then defaults
+          const savedPosts = localStorage.getItem('blogPosts')
+          if (savedPosts) {
+            const adminPosts = JSON.parse(savedPosts)
+            const publishedAdminPosts = adminPosts.filter((p: any) => p.published)
+            if (publishedAdminPosts.length > 0) {
+              const adminSlugs = publishedAdminPosts.map((p: any) => p.slug)
+              const defaultsNotInAdmin = defaultPosts.filter(p => !adminSlugs.includes(p.slug))
+              setPosts([...publishedAdminPosts, ...defaultsNotInAdmin])
+            }
+          }
         }
       } catch (e) {
         console.error('Error loading posts:', e)
+      } finally {
+        setLoading(false)
       }
     }
+    
+    loadPosts()
   }, [])
 
   const filteredPosts = activeCategory === 'الكل'

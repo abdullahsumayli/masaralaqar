@@ -32,20 +32,20 @@ CREATE TABLE IF NOT EXISTS library_resources (
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE library_resources ENABLE ROW LEVEL SECURITY;
 
--- سياسة القراءة العامة للمقالات المنشورة
-CREATE POLICY "Public can read published posts" ON blog_posts
-  FOR SELECT USING (published = true);
+-- سياسة القراءة العامة للمقالات
+CREATE POLICY "Public can read posts" ON blog_posts
+  FOR SELECT USING (true);
 
--- سياسة القراءة العامة للموارد المنشورة
-CREATE POLICY "Public can read published resources" ON library_resources
-  FOR SELECT USING (published = true);
+-- سياسة القراءة العامة للموارد
+CREATE POLICY "Public can read resources" ON library_resources
+  FOR SELECT USING (true);
 
--- سياسة الكتابة للمستخدمين المصادق عليهم (للإدارة)
-CREATE POLICY "Authenticated users can manage posts" ON blog_posts
-  FOR ALL USING (auth.role() = 'authenticated');
+-- سياسة الكتابة العامة (للتطوير - قم بتغييرها لاحقاً للإنتاج)
+CREATE POLICY "Allow all posts operations" ON blog_posts
+  FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY "Authenticated users can manage resources" ON library_resources
-  FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow all resources operations" ON library_resources
+  FOR ALL USING (true) WITH CHECK (true);
 
 -- إضافة مقالات افتراضية
 INSERT INTO blog_posts (slug, title, excerpt, content, category, date, reading_time, published) VALUES

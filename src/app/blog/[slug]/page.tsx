@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, Calendar, Share2, Tag, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/supabase'
 
 interface BlogPost {
   slug: string
@@ -14,6 +15,7 @@ interface BlogPost {
   category: string
   date: string
   readingTime: number
+  reading_time?: number
   image?: string
   published?: boolean
 }
@@ -315,44 +317,69 @@ export default function BlogPostPage({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // First try to get from localStorage (admin posts)
-    const savedPosts = localStorage.getItem('blogPosts')
-    let foundPost: BlogPost | null = null
-    let allPosts: BlogPost[] = Object.values(defaultPosts)
-
-    if (savedPosts) {
+    async function loadPost() {
       try {
-        const adminPosts: BlogPost[] = JSON.parse(savedPosts)
-        const publishedAdminPosts = adminPosts.filter(p => p.published)
+        // Try Supabase first
+        const supabasePost = await getBlogPostBySlug(slug)
         
-        // Merge admin posts with defaults
-        const adminSlugs = publishedAdminPosts.map(p => p.slug)
-        const defaultsNotInAdmin = Object.values(defaultPosts).filter(p => !adminSlugs.includes(p.slug))
-        allPosts = [...publishedAdminPosts, ...defaultsNotInAdmin]
-        
-        // Find the post
-        foundPost = adminPosts.find(p => p.slug === slug && p.published) || null
+        if (supabasePost) {
+          const mappedPost = {
+            ...supabasePost,
+            readingTime: supabasePost.reading_time || 5,
+          }
+          setPost(mappedPost)
+          
+          // Get related posts from Supabase
+          const allPosts = await getAllBlogPosts(true)
+          const related = allPosts
+            .filter((p: any) => p.category === supabasePost.category && p.slug !== slug)
+            .slice(0, 3)
+            .map((p: any) => ({ ...p, readingTime: p.reading_time || 5 }))
+          setRelatedPosts(related)
+        } else {
+          // Fallback to localStorage then defaults
+          let foundPost: BlogPost | null = null
+          let allPosts: BlogPost[] = Object.values(defaultPosts)
+          
+          const savedPosts = localStorage.getItem('blogPosts')
+          if (savedPosts) {
+            try {
+              const adminPosts: BlogPost[] = JSON.parse(savedPosts)
+              const publishedAdminPosts = adminPosts.filter(p => p.published)
+              const adminSlugs = publishedAdminPosts.map(p => p.slug)
+              const defaultsNotInAdmin = Object.values(defaultPosts).filter(p => !adminSlugs.includes(p.slug))
+              allPosts = [...publishedAdminPosts, ...defaultsNotInAdmin]
+              foundPost = adminPosts.find(p => p.slug === slug && p.published) || null
+            } catch (e) {
+              console.error('Error loading posts:', e)
+            }
+          }
+          
+          if (!foundPost && defaultPosts[slug]) {
+            foundPost = defaultPosts[slug]
+          }
+          
+          setPost(foundPost)
+          
+          if (foundPost) {
+            const related = allPosts
+              .filter(p => p.category === foundPost!.category && p.slug !== slug)
+              .slice(0, 3)
+            setRelatedPosts(related)
+          }
+        }
       } catch (e) {
-        console.error('Error loading posts:', e)
+        console.error('Error loading post:', e)
+        // Fallback to defaults
+        if (defaultPosts[slug]) {
+          setPost(defaultPosts[slug])
+        }
+      } finally {
+        setLoading(false)
       }
     }
-
-    // If not found in localStorage, check defaults
-    if (!foundPost && defaultPosts[slug]) {
-      foundPost = defaultPosts[slug]
-    }
-
-    setPost(foundPost)
-
-    // Get related posts
-    if (foundPost) {
-      const related = allPosts
-        .filter(p => p.category === foundPost!.category && p.slug !== slug)
-        .slice(0, 3)
-      setRelatedPosts(related)
-    }
-
-    setLoading(false)
+    
+    loadPost()
   }, [slug])
 
   if (loading) {

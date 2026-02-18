@@ -15,10 +15,17 @@ import {
   X,
   Download,
   ExternalLink,
-  Tag
+  Tag,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
 import { FileUpload } from '@/components/admin/file-upload'
+import { 
+  getAllLibraryResources, 
+  createLibraryResource, 
+  updateLibraryResource, 
+  deleteLibraryResource 
+} from '@/lib/supabase'
 
 interface Resource {
   id: string
@@ -58,16 +65,46 @@ export default function AdminLibraryPage() {
   const [showEditor, setShowEditor] = useState(false)
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  // Load resources from localStorage or use initial data
+  // Load resources from Supabase, fallback to localStorage
   useEffect(() => {
-    const savedResources = localStorage.getItem('libraryResources')
-    if (savedResources) {
-      setResources(JSON.parse(savedResources))
-    } else {
-      setResources(initialResources)
-      localStorage.setItem('libraryResources', JSON.stringify(initialResources))
+    const loadResources = async () => {
+      try {
+        // Try Supabase first
+        const supabaseResources = await getAllLibraryResources(false)
+        
+        if (supabaseResources && supabaseResources.length > 0) {
+          // Map Supabase fields to component fields
+          const mappedResources = supabaseResources.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            description: r.description,
+            type: r.type,
+            category: r.category,
+            downloadUrl: r.download_url,
+            externalUrl: r.external_url,
+            published: r.published,
+            createdAt: r.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          }))
+          setResources(mappedResources)
+          return
+        }
+      } catch (e) {
+        console.log('Supabase not available, falling back to localStorage')
+      }
+      
+      // Fallback to localStorage
+      const savedResources = localStorage.getItem('libraryResources')
+      if (savedResources) {
+        setResources(JSON.parse(savedResources))
+      } else {
+        setResources(initialResources)
+        localStorage.setItem('libraryResources', JSON.stringify(initialResources))
+      }
     }
+    
+    loadResources()
   }, [])
 
   // Save resources to localStorage
@@ -119,12 +156,42 @@ export default function AdminLibraryPage() {
   }
 
   // Save resource
-  const handleSaveResource = () => {
+  const handleSaveResource = async () => {
     if (!editingResource) return
-
+    
+    setSaving(true)
     const existingIndex = resources.findIndex(r => r.id === editingResource.id)
     let newResources: Resource[]
 
+    // Try Supabase first
+    try {
+      const supabaseData = {
+        title: editingResource.title,
+        description: editingResource.description,
+        type: editingResource.type,
+        category: editingResource.category,
+        download_url: editingResource.downloadUrl,
+        external_url: editingResource.externalUrl,
+        published: editingResource.published,
+      }
+      
+      if (existingIndex >= 0) {
+        // Update existing
+        const result = await updateLibraryResource(editingResource.id, supabaseData)
+        if (!result) throw new Error('Update failed')
+      } else {
+        // Create new
+        const result = await createLibraryResource(supabaseData as any)
+        if (result) {
+          // Update local resource with Supabase ID
+          editingResource.id = result.id
+        }
+      }
+    } catch (e) {
+      console.log('Supabase save failed, using localStorage fallback', e)
+    }
+    
+    // Update local state
     if (existingIndex >= 0) {
       newResources = [...resources]
       newResources[existingIndex] = editingResource
@@ -133,21 +200,45 @@ export default function AdminLibraryPage() {
     }
 
     saveResources(newResources)
+    setSaving(false)
     setShowEditor(false)
     setEditingResource(null)
   }
 
   // Delete resource
-  const handleDeleteResource = (id: string) => {
+  const handleDeleteResource = async (id: string) => {
+    try {
+      // Try Supabase first
+      const success = await deleteLibraryResource(id)
+      if (!success) throw new Error('Delete failed')
+    } catch {
+      console.log('Supabase delete failed, using localStorage')
+    }
+    
     const newResources = resources.filter(r => r.id !== id)
     saveResources(newResources)
     setShowDeleteConfirm(null)
   }
 
   // Toggle publish status
-  const togglePublish = (id: string) => {
+  const togglePublish = async (id: string) => {
+    const resource = resources.find(r => r.id === id)
+    if (!resource) return
+    
+    const updatedResource = { ...resource, published: !resource.published }
+    
+    try {
+      // Try Supabase first
+      const result = await updateLibraryResource(id, {
+        published: updatedResource.published
+      })
+      if (!result) throw new Error('Update failed')
+    } catch {
+      console.log('Supabase update failed, using localStorage')
+    }
+    
     const newResources = resources.map(r => 
-      r.id === id ? { ...r, published: !r.published } : r
+      r.id === id ? updatedResource : r
     )
     saveResources(newResources)
   }

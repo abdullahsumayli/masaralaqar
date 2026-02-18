@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Send, Download, ExternalLink, BookOpen, Video, FileSpreadsheet, Wrench, X, User, Phone, CheckCircle } from 'lucide-react'
+import { getAllLibraryResources } from '@/lib/supabase'
 
 const tabs = ['الكل', 'كتب', 'دورات', 'قوالب', 'أدوات']
 
@@ -98,25 +99,54 @@ export default function LibraryPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [email, setEmail] = useState('')
 
-  // Load resources from localStorage (from admin) and merge with defaults
+  // Load resources from Supabase, fallback to localStorage, then defaults
   useEffect(() => {
-    const savedResources = localStorage.getItem('libraryResources')
-    if (savedResources) {
+    const loadResources = async () => {
       try {
-        const adminResources = JSON.parse(savedResources)
-        // Filter published resources from admin
-        const publishedAdminResources = adminResources.filter((r: any) => r.published)
+        // Try Supabase first
+        const supabaseResources = await getAllLibraryResources(true)
         
-        if (publishedAdminResources.length > 0) {
-          // Merge: admin resources take priority, then add defaults that don't exist in admin
-          const adminIds = publishedAdminResources.map((r: any) => r.id)
-          const defaultsNotInAdmin = defaultResources.filter(r => !adminIds.includes(r.id))
-          setResources([...publishedAdminResources, ...defaultsNotInAdmin])
+        if (supabaseResources && supabaseResources.length > 0) {
+          // Map Supabase fields to component fields
+          const mappedResources = supabaseResources.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            description: r.description,
+            type: r.type,
+            category: r.category,
+            downloadUrl: r.download_url,
+            externalUrl: r.external_url,
+          }))
+          
+          // Merge with defaults
+          const supabaseIds = mappedResources.map((r: any) => r.id)
+          const defaultsNotInSupabase = defaultResources.filter(r => !supabaseIds.includes(r.id))
+          setResources([...mappedResources, ...defaultsNotInSupabase])
+          return
         }
       } catch (e) {
-        console.error('Error loading resources:', e)
+        console.log('Supabase not available, falling back to localStorage')
+      }
+      
+      // Fallback to localStorage
+      const savedResources = localStorage.getItem('libraryResources')
+      if (savedResources) {
+        try {
+          const adminResources = JSON.parse(savedResources)
+          const publishedAdminResources = adminResources.filter((r: any) => r.published)
+          
+          if (publishedAdminResources.length > 0) {
+            const adminIds = publishedAdminResources.map((r: any) => r.id)
+            const defaultsNotInAdmin = defaultResources.filter(r => !adminIds.includes(r.id))
+            setResources([...publishedAdminResources, ...defaultsNotInAdmin])
+          }
+        } catch (e) {
+          console.error('Error loading resources:', e)
+        }
       }
     }
+    
+    loadResources()
   }, [])
 
   const filteredResources = activeTab === 'الكل'
