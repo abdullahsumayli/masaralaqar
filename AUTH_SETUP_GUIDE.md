@@ -64,9 +64,9 @@ await updateUserProfile(userId, updates)
 #### **`useAuth()`** - الحصول على المستخدم الحالي
 
 ```typescript
-const { user, profile, isLoading } = useAuth()
+const { user, profile, loading } = useAuth()
 
-if (isLoading) return <LoadingSpinner />
+if (loading) return <LoadingSpinner />
 if (!user) return <Redirect to="/login" />
 
 return <div>مرحباً {profile?.name}</div>
@@ -76,9 +76,9 @@ return <div>مرحباً {profile?.name}</div>
 
 ```typescript
 function Dashboard() {
-  const { user, isLoading } = useRequireAuth()
+  const { user, loading } = useRequireAuth()
   
-  if (isLoading) return <LoadingSpinner />
+  if (loading) return <LoadingSpinner />
   if (!user) return null // سيتم إعادة التوجيه تلقائياً
   
   return <DashboardContent />
@@ -89,7 +89,7 @@ function Dashboard() {
 
 ```typescript
 function AdminPanel() {
-  const { user, isLoading } = useRequireAdmin()
+  const { user, loading } = useRequireAdmin()
   
   // سيتم إعادة التوجيه إذا لم يكن admin
   if (!user) return null
@@ -195,9 +195,9 @@ Body: {
 ```typescript
 'use client'
 export default function DashboardLayout() {
-  const { user, isLoading } = useRequireAuth()
+  const { user, loading } = useRequireAuth()
   
-  if (isLoading) return <Spinner />
+  if (loading) return <Spinner />
   if (!user) return null // redirects automatically
   
   return <Protected Layout />

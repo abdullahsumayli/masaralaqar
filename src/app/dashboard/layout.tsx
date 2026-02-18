@@ -10,9 +10,9 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, isLoading } = useRequireAuth()
+  const { user, loading } = useRequireAuth()
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader className="w-8 h-8 animate-spin text-primary" />
