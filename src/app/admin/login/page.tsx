@@ -3,14 +3,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Lock, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { signIn, getCurrentUser, getUserProfile } from '@/lib/auth'
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
 
@@ -19,14 +20,31 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError('')
 
-    // Check credentials
-    if (username === 'admin' && password === 'abdullah') {
-      // Store auth in localStorage
-      localStorage.setItem('adminAuth', 'true')
-      localStorage.setItem('adminUser', 'admin')
+    try {
+      // Sign in with Supabase
+      await signIn(email, password)
+      
+      // Check if user is admin
+      const user = await getCurrentUser()
+      if (!user) {
+        setError('فشل التحقق من بيانات المستخدم')
+        setIsLoading(false)
+        return
+      }
+
+      const profile = await getUserProfile(user.id)
+      
+      if (profile?.role !== 'admin') {
+        setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة')
+        setIsLoading(false)
+        return
+      }
+
+      // Redirect to admin dashboard
       router.push('/admin')
-    } else {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة')
+    } catch (err: any) {
+      console.error('Admin login error:', err)
+      setError(err.message || 'بيانات الدخول غير صحيحة')
       setIsLoading(false)
     }
   }
@@ -53,7 +71,7 @@ export default function AdminLoginPage() {
 
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-white mb-2 font-cairo">لوحة الإدارة</h1>
-            <p className="text-gray-400">سجّل دخولك للوصول إلى لوحة إدارة مسار العقار</p>
+            <p className="text-gray-400">دخول إداري فقط</p>
           </div>
 
           {/* Error Message */}
@@ -72,15 +90,15 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                اسم المستخدم
+                البريد الإلكتروني
               </label>
               <div className="relative">
-                <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="أدخل اسم المستخدم"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="أدخل بريدك الإلكتروني"
                   className="w-full bg-[#161b22] border border-[#21262d] rounded-xl pr-12 pl-4 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary transition-colors"
                   required
                 />
@@ -138,3 +156,4 @@ export default function AdminLoginPage() {
     </div>
   )
 }
+
