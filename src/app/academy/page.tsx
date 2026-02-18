@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
@@ -15,80 +15,98 @@ import {
   Send
 } from 'lucide-react'
 
-const services = [
+interface Service {
+  id: string
+  icon: string
+  title: string
+  duration: string
+  price: string
+  description: string
+  features: string[]
+  buttonText: string
+  buttonHref: string
+}
+
+interface Trainer {
+  name: string
+  title: string
+  bio: string
+  credentials: string[]
+  linkedin: string
+}
+
+interface Testimonial {
+  id: string
+  quote: string
+  author: string
+  company: string
+}
+
+const iconMap: Record<string, any> = {
+  MessageCircle,
+  Users,
+  Rocket,
+}
+
+const defaultServices: Service[] = [
   {
-    icon: MessageCircle,
+    id: '1',
+    icon: 'MessageCircle',
     title: 'استشارات فردية',
     duration: '60 دقيقة',
     price: '500 ريال',
     description: 'جلسة استشارية فردية لحل تحديات مكتبك العقاري وتحديد خطة الأتمتة المناسبة',
-    features: [
-      'تحليل وضع مكتبك الحالي',
-      'خطة أتمتة مخصصة',
-      'توصيات الأدوات المناسبة',
-      'متابعة بعد الجلسة',
-    ],
+    features: ['تحليل وضع مكتبك الحالي', 'خطة أتمتة مخصصة', 'توصيات الأدوات المناسبة', 'متابعة بعد الجلسة'],
     buttonText: 'احجز الآن',
     buttonHref: '#booking',
   },
   {
-    icon: Users,
+    id: '2',
+    icon: 'Users',
     title: 'تدريب المكاتب',
     duration: 'يوم كامل',
     price: '3,000 ريال',
     description: 'تدريب مكثف لفريق مكتبك على الأتمتة والتقنيات الحديثة في مقر عملكم',
-    features: [
-      'تدريب فريق كامل (حتى 10 أشخاص)',
-      'ورشة عمل تطبيقية',
-      'إعداد الأدوات الأساسية',
-      'دعم لمدة شهر',
-    ],
+    features: ['تدريب فريق كامل (حتى 10 أشخاص)', 'ورشة عمل تطبيقية', 'إعداد الأدوات الأساسية', 'دعم لمدة شهر'],
     buttonText: 'تواصل معنا',
     buttonHref: '/contact',
   },
   {
-    icon: Rocket,
+    id: '3',
+    icon: 'Rocket',
     title: 'برنامج التحول الرقمي',
     duration: '3 أشهر',
     price: 'يبدأ من 15,000 ريال',
     description: 'برنامج متكامل للتحول الرقمي الشامل لمكتبك العقاري مع متابعة مستمرة',
-    features: [
-      'تحليل شامل وخطة استراتيجية',
-      'تنفيذ الأتمتة الكاملة',
-      'تدريب الفريق',
-      'دعم ومتابعة لـ 3 أشهر',
-      'تقارير أداء شهرية',
-    ],
+    features: ['تحليل شامل وخطة استراتيجية', 'تنفيذ الأتمتة الكاملة', 'تدريب الفريق', 'دعم ومتابعة لـ 3 أشهر', 'تقارير أداء شهرية'],
     buttonText: 'اعرف أكثر',
     buttonHref: '/contact',
   },
 ]
 
-const trainer = {
+const defaultTrainer: Trainer = {
   name: 'عبدالله صميلي',
   title: 'مؤسس مسار العقار',
   bio: 'خبير في أتمتة العمليات العقارية والذكاء الاصطناعي مع أكثر من 10 سنوات خبرة في السوق العقاري السعودي. ساعد أكثر من 50 مكتب عقاري على التحول الرقمي.',
-  credentials: [
-    'ماجستير في إدارة الأعمال',
-    'شهادة معتمدة في الذكاء الاصطناعي',
-    'مدرب معتمد من HubSpot',
-    '+50 مكتب عقاري تم تدريبهم',
-  ],
+  credentials: ['ماجستير في إدارة الأعمال', 'شهادة معتمدة في الذكاء الاصطناعي', 'مدرب معتمد من HubSpot', '+50 مكتب عقاري تم تدريبهم'],
   linkedin: 'https://linkedin.com',
 }
 
-const testimonials = [
+const defaultTestimonials: Testimonial[] = [
   {
+    id: '1',
     quote: 'استشارة عبدالله غيرت نظرتنا للأتمتة. خلال شهر ضاعفنا إنتاجيتنا وقللنا الجهد للنصف.',
     author: 'محمد العتيبي',
     company: 'مكتب الرياض للعقارات',
   },
   {
+    id: '2',
     quote: 'برنامج التحول الرقمي كان أفضل استثمار لمكتبنا. النتائج فاقت توقعاتنا.',
     author: 'خالد السعيد',
     company: 'مجموعة الخليج العقارية',
   },
   {
+    id: '3',
     quote: 'تدريب الفريق كان ممتاز. الآن كل موظف يفهم كيف يستخدم الأدوات بفعالية.',
     author: 'فهد الشمري',
     company: 'عقارات الشرق',
@@ -96,6 +114,9 @@ const testimonials = [
 ]
 
 export default function AcademyPage() {
+  const [services, setServices] = useState<Service[]>(defaultServices)
+  const [trainer, setTrainer] = useState<Trainer>(defaultTrainer)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -104,9 +125,35 @@ export default function AcademyPage() {
     message: '',
   })
 
+  // Load data from localStorage
+  useEffect(() => {
+    const savedServices = localStorage.getItem('academyServices')
+    const savedTrainer = localStorage.getItem('academyTrainer')
+    const savedTestimonials = localStorage.getItem('academyTestimonials')
+
+    if (savedServices) {
+      setServices(JSON.parse(savedServices))
+    }
+
+    if (savedTrainer) {
+      setTrainer(JSON.parse(savedTrainer))
+    }
+
+    if (savedTestimonials) {
+      const parsed = JSON.parse(savedTestimonials)
+      if (parsed.length > 0) {
+        setTestimonials(parsed)
+      }
+    }
+  }, [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
+    // Save to localStorage
+    const bookings = JSON.parse(localStorage.getItem('academyBookings') || '[]')
+    bookings.push({ ...formData, date: new Date().toISOString() })
+    localStorage.setItem('academyBookings', JSON.stringify(bookings))
+    
     alert('شكراً! سنتواصل معك قريباً.')
     setFormData({ name: '', email: '', phone: '', service: '', message: '' })
   }
@@ -166,50 +213,53 @@ export default function AcademyPage() {
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <motion.div
-                key={service.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-background border border-border rounded-2xl p-6 md:p-8 flex flex-col"
-              >
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                  <service.icon className="w-7 h-7 text-primary" />
-                </div>
-                
-                <h3 className="text-2xl font-cairo font-bold text-text-primary mb-2">
-                  {service.title}
-                </h3>
-                
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1 text-text-secondary text-sm">
-                    <Clock className="w-4 h-4" />
-                    {service.duration}
-                  </div>
-                  <span className="text-primary font-semibold">{service.price}</span>
-                </div>
-                
-                <p className="text-text-secondary mb-6">{service.description}</p>
-                
-                <ul className="space-y-2 mb-8 flex-1">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-text-secondary text-sm">
-                      <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                
-                <Link
-                  href={service.buttonHref}
-                  className="btn-primary text-center"
+            {services.map((service, index) => {
+              const IconComponent = iconMap[service.icon] || MessageCircle
+              return (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-background border border-border rounded-2xl p-6 md:p-8 flex flex-col"
                 >
-                  {service.buttonText}
-                </Link>
-              </motion.div>
-            ))}
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+                    <IconComponent className="w-7 h-7 text-primary" />
+                  </div>
+                  
+                  <h3 className="text-2xl font-cairo font-bold text-text-primary mb-2">
+                    {service.title}
+                  </h3>
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-1 text-text-secondary text-sm">
+                      <Clock className="w-4 h-4" />
+                      {service.duration}
+                    </div>
+                    <span className="text-primary font-semibold">{service.price}</span>
+                  </div>
+                  
+                  <p className="text-text-secondary mb-6">{service.description}</p>
+                  
+                  <ul className="space-y-2 mb-8 flex-1">
+                    {service.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2 text-text-secondary text-sm">
+                        <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Link
+                    href={service.buttonHref}
+                    className="btn-primary text-center"
+                  >
+                    {service.buttonText}
+                  </Link>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -237,8 +287,8 @@ export default function AcademyPage() {
             </p>
             
             <ul className="space-y-2 mb-6">
-              {trainer.credentials.map((credential) => (
-                <li key={credential} className="flex items-center gap-2 text-text-secondary">
+              {trainer.credentials.map((credential, i) => (
+                <li key={i} className="flex items-center gap-2 text-text-secondary">
                   <CheckCircle className="w-4 h-4 text-primary" />
                   {credential}
                 </li>
@@ -283,44 +333,44 @@ export default function AcademyPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="bg-surface/50 border-y border-border py-16 md:py-20 mb-20">
-        <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-cairo font-bold text-text-primary mb-4">
-              آراء عملائنا
-            </h2>
-          </motion.div>
+      {testimonials.length > 0 && (
+        <section className="bg-surface/50 border-y border-border py-16 md:py-20 mb-20">
+          <div className="container-custom">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-cairo font-bold text-text-primary mb-4">
+                آراء عملائنا
+              </h2>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-background border border-border rounded-2xl p-6"
-              >
-                <Quote className="w-10 h-10 text-primary/30 mb-4" />
-                <p className="text-text-secondary mb-6 leading-relaxed">
-                  &quot;{testimonial.quote}&quot;
-                </p>
-                <div>
-                  <p className="font-cairo font-bold text-text-primary">
-                    {testimonial.author}
+            <div className="grid md:grid-cols-3 gap-6">
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={testimonial.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-background border border-border rounded-2xl p-6"
+                >
+                  <Quote className="w-8 h-8 text-primary/30 mb-4" />
+                  <p className="text-text-secondary mb-4 italic">
+                    "{testimonial.quote}"
                   </p>
-                  <p className="text-text-muted text-sm">{testimonial.company}</p>
-                </div>
-              </motion.div>
-            ))}
+                  <div>
+                    <p className="font-semibold text-text-primary">{testimonial.author}</p>
+                    <p className="text-text-muted text-sm">{testimonial.company}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Booking Form */}
       <section id="booking" className="container-custom">
@@ -330,100 +380,86 @@ export default function AcademyPage() {
           viewport={{ once: true }}
           className="max-w-2xl mx-auto"
         >
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-cairo font-bold text-text-primary mb-4">
               احجز استشارتك
             </h2>
             <p className="text-text-secondary">
-              املأ النموذج وسنتواصل معك لتحديد موعد مناسب
+              أرسل طلبك وسنتواصل معك خلال 24 ساعة
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl p-6 md:p-8 space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  الاسم الكامل
-                </label>
+                <label className="block text-text-primary font-medium mb-2">الاسم</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors"
                   required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
-                  placeholder="أدخل اسمك"
                 />
               </div>
-              
               <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  البريد الإلكتروني
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
-                  placeholder="example@email.com"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  رقم الجوال
-                </label>
+                <label className="block text-text-primary font-medium mb-2">الجوال</label>
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors"
                   required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
-                  placeholder="05xxxxxxxx"
                 />
-              </div>
-              
-              <div>
-                <label className="block text-text-primary font-medium mb-2">
-                  الخدمة المطلوبة
-                </label>
-                <select
-                  name="service"
-                  value={formData.service}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:border-primary transition-colors"
-                >
-                  <option value="">اختر الخدمة</option>
-                  <option value="consultation">استشارة فردية</option>
-                  <option value="training">تدريب المكاتب</option>
-                  <option value="transformation">برنامج التحول الرقمي</option>
-                </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-text-primary font-medium mb-2">
-                رسالتك (اختياري)
-              </label>
+              <label className="block text-text-primary font-medium mb-2">البريد الإلكتروني</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-text-primary font-medium mb-2">الخدمة المطلوبة</label>
+              <select
+                name="service"
+                value={formData.service}
+                onChange={handleChange}
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors"
+                required
+              >
+                <option value="">اختر الخدمة</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.title}>{service.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-text-primary font-medium mb-2">رسالتك (اختياري)</label>
               <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors resize-none"
-                placeholder="أخبرنا عن مكتبك والتحديات التي تواجهها..."
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors resize-none"
               />
             </div>
 
-            <button type="submit" className="btn-primary w-full inline-flex items-center justify-center gap-2 text-lg">
+            <button
+              type="submit"
+              className="w-full btn-primary flex items-center justify-center gap-2 py-4"
+            >
               <Send className="w-5 h-5" />
-              أرسل الطلب
+              إرسال الطلب
             </button>
           </form>
         </motion.div>

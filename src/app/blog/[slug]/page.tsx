@@ -4,65 +4,78 @@ import { use } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Clock, Calendar, Share2, Tag } from 'lucide-react'
-import { BlogCard } from '@/components/blog-card'
+import ReactMarkdown from 'react-markdown'
 
-// Mock blog data (in production, this would come from MDX files or a CMS)
-const blogPosts: Record<string, {
+interface BlogPost {
+  slug: string
   title: string
+  excerpt: string
+  content: string
   category: string
   date: string
   readingTime: number
-  content: string
-}> = {
-  'losing-clients-due-to-late-response': {
-    title: 'كيف يخسر مكتبك العقاري 60% من عملائه بسبب التأخر في الرد',
-    category: 'استراتيجية',
-    date: '10 فبراير 2026',
-    readingTime: 5,
-    content: `
-## المشكلة الحقيقية
+}
 
-في عالم العقارات اليوم، السرعة هي كل شيء. الدراسات تُظهر أن **60% من العملاء المحتملين** يتحولون للمنافسين إذا لم يحصلوا على رد خلال ساعة واحدة فقط.
+const defaultPosts: Record<string, BlogPost> = {
+  'ai-in-real-estate-filtering': {
+    slug: 'ai-in-real-estate-filtering',
+    title: 'كيف يعمل الذكاء الاصطناعي في تصفية عملاء العقار',
+    excerpt: 'شرح مبسط لكيفية استخدام AI في فرز العملاء الجادين من المتصفحين وتوفير وقتك الثمين.',
+    category: 'ذكاء اصطناعي',
+    date: '1 فبراير 2026',
+    readingTime: 6,
+    content: `# فهم الذكاء الاصطناعي في العقارات
 
-## لماذا يحدث هذا؟
+الذكاء الاصطناعي يمكنه تحليل محادثات العملاء وتحديد مدى جديتهم بدقة عالية.
 
-العميل الذي يبحث عن عقار غالباً ما يتواصل مع عدة مكاتب في نفس الوقت. المكتب الذي يرد أولاً يحصل على الأفضلية.
+## ما هي تصفية العملاء بـ AI؟
 
-### الأسباب الرئيسية للتأخر:
+هي عملية استخدام خوارزميات الذكاء الاصطناعي لتحليل:
+- لغة العميل وطريقة تواصله
+- الأسئلة التي يطرحها
+- سرعة ردوده
+- المعلومات التي يقدمها
 
-1. **انشغال الموظفين** بالمعاينات والمهام الأخرى
-2. **ساعات العمل المحدودة** - العملاء يتواصلون في الليل وعطلة نهاية الأسبوع
-3. **عدم وجود نظام** لتوزيع الاستفسارات
+والهدف: **تحديد من هو الجاد للشراء ومن هو مجرد متصفح.**
 
-## الحل: الأتمتة الذكية
+## كيف يعمل؟
 
-باستخدام نظام رد آلي ذكي مثل **نظام صقر**، يمكنك:
+### 1. تحليل اللغة الطبيعية (NLP)
 
-- الرد على العملاء فوراً، 24 ساعة في اليوم
-- جمع معلومات العميل الأساسية تلقائياً
-- تصفية العملاء الجادين من المتصفحين
-- جدولة المعاينات بدون تدخل بشري
+يفهم النظام ما يقوله العميل ويستخرج المعلومات المهمة:
 
-## النتائج المتوقعة
+- **الميزانية المتوقعة**: "أبحث عن شقة بحدود 800 ألف"
+- **نوع العقار المطلوب**: "فيلا، شقة، أرض"
+- **الموقع المفضل**: "شمال الرياض، حي النرجس"
+- **مدى الاستعجال**: "أريد الانتقال خلال شهر"
 
-المكاتب التي تستخدم الأتمتة الذكية تشهد:
+### 2. تقييم الجدية
 
-- **زيادة 3x** في معدل التحويل
-- **تقليل 60%** في الجهد اليدوي
-- **صفر فرص ضائعة** بسبب التأخر
+بناءً على إجابات العميل، يُعطي النظام درجة جدية من 0 إلى 100.
 
-## الخطوة التالية
+### 3. التوجيه الذكي
 
-لا تدع عملاءك يذهبون للمنافسين. ابدأ اليوم بتجربة نظام صقر مجاناً واكتشف الفرق.
-    `,
+بعد التقييم، يتم توجيه كل عميل للمسار المناسب:
+
+- **العملاء الجادون** ← تحويل فوري للوسيط مع ملخص المحادثة
+- **العملاء المحتملون** ← سلسلة متابعة آلية لإنضاجهم
+- **المتصفحون** ← محتوى تعليمي وتوعوي
+
+## الفوائد لمكتبك العقاري
+
+1. **توفير الوقت**: لا تضيع وقتك مع العملاء غير الجادين
+2. **زيادة المبيعات**: تركيز جهودك على العملاء الواعدين
+3. **تحسين تجربة العميل**: ردود سريعة ومخصصة
+4. **بيانات قيمة**: فهم أعمق لاحتياجات السوق`
   },
   'complete-automation-guide-2026': {
+    slug: 'complete-automation-guide-2026',
     title: 'دليل الأتمتة الكامل للمكاتب العقارية السعودية 2026',
+    excerpt: 'كل ما تحتاج معرفته عن أتمتة مكتبك العقاري: من الأدوات إلى الاستراتيجيات والنتائج المتوقعة.',
     category: 'أتمتة',
     date: '5 فبراير 2026',
     readingTime: 8,
-    content: `
-## مقدمة
+    content: `# مقدمة
 
 الأتمتة لم تعد رفاهية، بل ضرورة للبقاء في المنافسة. في هذا الدليل الشامل، سنستعرض كل ما تحتاج معرفته.
 
@@ -70,112 +83,224 @@ const blogPosts: Record<string, {
 
 الأتمتة العقارية هي استخدام التقنية لتنفيذ المهام الروتينية تلقائياً، مما يوفر وقتك للتركيز على إغلاق الصفقات.
 
+### لماذا الأتمتة مهمة الآن؟
+
+- المنافسة تزداد شراسة
+- توقعات العملاء ترتفع
+- التكلفة البشرية في ارتفاع
+- التقنية أصبحت أسهل وأرخص
+
 ## المجالات الرئيسية للأتمتة
 
 ### 1. الرد على الاستفسارات
+
 - ردود فورية على واتساب
 - تصفية العملاء تلقائياً
-- جمع البيانات الأساسية
+- جمع المعلومات الأساسية
 
-### 2. متابعة العملاء
-- رسائل متابعة مجدولة
-- تذكيرات بالمواعيد
-- تحديثات على العروض الجديدة
+### 2. جدولة المعاينات
 
-### 3. إدارة العقارات
-- تحديث البيانات تلقائياً
-- مزامنة مع منصات الإعلان
+- حجز المواعيد أونلاين
+- تذكيرات تلقائية
+- إعادة الجدولة بسهولة
+
+### 3. متابعة العملاء
+
+- سلاسل رسائل مجدولة
+- تنبيهات للوسيط عند الحاجة
 - تقارير دورية
-
-## أدوات الأتمتة الموصى بها
-
-| الأداة | الاستخدام | التكلفة |
-|--------|----------|---------|
-| نظام صقر | الرد الآلي | متغيرة |
-| منصة إغلاق | المتابعة | متغيرة |
-| Zapier | الربط | مجاني/مدفوع |
 
 ## خطوات البدء
 
-1. **حدد المهام المتكررة** في مكتبك
-2. **اختر الأداة المناسبة** لكل مهمة
-3. **ابدأ بمهمة واحدة** واتقنها
-4. **وسّع تدريجياً** لتشمل مهام أخرى
-
-## الخلاصة
-
-الأتمتة ستوفر لك ساعات كل يوم وتضاعف إنتاجيتك. ابدأ اليوم!
-    `,
+1. **حدد العمليات المتكررة** في مكتبك
+2. **اختر الأدوات المناسبة** لحجم عملك
+3. **ابدأ بعملية واحدة** ثم توسع تدريجياً
+4. **قس النتائج** وحسّن باستمرار`
   },
-  'ai-in-real-estate-filtering': {
-    title: 'كيف يعمل الذكاء الاصطناعي في تصفية عملاء العقار',
-    category: 'ذكاء اصطناعي',
-    date: '1 فبراير 2026',
-    readingTime: 6,
-    content: `
-## فهم الذكاء الاصطناعي في العقارات
+  'losing-clients-due-to-late-response': {
+    slug: 'losing-clients-due-to-late-response',
+    title: 'كيف يخسر مكتبك العقاري 60% من عملائه بسبب التأخر في الرد',
+    excerpt: 'دراسة تكشف أن 60% من العملاء المحتملين يتحولون للمنافسين خلال ساعة واحدة من عدم الرد.',
+    category: 'استراتيجية',
+    date: '10 فبراير 2026',
+    readingTime: 5,
+    content: `# المشكلة الحقيقية
 
-الذكاء الاصطناعي يمكنه تحليل محادثات العملاء وتحديد مدى جديتهم بدقة عالية.
+في عالم العقارات اليوم، السرعة هي كل شيء. الدراسات تُظهر أن **60% من العملاء المحتملين** يتحولون للمنافسين إذا لم يحصلوا على رد خلال ساعة واحدة فقط.
 
-## كيف يعمل؟
+## لماذا يحدث هذا؟
 
-### 1. تحليل اللغة الطبيعية (NLP)
-يفهم النظام ما يقوله العميل ويستخرج المعلومات المهمة:
-- الميزانية المتوقعة
-- نوع العقار المطلوب
-- الموقع المفضل
-- مدى الاستعجال
+العميل الذي يبحث عن عقار غالباً ما يتواصل مع عدة مكاتب في نفس الوقت. المكتب الذي يرد أولاً يحصل على الأفضلية.
 
-### 2. تقييم الجدية
-بناءً على إجابات العميل، يُعطي النظام درجة جدية:
-- **عالية**: العميل جاهز للشراء
-- **متوسطة**: يحتاج متابعة
-- **منخفضة**: متصفح فقط
+### الأسباب الرئيسية للتأخر
 
-### 3. التوجيه الذكي
-- العملاء الجادون → تحويل فوري للوسيط
-- العملاء المحتملون → متابعة آلية
-- المتصفحون → محتوى تعليمي
+1. **انشغال الموظفين** بالمعاينات والمهام الأخرى
+2. **ساعات العمل المحدودة** - العملاء يتواصلون في الليل وعطلة نهاية الأسبوع
+3. **عدم وجود نظام** لتوزيع الاستفسارات
 
-## فوائد التصفية الذكية
+> العميل الذي يريد الشراء اليوم لن ينتظرك للغد
 
-- **توفير 80%** من وقت الموظفين
-- **زيادة معدل الإغلاق** بالتركيز على الجادين
-- **تجربة أفضل للعميل** برد سريع ومناسب
+## الحل: الأتمتة الذكية
 
-## تطبيق عملي
+باستخدام نظام رد آلي ذكي مثل **نظام صقر**، يمكنك:
 
-نظام صقر يستخدم هذه التقنيات لتصفية العملاء تلقائياً. جربه اليوم!
-    `,
+- الرد على العملاء فوراً، 24 ساعة في اليوم
+- تصفية العملاء الجادين تلقائياً
+- تحويل العملاء المؤهلين للوسيط المناسب
+- متابعة العملاء المحتملين بشكل آلي
+
+## النتائج المتوقعة
+
+- **زيادة 40%** في معدل التحويل
+- **توفير 80%** من وقت الرد على الاستفسارات
+- **رضا أعلى** للعملاء
+- **مبيعات أكثر** بنفس الجهد`
   },
-}
-
-const relatedPosts = [
-  {
-    slug: 'whatsapp-automation-secrets',
-    title: 'أسرار أتمتة واتساب للمكاتب العقارية',
-    excerpt: 'كيف تجعل واتساب يعمل لصالحك 24 ساعة.',
+  'whatsapp-automation-tips': {
+    slug: 'whatsapp-automation-tips',
+    title: '7 نصائح ذهبية لأتمتة واتساب في مكتبك العقاري',
+    excerpt: 'اكتشف أفضل الممارسات لاستخدام الواتساب الآلي في التواصل مع العملاء وزيادة المبيعات.',
     category: 'أتمتة',
-    date: '28 يناير 2026',
+    date: '12 فبراير 2026',
     readingTime: 7,
-  },
-  {
-    slug: 'proptech-trends-saudi-2026',
-    title: 'اتجاهات التقنية العقارية في السعودية 2026',
-    excerpt: 'نظرة على مستقبل السوق العقاري السعودي.',
-    category: 'تقنية عقارية',
-    date: '25 يناير 2026',
-    readingTime: 10,
-  },
-]
+    content: `# مقدمة
 
-// Table of Contents items (extracted from content)
-const tableOfContents = [
-  { id: 'intro', label: 'المقدمة' },
-  { id: 'problem', label: 'المشكلة' },
-  { id: 'solution', label: 'الحل' },
-  { id: 'results', label: 'النتائج' },
-]
+واتساب أصبح القناة الأولى للتواصل مع العملاء في السوق العقاري السعودي. إليك 7 نصائح لأتمتته بشكل فعال.
+
+## 1. الرد الفوري الذكي
+
+لا تستخدم ردوداً آلية مملة. اجعل الرد الأول شخصياً ومفيداً.
+
+## 2. اسأل الأسئلة الصحيحة
+
+- ما نوع العقار الذي تبحث عنه؟
+- ما المنطقة المفضلة؟
+- ما الميزانية المتوقعة؟
+- ما الإطار الزمني للشراء؟
+
+## 3. استخدم الأزرار التفاعلية
+
+اجعل التفاعل سهلاً بأزرار واضحة للاختيار.
+
+## 4. أرسل محتوى قيم
+
+- صور عالية الجودة
+- فيديوهات للعقارات
+- معلومات عن الأحياء
+
+## 5. تابع بذكاء
+
+- لا ترسل رسائل كثيرة
+- اختر التوقيت المناسب
+- قدم قيمة في كل رسالة
+
+## 6. حوّل للوسيط في الوقت المناسب
+
+عندما يصبح العميل جاهزاً، حوّله فوراً للوسيط.
+
+## 7. قس وحسّن
+
+تابع الإحصائيات وحسّن باستمرار.`
+  },
+  'real-estate-tech-trends-2026': {
+    slug: 'real-estate-tech-trends-2026',
+    title: 'أهم 10 تقنيات عقارية ستغير السوق السعودي في 2026',
+    excerpt: 'نظرة شاملة على التقنيات الحديثة التي ستشكل مستقبل السوق العقاري السعودي.',
+    category: 'تقنية عقارية',
+    date: '14 فبراير 2026',
+    readingTime: 10,
+    content: `# مستقبل التقنية العقارية
+
+السوق العقاري السعودي يشهد تحولاً رقمياً غير مسبوق. إليك أهم التقنيات التي ستغير قواعد اللعبة.
+
+## 1. الذكاء الاصطناعي للمحادثات
+
+روبوتات دردشة ذكية ترد على العملاء وتؤهلهم تلقائياً.
+
+## 2. الواقع الافتراضي (VR)
+
+جولات افتراضية للعقارات من أي مكان في العالم.
+
+## 3. الواقع المعزز (AR)
+
+تخيل العقار بأثاثك قبل الشراء.
+
+## 4. التحليلات التنبؤية
+
+توقع أسعار العقارات وأفضل وقت للبيع أو الشراء.
+
+## 5. البلوك تشين
+
+عقود ذكية وتحويل ملكية بأمان وسرعة.
+
+## 6. إنترنت الأشياء (IoT)
+
+منازل ذكية ترفع قيمة العقار.
+
+## 7. الدرونز
+
+تصوير جوي احترافي للعقارات.
+
+## 8. التوقيع الإلكتروني
+
+إتمام الصفقات بدون ورق.
+
+## 9. CRM الذكي
+
+إدارة علاقات العملاء بالذكاء الاصطناعي.
+
+## 10. التسويق الآلي
+
+حملات تسويقية مستهدفة ومؤتمتة.`
+  },
+  'lead-qualification-strategies': {
+    slug: 'lead-qualification-strategies',
+    title: 'استراتيجيات تأهيل العملاء المحتملين في 5 دقائق',
+    excerpt: 'تعلم كيف تحدد العملاء الجادين بسرعة وتوفر وقتك للصفقات الحقيقية.',
+    category: 'مبيعات',
+    date: '16 فبراير 2026',
+    readingTime: 6,
+    content: `# فن تأهيل العملاء
+
+ليس كل من يسأل عن عقار هو عميل محتمل. تعلم كيف تميز الجاد من المتصفح.
+
+## معايير التأهيل الأساسية (BANT)
+
+### Budget - الميزانية
+هل لديه القدرة المالية؟
+
+### Authority - الصلاحية
+هل هو صاحب القرار؟
+
+### Need - الحاجة
+هل لديه حاجة حقيقية؟
+
+### Timeline - التوقيت
+متى يريد الشراء؟
+
+## الأسئلة الذهبية
+
+1. ما الذي دفعك للتفكير في العقار الآن؟
+2. هل زرت عقارات مشابهة؟
+3. ما أهم 3 معايير لك؟
+4. متى تريد الانتقال؟
+5. هل تحتاج تمويل؟
+
+## علامات العميل الجاد
+
+- يطرح أسئلة تفصيلية
+- متجاوب وسريع الرد
+- لديه ميزانية واضحة
+- يطلب معاينة
+
+## علامات المتصفح
+
+- أسئلة عامة فقط
+- لا يحدد ميزانية
+- غير متجاوب
+- يؤجل المواعيد`
+  }
+}
 
 export default function BlogPostPage({
   params,
@@ -183,7 +308,7 @@ export default function BlogPostPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = use(params)
-  const post = blogPosts[slug]
+  const post = defaultPosts[slug]
 
   if (!post) {
     return (
@@ -199,6 +324,27 @@ export default function BlogPostPage({
         </div>
       </div>
     )
+  }
+
+  const relatedPosts = Object.values(defaultPosts)
+    .filter(p => p.category === post.category && p.slug !== slug)
+    .slice(0, 3)
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          text: post.excerpt,
+          url: window.location.href,
+        })
+      } catch (err) {
+        console.log('Share cancelled')
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      alert('تم نسخ الرابط!')
+    }
   }
 
   return (
@@ -219,143 +365,144 @@ export default function BlogPostPage({
           </Link>
         </motion.div>
 
-        <div className="grid lg:grid-cols-[1fr_280px] gap-12">
-          {/* Main Content */}
-          <div>
-            {/* Header */}
-            <motion.header
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              {/* Category Badge */}
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-white text-sm font-semibold rounded-full mb-4">
-                <Tag className="w-3 h-3" />
-                {post.category}
-              </span>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <motion.header
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            {/* Category Badge */}
+            <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-white text-sm font-semibold rounded-full mb-4">
+              <Tag className="w-3 h-3" />
+              {post.category}
+            </span>
 
-              {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-cairo font-bold text-text-primary mb-6 leading-tight">
-                {post.title}
-              </h1>
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-cairo font-bold text-text-primary mb-6 leading-tight">
+              {post.title}
+            </h1>
 
-              {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-text-secondary">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>{post.date}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{post.readingTime} دقائق قراءة</span>
-                </div>
-                <button className="flex items-center gap-2 hover:text-primary transition-colors">
-                  <Share2 className="w-4 h-4" />
-                  <span>مشاركة</span>
-                </button>
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-4 text-text-secondary">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>{post.date}</span>
               </div>
-            </motion.header>
-
-            {/* Content */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="prose prose-lg max-w-none"
-            >
-              {/* Render markdown content */}
-              <div
-                className="text-text-secondary leading-relaxed space-y-6"
-                dangerouslySetInnerHTML={{
-                  __html: post.content
-                    .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-cairo font-bold text-text-primary mt-8 mb-4">$1</h2>')
-                    .replace(/^### (.+)$/gm, '<h3 class="text-xl font-cairo font-bold text-text-primary mt-6 mb-3">$1</h3>')
-                    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-text-primary font-semibold">$1</strong>')
-                    .replace(/^- (.+)$/gm, '<li class="mr-4 mb-2 list-disc list-inside">$1</li>')
-                    .replace(/^(\d+)\. (.+)$/gm, '<li class="mr-4 mb-2 list-decimal list-inside">$2</li>')
-                    .replace(/\n\n/g, '</p><p class="mb-4">')
-                }}
-              />
-            </motion.div>
-
-            {/* Share Section */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mt-12 pt-8 border-t border-border"
-            >
-              <p className="text-text-secondary mb-4">شارك هذا المقال:</p>
-              <div className="flex items-center gap-3">
-                <button className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-primary hover:border-primary transition-all">
-                  <Share2 className="w-5 h-5" />
-                </button>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>{post.readingTime} دقائق قراءة</span>
               </div>
-            </motion.div>
-          </div>
-
-          {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              {/* Table of Contents */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-surface border border-border rounded-2xl p-6 mb-6"
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 hover:text-primary transition-colors"
               >
-                <h3 className="font-cairo font-bold text-text-primary mb-4">
-                  محتويات المقال
-                </h3>
-                <nav className="space-y-2">
-                  {tableOfContents.map((item) => (
-                    <a
-                      key={item.id}
-                      href={`#${item.id}`}
-                      className="block text-text-secondary hover:text-primary transition-colors text-sm py-1"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
-              </motion.div>
-
-              {/* CTA */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 rounded-2xl p-6"
-              >
-                <h3 className="font-cairo font-bold text-text-primary mb-2">
-                  جرّب نظام صقر
-                </h3>
-                <p className="text-text-secondary text-sm mb-4">
-                  ابدأ بالرد الآلي الذكي اليوم
-                </p>
-                <Link href="/products/saqr" className="btn-primary text-sm w-full justify-center">
-                  ابدأ مجاناً
-                </Link>
-              </motion.div>
+                <Share2 className="w-4 h-4" />
+                <span>مشاركة</span>
+              </button>
             </div>
-          </aside>
-        </div>
+          </motion.header>
 
-        {/* Related Posts */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-16 pt-16 border-t border-border"
-        >
-          <h2 className="text-2xl font-cairo font-bold text-text-primary mb-8">
-            مقالات ذات صلة
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {relatedPosts.map((post) => (
-              <BlogCard key={post.slug} {...post} />
-            ))}
-          </div>
-        </motion.section>
+          {/* Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="prose prose-lg prose-invert max-w-none"
+          >
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="text-3xl font-cairo font-bold text-text-primary mt-8 mb-4">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="text-2xl font-cairo font-bold text-text-primary mt-8 mb-4">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-xl font-cairo font-bold text-text-primary mt-6 mb-3">{children}</h3>
+                ),
+                p: ({ children }) => (
+                  <p className="text-text-secondary leading-relaxed mb-4">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc list-inside text-text-secondary mb-4 space-y-2">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal list-inside text-text-secondary mb-4 space-y-2">{children}</ol>
+                ),
+                li: ({ children }) => (
+                  <li className="text-text-secondary">{children}</li>
+                ),
+                strong: ({ children }) => (
+                  <strong className="text-text-primary font-bold">{children}</strong>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-r-4 border-primary pr-4 my-4 italic text-text-secondary">{children}</blockquote>
+                ),
+                code: ({ children }) => (
+                  <code className="bg-surface px-2 py-1 rounded text-primary text-sm">{children}</code>
+                ),
+                pre: ({ children }) => (
+                  <pre className="bg-surface p-4 rounded-xl overflow-x-auto mb-4">{children}</pre>
+                ),
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
+          </motion.div>
+
+          {/* Related Posts */}
+          {relatedPosts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-16 pt-8 border-t border-border"
+            >
+              <h2 className="text-2xl font-cairo font-bold text-text-primary mb-6">
+                مقالات ذات صلة
+              </h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                {relatedPosts.map((relPost) => (
+                  <Link
+                    key={relPost.slug}
+                    href={`/blog/${relPost.slug}`}
+                    className="bg-surface border border-border rounded-xl p-4 hover:border-primary/50 transition-colors group"
+                  >
+                    <h3 className="font-cairo font-bold text-text-primary group-hover:text-primary transition-colors line-clamp-2">
+                      {relPost.title}
+                    </h3>
+                    <p className="text-sm text-text-secondary mt-2 line-clamp-2">
+                      {relPost.excerpt}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-16 bg-gradient-to-br from-primary/10 to-background border border-primary/20 rounded-2xl p-8 text-center"
+          >
+            <h3 className="text-2xl font-cairo font-bold text-text-primary mb-4">
+              جاهز لتحويل مكتبك العقاري؟
+            </h3>
+            <p className="text-text-secondary mb-6 max-w-xl mx-auto">
+              ابدأ اليوم بتجربة نظام صقر مجاناً واكتشف كيف يمكن للذكاء الاصطناعي مضاعفة مبيعاتك
+            </p>
+            <Link
+              href="/demo"
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              جرّب مجاناً
+              <ArrowRight className="w-5 h-5 rotate-180" />
+            </Link>
+          </motion.div>
+        </div>
       </article>
     </div>
   )

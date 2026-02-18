@@ -40,13 +40,24 @@ export function BlogCard({
     >
       {/* Cover Image */}
       <div className="relative h-48 md:h-56 bg-background overflow-hidden">
-        {coverImage ? (
-          <Image
-            src={coverImage}
-            alt={title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        {coverImage && coverImage.length > 50 ? (
+          coverImage.startsWith('data:') ? (
+            <img
+              src={coverImage}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : (
+            <Image
+              src={coverImage}
+              alt={title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          )
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-background flex items-center justify-center">
             <span className="text-4xl">📝</span>

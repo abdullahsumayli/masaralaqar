@@ -57,12 +57,12 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <Building2 className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-xl">
+            🦅
           </div>
           <div>
-            <span className="font-cairo font-bold text-lg text-text-primary block">مسار العقار</span>
-            <span className="text-xs text-text-muted">لوحة التحكم</span>
+            <span className="font-cairo font-bold text-lg text-text-primary block">نظام صقر</span>
+            <span className="text-xs text-text-muted">لوحة تحكم المكتب</span>
           </div>
         </Link>
       </div>

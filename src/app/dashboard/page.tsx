@@ -90,8 +90,8 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">مرحباً، عبدالله 👋</h1>
-          <p className="text-text-secondary mt-1">إليك نظرة عامة على أداء مكتبك اليوم</p>
+          <h1 className="text-2xl font-bold text-text-primary">مرحباً بك في نظام صقر 👋</h1>
+          <p className="text-text-secondary mt-1">إليك نظرة عامة على أداء مكتبك العقاري اليوم</p>
         </div>
         <div className="flex items-center gap-3">
           <select className="bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary">

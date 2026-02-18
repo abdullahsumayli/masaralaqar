@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Building2, Linkedin, Twitter, MessageCircle } from 'lucide-react'
+import Image from 'next/image'
+import { Linkedin, Twitter, MessageCircle } from 'lucide-react'
 
 const quickLinks = [
   { href: '/', label: 'الرئيسية' },
@@ -25,12 +26,15 @@ export function Footer() {
     <footer className="bg-surface border-t border-border">
       <div className="container-custom py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
+              <Image
+                src="/logo.jpeg"
+                alt="مسار العقار"
+                width={44}
+                height={44}
+                className="rounded-lg"
+              />
               <span className="font-cairo font-bold text-xl text-text-primary">
                 مسار العقار
               </span>

@@ -162,8 +162,8 @@ export default function SaqrPage() {
               ابدأ تجربتك المجانية
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <Link href="#pricing" className="btn-outline inline-flex items-center gap-2">
-              شاهد الأسعار
+            <Link href="/demo" className="btn-outline inline-flex items-center gap-2">
+              🎬 شاهد الديمو
             </Link>
           </div>
         </motion.div>

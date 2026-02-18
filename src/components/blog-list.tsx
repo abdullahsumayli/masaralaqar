@@ -25,63 +25,16 @@ interface BlogPost {
   image?: string
 }
 
-const defaultPosts: BlogPost[] = [
-  {
-    slug: 'ai-in-real-estate-filtering',
-    title: 'كيف يعمل الذكاء الاصطناعي في تصفية عملاء العقار',
-    excerpt: 'شرح مبسط لكيفية استخدام AI في فرز العملاء الجادين من المتصفحين وتوفير وقتك الثمين.',
-    category: 'ذكاء اصطناعي',
-    date: '1 فبراير 2026',
-    readingTime: 6,
-  },
-  {
-    slug: 'complete-automation-guide-2026',
-    title: 'دليل الأتمتة الكامل للمكاتب العقارية السعودية 2026',
-    excerpt: 'كل ما تحتاج معرفته عن أتمتة مكتبك العقاري: من الأدوات إلى الاستراتيجيات والنتائج المتوقعة.',
-    category: 'أتمتة',
-    date: '5 فبراير 2026',
-    readingTime: 8,
-  },
-  {
-    slug: 'losing-clients-due-to-late-response',
-    title: 'كيف يخسر مكتبك العقاري 60% من عملائه بسبب التأخر في الرد',
-    excerpt: 'دراسة تكشف أن 60% من العملاء المحتملين يتحولون للمنافسين خلال ساعة واحدة من عدم الرد.',
-    category: 'استراتيجية',
-    date: '10 فبراير 2026',
-    readingTime: 5,
-  },
-  {
-    slug: 'whatsapp-automation-tips',
-    title: '7 نصائح ذهبية لأتمتة واتساب في مكتبك العقاري',
-    excerpt: 'اكتشف أفضل الممارسات لاستخدام الواتساب الآلي في التواصل مع العملاء وزيادة المبيعات.',
-    category: 'أتمتة',
-    date: '12 فبراير 2026',
-    readingTime: 7,
-  },
-  {
-    slug: 'real-estate-tech-trends-2026',
-    title: 'أهم 10 تقنيات عقارية ستغير السوق السعودي في 2026',
-    excerpt: 'نظرة شاملة على التقنيات الحديثة التي ستشكل مستقبل السوق العقاري السعودي.',
-    category: 'تقنية عقارية',
-    date: '14 فبراير 2026',
-    readingTime: 10,
-  },
-  {
-    slug: 'lead-qualification-strategies',
-    title: 'استراتيجيات تأهيل العملاء المحتملين في 5 دقائق',
-    excerpt: 'تعلم كيف تحدد العملاء الجادين بسرعة وتوفر وقتك للصفقات الحقيقية.',
-    category: 'مبيعات',
-    date: '16 فبراير 2026',
-    readingTime: 6,
-  },
-]
+interface BlogListProps {
+  posts: BlogPost[]
+}
 
-export default function BlogPage() {
+export function BlogList({ posts }: BlogListProps) {
   const [activeCategory, setActiveCategory] = useState('الكل')
 
   const filteredPosts = activeCategory === 'الكل'
-    ? defaultPosts
-    : defaultPosts.filter((post) => post.category === activeCategory)
+    ? posts
+    : posts.filter((post) => post.category === activeCategory)
 
   return (
     <div className="min-h-screen pt-24 pb-16">

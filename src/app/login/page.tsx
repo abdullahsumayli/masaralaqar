@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function LoginPage() {
@@ -29,9 +30,13 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
-            </div>
+            <Image
+              src="/logo.jpeg"
+              alt="مسار العقار"
+              width={48}
+              height={48}
+              className="rounded-xl"
+            />
             <div>
               <span className="font-cairo font-bold text-2xl text-text-primary block">مسار العقار</span>
               <span className="text-sm text-text-muted">لوحة التحكم</span>
@@ -147,7 +152,13 @@ export default function LoginPage() {
         
         <div className="relative z-10 text-center max-w-md">
           <div className="w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-8">
-            <Building2 className="w-12 h-12 text-primary" />
+            <Image
+              src="/logo.jpeg"
+              alt="مسار العقار"
+              width={64}
+              height={64}
+              className="rounded-xl"
+            />
           </div>
           <h2 className="text-2xl font-bold text-text-primary mb-4">
             نظام إدارة متكامل

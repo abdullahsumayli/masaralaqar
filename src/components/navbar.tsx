@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Building2 } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navLinks = [
@@ -39,9 +40,13 @@ export function Navbar() {
         <nav className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center transition-all duration-300 group-hover:glow-orange-sm">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
+            <Image
+              src="/logo.jpeg"
+              alt="مسار العقار"
+              width={44}
+              height={44}
+              className="rounded-lg transition-all duration-300 group-hover:scale-105"
+            />
             <span className="font-cairo font-bold text-xl text-text-primary">
               مسار العقار
             </span>
