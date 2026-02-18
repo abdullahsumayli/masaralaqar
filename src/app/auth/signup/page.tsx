@@ -1,21 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, User, Building2, Loader2, AlertCircle } from 'lucide-react'
-import { signUp } from '@/lib/auth'
+import { Phone, Mail, User, Loader2, AlertCircle, CheckCircle, Zap, ArrowRight } from 'lucide-react'
+import { createLead } from '@/lib/leads'
 
 export default function SignUpPage() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    company: '',
+    phone: '',
     email: '',
-    password: '',
-    confirmPassword: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,36 +29,34 @@ export default function SignUpPage() {
 
     try {
       // Validation
-      if (!formData.name || !formData.company || !formData.email || !formData.password) {
+      if (!formData.name || !formData.phone || !formData.email) {
         throw new Error('جميع الحقول مطلوبة')
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('كلمات المرور غير متطابقة')
-      }
-
-      if (formData.password.length < 6) {
-        throw new Error('يجب أن تكون كلمة المرور 6 أحرف على الأقل')
       }
 
       if (!formData.email.includes('@')) {
         throw new Error('البريد الإلكتروني غير صحيح')
       }
 
-      const { user, error: signUpError } = await signUp(
-        formData.email,
-        formData.password,
-        formData.name,
-        formData.company
-      )
-
-      if (signUpError) {
-        throw new Error(signUpError)
+      // Validate Saudi phone number
+      const phoneRegex = /^(05|5|9665)\d{8}$/
+      const cleanPhone = formData.phone.replace(/\s/g, '')
+      if (!phoneRegex.test(cleanPhone)) {
+        throw new Error('رقم الجوال غير صحيح')
       }
 
-      if (user) {
-        // Redirect to success page
-        router.push('/auth/verify-email')
+      const { data, error: createError } = await createLead({
+        name: formData.name,
+        phone: cleanPhone,
+        email: formData.email,
+        source: 'website_trial',
+      })
+
+      if (createError) {
+        throw new Error(createError)
+      }
+
+      if (data) {
+        setSuccess(true)
       }
     } catch (err: any) {
       setError(err.message)
@@ -70,20 +65,51 @@ export default function SignUpPage() {
     }
   }
 
+  // Success State
+  if (success) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-4">تم التسجيل بنجاح! 🎉</h1>
+          <p className="text-gray-400 mb-6">
+            شكراً لك {formData.name}! سنتواصل معك خلال 24 ساعة لإعداد حسابك وربط واتساب.
+          </p>
+          <div className="bg-[#111] border border-white/10 rounded-xl p-6 mb-6">
+            <p className="text-gray-300 text-sm mb-3">تم إرسال تفاصيل التجربة إلى:</p>
+            <p className="text-primary font-bold">{formData.email}</p>
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          >
+            <ArrowRight className="w-4 h-4" />
+            العودة للصفحة الرئيسية
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-[#0a0e27] to-black flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب جديد</h1>
-          <p className="text-gray-400">انضم إلى آلاف المتخصصين العقاريين</p>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center mx-auto mb-4">
+            <Zap className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">ابدأ تجربتك المجانية</h1>
+          <p className="text-gray-400">14 يوم مجاناً - بدون بطاقة ائتمان</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Error Alert */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex gap-3">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <p className="text-red-400 text-sm">{error}</p>
             </div>
@@ -91,7 +117,7 @@ export default function SignUpPage() {
 
           {/* Name Input */}
           <div>
-            <label className="block text-sm font-medium text-white mb-2">الاسم الكامل</label>
+            <label className="block text-sm font-medium text-white mb-2">الاسم</label>
             <div className="relative">
               <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
@@ -99,25 +125,26 @@ export default function SignUpPage() {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="أحمد محمد"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none transition"
+                placeholder="أحمد العتيبي"
+                className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pr-11 pl-4 text-white placeholder-gray-600 focus:border-primary focus:outline-none transition"
                 disabled={loading}
               />
             </div>
           </div>
 
-          {/* Company Input */}
+          {/* Phone Input */}
           <div>
-            <label className="block text-sm font-medium text-white mb-2">اسم المكتب</label>
+            <label className="block text-sm font-medium text-white mb-2">رقم الجوال</label>
             <div className="relative">
-              <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
-                type="text"
-                name="company"
-                value={formData.company}
+                type="tel"
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
-                placeholder="مكتب أحمد العقاري"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none transition"
+                placeholder="05xxxxxxxx"
+                dir="ltr"
+                className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pr-11 pl-4 text-white placeholder-gray-600 focus:border-primary focus:outline-none transition text-left"
                 disabled={loading}
               />
             </div>
@@ -133,42 +160,9 @@ export default function SignUpPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="you@example.com"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none transition"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">كلمة المرور</label>
-            <div className="relative">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none transition"
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {/* Confirm Password Input */}
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">تأكيد كلمة المرور</label>
-            <div className="relative">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pr-10 pl-4 text-white placeholder-gray-500 focus:border-primary/50 focus:outline-none transition"
+                placeholder="ahmed@example.com"
+                dir="ltr"
+                className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pr-11 pl-4 text-white placeholder-gray-600 focus:border-primary focus:outline-none transition text-left"
                 disabled={loading}
               />
             </div>
@@ -178,7 +172,7 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2 mt-6"
+            className="w-full bg-gradient-to-r from-primary to-orange-600 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
           >
             {loading ? (
               <>
@@ -186,16 +180,21 @@ export default function SignUpPage() {
                 جاري التسجيل...
               </>
             ) : (
-              'إنشاء حساب'
+              'ابدأ التجربة المجانية'
             )}
           </button>
+
+          <p className="text-center text-gray-500 text-sm">
+            بالتسجيل، أنت توافق على{' '}
+            <a href="#" className="text-primary hover:underline">الشروط والأحكام</a>
+          </p>
         </form>
 
-        {/* Sign In Link */}
-        <p className="text-center text-gray-400 mt-6">
-          هل لديك حساب بالفعل؟{' '}
-          <Link href="/login" className="text-primary hover:underline">
-            دخول
+        {/* Back Link */}
+        <p className="text-center text-gray-400 mt-8">
+          <Link href="/" className="text-primary hover:underline flex items-center justify-center gap-2">
+            <ArrowRight className="w-4 h-4" />
+            العودة للصفحة الرئيسية
           </Link>
         </p>
       </div>

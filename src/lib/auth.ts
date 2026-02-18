@@ -34,6 +34,7 @@ export async function signUp(email: string, password: string, name: string, comp
         email: data.user.email,
         name,
         company,
+        role: 'user',
         created_at: new Date().toISOString(),
       })
     }

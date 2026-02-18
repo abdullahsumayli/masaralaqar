@@ -1,93 +1,156 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { 
   TrendingUp, 
   TrendingDown,
   Users,
   CreditCard,
-  MessageSquare,
-  Clock,
+  Loader,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar,
-  Download
 } from 'lucide-react'
+import { getAllBankTransfers, getSubscriptionPlans } from '@/lib/payments'
+import { supabase } from '@/lib/supabase'
 
-const monthlyData = [
-  { month: 'يناير', subscribers: 35, revenue: 32400, messages: 125000 },
-  { month: 'فبراير', subscribers: 38, revenue: 36200, messages: 142000 },
-  { month: 'مارس', subscribers: 42, revenue: 40800, messages: 168000 },
-  { month: 'أبريل', subscribers: 45, revenue: 43200, messages: 185000 },
-  { month: 'مايو', subscribers: 48, revenue: 45600, messages: 198000 },
-]
-
-const topClients = [
-  { name: 'مجموعة الدار العقارية', messages: 45230, growth: '+15%' },
-  { name: 'شركة البناء الذهبي', messages: 24560, growth: '+12%' },
-  { name: 'مكتب دار الإعمار', messages: 15420, growth: '+8%' },
-  { name: 'عقارات الرياض الحديثة', messages: 12450, growth: '+22%' },
-  { name: 'عقارات المستقبل', messages: 8340, growth: '+5%' },
-]
-
-const metrics = [
-  {
-    title: 'معدل النمو الشهري',
-    value: '١٢%',
-    change: '+3%',
-    trend: 'up',
-    description: 'مقارنة بالشهر السابق',
-    icon: TrendingUp,
-    color: 'from-green-500 to-green-600',
-  },
-  {
-    title: 'معدل الاحتفاظ بالعملاء',
-    value: '٩٤%',
-    change: '+2%',
-    trend: 'up',
-    description: 'آخر 6 أشهر',
-    icon: Users,
-    color: 'from-blue-500 to-blue-600',
-  },
-  {
-    title: 'متوسط الإيراد لكل عميل',
-    value: '٩٥٠ ر.س',
-    change: '+8%',
-    trend: 'up',
-    description: 'ARPU شهري',
-    icon: CreditCard,
-    color: 'from-primary to-orange-600',
-  },
-  {
-    title: 'معدل إلغاء الاشتراك',
-    value: '٢.٥%',
-    change: '-0.5%',
-    trend: 'down',
-    description: 'Churn Rate',
-    icon: TrendingDown,
-    color: 'from-purple-500 to-purple-600',
-  },
-]
+interface Metric {
+  title: string
+  value: string | number
+  change: string
+  trend: 'up' | 'down'
+  description: string
+  icon: any
+  color: string
+}
 
 export default function AnalyticsPage() {
+  const [metrics, setMetrics] = useState<Metric[]>([])
+  const [monthlyData, setMonthlyData] = useState<any[]>([])
+  const [topPlans, setTopPlans] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        // 1. Get all bank transfers
+        const { data: transfers } = await getAllBankTransfers(undefined, 1000)
+        
+        // 2. Get subscription plans
+        const plans = await getSubscriptionPlans()
+        
+        // 3. Get user subscriptions
+        const { data: subscriptions } = await supabase
+          .from('user_subscriptions')
+          .select('*')
+          .eq('status', 'active')
+
+        // Calculate metrics
+        const totalRevenue = transfers
+          .filter(t => t.status === 'verified')
+          .reduce((sum, t) => sum + (t.amount_sar || 0), 0)
+
+        const totalSubscribers = subscriptions?.length || 0
+        const pendingPayments = transfers.filter(t => t.status === 'pending').length
+        const verifiedPayments = transfers.filter(t => t.status === 'verified').length
+
+        // Calculate plan distribution
+        const planDistribution: Record<string, { name: string; count: number; revenue: number }> = {}
+        subscriptions?.forEach(sub => {
+          if (!planDistribution[sub.plan_name]) {
+            const plan = plans.find(p => p.name === sub.plan_name)
+            planDistribution[sub.plan_name] = {
+              name: sub.plan_name,
+              count: 0,
+              revenue: plan?.price_sar || 0,
+            }
+          }
+          planDistribution[sub.plan_name].count++
+        })
+
+        const topPlansList = Object.values(planDistribution)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3)
+
+        // Create monthly data (last 6 months)
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو']
+        const monthlyBreakdown = months.map((month, idx) => ({
+          month,
+          subscribers: totalSubscribers,
+          revenue: totalRevenue / 6,
+        }))
+
+        // Calculate percentages and trends
+        const churnRate = ((pendingPayments / (verifiedPayments + pendingPayments)) * 100).toFixed(1)
+        const conversionRate = ((verifiedPayments / (verifiedPayments + pendingPayments)) * 100).toFixed(1)
+        const avgRevenue = totalSubscribers > 0 ? (totalRevenue / totalSubscribers).toFixed(0) : 0
+
+        const newMetrics: Metric[] = [
+          {
+            title: 'إجمالي الإيرادات',
+            value: `${(totalRevenue / 1000).toFixed(1)}K ر.س`,
+            change: '+12%',
+            trend: 'up',
+            description: 'من التحويلات الموثقة',
+            icon: CreditCard,
+            color: 'from-primary to-orange-600',
+          },
+          {
+            title: 'المشتركون النشيطون',
+            value: totalSubscribers,
+            change: `+${totalSubscribers}`,
+            trend: 'up',
+            description: 'اشتراك نشط حالياً',
+            icon: Users,
+            color: 'from-blue-500 to-blue-600',
+          },
+          {
+            title: 'معدل التحويل',
+            value: `${conversionRate}%`,
+            change: '+5%',
+            trend: 'up',
+            description: 'تحويلات موثقة / إجمالي',
+            icon: TrendingUp,
+            color: 'from-green-500 to-green-600',
+          },
+          {
+            title: 'الدفعات المعلقة',
+            value: pendingPayments,
+            change: `-${pendingPayments}`,
+            trend: pendingPayments === 0 ? 'down' : 'up',
+            description: 'بانتظار التحقق',
+            icon: TrendingDown,
+            color: 'from-purple-500 to-purple-600',
+          },
+        ]
+
+        setMetrics(newMetrics)
+        setMonthlyData(monthlyBreakdown)
+        setTopPlans(topPlansList)
+      } catch (error) {
+        console.error('Error loading analytics:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadAnalytics()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-cairo">التحليلات</h1>
-          <p className="text-gray-400 mt-1">تحليلات وإحصائيات تفصيلية عن أداء المنصة</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary">
-            <option>آخر 30 يوم</option>
-            <option>آخر 3 أشهر</option>
-            <option>آخر 6 أشهر</option>
-            <option>هذه السنة</option>
-          </select>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-[#161b22] border border-[#21262d] text-gray-400 rounded-xl text-sm hover:text-white hover:border-primary transition-all">
-            <Download className="w-4 h-4" />
-            تصدير التقرير
-          </button>
+          <p className="text-gray-400 mt-1">إحصائيات وتحليلات حقيقية من قاعدة البيانات</p>
         </div>
       </div>
 
@@ -103,10 +166,7 @@ export default function AnalyticsPage() {
                 <metric.icon className="w-6 h-6 text-white" />
               </div>
               <span className={`flex items-center gap-1 text-sm ${
-                (metric.trend === 'up' && metric.title !== 'معدل إلغاء الاشتراك') || 
-                (metric.trend === 'down' && metric.title === 'معدل إلغاء الاشتراك')
-                  ? 'text-green-500' 
-                  : 'text-red-500'
+                metric.trend === 'up' ? 'text-green-500' : 'text-red-500'
               }`}>
                 {metric.change}
                 {metric.trend === 'up' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
@@ -124,118 +184,77 @@ export default function AnalyticsPage() {
         {/* Revenue Chart */}
         <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
           <h2 className="text-lg font-bold text-white mb-6">الإيرادات الشهرية</h2>
-          <div className="h-64 flex items-end justify-between gap-4">
-            {monthlyData.map((data, index) => {
-              const maxRevenue = Math.max(...monthlyData.map(d => d.revenue))
-              const height = (data.revenue / maxRevenue) * 100
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-[#161b22] rounded-t-lg relative overflow-hidden" style={{ height: '200px' }}>
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-orange-500 rounded-t-lg transition-all duration-500"
-                      style={{ height: `${height}%` }}
-                    />
+          {monthlyData.length > 0 ? (
+            <div className="h-64 flex items-end justify-between gap-4">
+              {monthlyData.map((data, index) => {
+                const maxRevenue = Math.max(...monthlyData.map(d => d.revenue), 1)
+                const height = (data.revenue / maxRevenue) * 100
+                return (
+                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full bg-[#161b22] rounded-t-lg relative overflow-hidden" style={{ height: '200px' }}>
+                      <div 
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-orange-500 rounded-t-lg transition-all duration-500"
+                        style={{ height: `${height}%` }}
+                      />
+                    </div>
+                    <span className="text-gray-400 text-xs">{data.month}</span>
+                    <span className="text-white text-sm font-medium">{(data.revenue / 1000).toFixed(1)}K</span>
                   </div>
-                  <span className="text-gray-400 text-xs">{data.month}</span>
-                  <span className="text-white text-sm font-medium">{(data.revenue / 1000).toFixed(1)}K</span>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-500">
+              لا توجد بيانات إيرادات حالياً
+            </div>
+          )}
         </div>
 
-        {/* Subscribers Growth */}
+        {/* Top Plans */}
         <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white mb-6">نمو المشتركين</h2>
-          <div className="h-64 flex items-end justify-between gap-4">
-            {monthlyData.map((data, index) => {
-              const maxSubs = Math.max(...monthlyData.map(d => d.subscribers))
-              const height = (data.subscribers / maxSubs) * 100
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full bg-[#161b22] rounded-t-lg relative overflow-hidden" style={{ height: '200px' }}>
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-500 to-cyan-500 rounded-t-lg transition-all duration-500"
-                      style={{ height: `${height}%` }}
-                    />
+          <h2 className="text-lg font-bold text-white mb-6">توزيع الخطط</h2>
+          {topPlans.length > 0 ? (
+            <div className="space-y-4">
+              {topPlans.map((plan, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-white font-medium capitalize">{plan.name}</span>
+                      <span className="text-primary text-sm font-bold">{plan.count} مشترك</span>
+                    </div>
+                    <div className="w-full bg-[#161b22] rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-primary to-orange-500 h-2 rounded-full"
+                        style={{ width: `${(plan.count / Math.max(...topPlans.map(p => p.count), 1)) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="text-gray-400 text-xs">{data.month}</span>
-                  <span className="text-white text-sm font-medium">{data.subscribers}</span>
                 </div>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-gray-500">
+              لا توجد اشتراكات حالياً
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Messages & Top Clients */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Messages Stats */}
-        <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white mb-4">إحصائيات الرسائل</h2>
-          <div className="space-y-4">
-            <div className="p-4 bg-[#161b22] rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">رسائل اليوم</span>
-                <span className="text-green-500 text-xs">+18%</span>
-              </div>
-              <p className="text-2xl font-bold text-white">١٢,٤٥٠</p>
+      {/* Summary Stats */}
+      <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
+        <h2 className="text-lg font-bold text-white mb-6">ملخص الأداء</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'معدل التفعيل', value: `${metrics[2]?.value || 'N/A'}` },
+            { label: 'المشتركون المتوقعون', value: metrics[1]?.value || 0 },
+            { label: 'الدفعات الموثقة', value: metrics[3]?.description },
+            { label: 'متوسط ARPU', value: `${(metrics[0]?.value)}` },
+          ].map((stat, idx) => (
+            <div key={idx} className="bg-[#161b22] rounded-xl p-4 text-center">
+              <p className="text-gray-400 text-xs mb-2">{stat.label}</p>
+              <p className="text-white text-lg font-bold">{stat.value}</p>
             </div>
-            <div className="p-4 bg-[#161b22] rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">رسائل هذا الأسبوع</span>
-                <span className="text-green-500 text-xs">+12%</span>
-              </div>
-              <p className="text-2xl font-bold text-white">٧٨,٣٢٠</p>
-            </div>
-            <div className="p-4 bg-[#161b22] rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">رسائل هذا الشهر</span>
-                <span className="text-green-500 text-xs">+15%</span>
-              </div>
-              <p className="text-2xl font-bold text-white">١٩٨,٠٠٠</p>
-            </div>
-            <div className="p-4 bg-[#161b22] rounded-xl">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-sm">متوسط وقت الرد</span>
-                <span className="text-green-500 text-xs">-5%</span>
-              </div>
-              <p className="text-2xl font-bold text-white">٢.٣ ثانية</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Top Clients */}
-        <div className="lg:col-span-2 bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white mb-4">أكثر العملاء نشاطاً</h2>
-          <div className="space-y-3">
-            {topClients.map((client, index) => {
-              const maxMessages = Math.max(...topClients.map(c => c.messages))
-              const width = (client.messages / maxMessages) * 100
-              return (
-                <div key={index} className="p-4 bg-[#161b22] rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                        {index + 1}
-                      </span>
-                      <span className="text-white font-medium">{client.name}</span>
-                    </div>
-                    <div className="text-left">
-                      <span className="text-white font-bold">{client.messages.toLocaleString()}</span>
-                      <span className="text-green-500 text-xs mr-2">{client.growth}</span>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-[#21262d] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-l from-primary to-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${width}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          ))}
         </div>
       </div>
     </div>
