@@ -111,12 +111,10 @@ export default function AdminBlogPage() {
   const handleSavePost = () => {
     if (!editingPost) return
 
-    // Generate slug if empty
+    // Generate slug if empty - handle Arabic titles
     if (!editingPost.slug) {
-      editingPost.slug = editingPost.title
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-')
+      // Use timestamp + random string for Arabic titles
+      editingPost.slug = `post-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
     }
 
     const existingIndex = posts.findIndex(p => p.id === editingPost.id)
