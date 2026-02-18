@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,6 +16,8 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { signOut } from '@/lib/auth'
 
 const menuItems = [
   {
@@ -51,6 +54,20 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { profile } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await signOut()
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <aside className="fixed right-0 top-0 h-screen w-64 bg-surface border-l border-border flex flex-col z-50">
@@ -91,18 +108,24 @@ export function Sidebar() {
 
       {/* Bottom Section */}
       <div className="p-4 border-t border-border space-y-2">
+        <div className="px-4 py-3 rounded-xl bg-border/50 text-xs">
+          <p className="text-text-muted">المستخدم</p>
+          <p className="text-text-primary font-medium mt-1 truncate">{profile?.email}</p>
+        </div>
         <Link
-          href="/dashboard/help"
+          href="/dashboard/settings"
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-border/50 hover:text-text-primary transition-all"
         >
-          <HelpCircle className="w-5 h-5" />
-          <span className="font-medium">المساعدة</span>
+          <Settings className="w-5 h-5" />
+          <span className="font-medium">الإعدادات</span>
         </Link>
         <button
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-50"
         >
           <LogOut className="w-5 h-5" />
-          <span className="font-medium">تسجيل الخروج</span>
+          <span className="font-medium">{loggingOut ? 'جاري الخروج...' : 'تسجيل الخروج'}</span>
         </button>
       </div>
     </aside>
