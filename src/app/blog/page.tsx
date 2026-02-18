@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BlogCard } from '@/components/blog-card'
 import { FileText } from 'lucide-react'
@@ -23,6 +23,7 @@ interface BlogPost {
   date: string
   readingTime: number
   image?: string
+  published?: boolean
 }
 
 const defaultPosts: BlogPost[] = [
@@ -33,6 +34,7 @@ const defaultPosts: BlogPost[] = [
     category: 'ذكاء اصطناعي',
     date: '1 فبراير 2026',
     readingTime: 6,
+    published: true,
   },
   {
     slug: 'complete-automation-guide-2026',
@@ -41,6 +43,7 @@ const defaultPosts: BlogPost[] = [
     category: 'أتمتة',
     date: '5 فبراير 2026',
     readingTime: 8,
+    published: true,
   },
   {
     slug: 'losing-clients-due-to-late-response',
@@ -49,6 +52,7 @@ const defaultPosts: BlogPost[] = [
     category: 'استراتيجية',
     date: '10 فبراير 2026',
     readingTime: 5,
+    published: true,
   },
   {
     slug: 'whatsapp-automation-tips',
@@ -57,6 +61,7 @@ const defaultPosts: BlogPost[] = [
     category: 'أتمتة',
     date: '12 فبراير 2026',
     readingTime: 7,
+    published: true,
   },
   {
     slug: 'real-estate-tech-trends-2026',
@@ -65,6 +70,7 @@ const defaultPosts: BlogPost[] = [
     category: 'تقنية عقارية',
     date: '14 فبراير 2026',
     readingTime: 10,
+    published: true,
   },
   {
     slug: 'lead-qualification-strategies',
@@ -73,15 +79,38 @@ const defaultPosts: BlogPost[] = [
     category: 'مبيعات',
     date: '16 فبراير 2026',
     readingTime: 6,
+    published: true,
   },
 ]
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('الكل')
+  const [posts, setPosts] = useState<BlogPost[]>(defaultPosts)
+
+  // Load posts from localStorage (from admin) and merge with defaults
+  useEffect(() => {
+    const savedPosts = localStorage.getItem('blogPosts')
+    if (savedPosts) {
+      try {
+        const adminPosts = JSON.parse(savedPosts)
+        // Filter published posts from admin
+        const publishedAdminPosts = adminPosts.filter((p: any) => p.published)
+        
+        if (publishedAdminPosts.length > 0) {
+          // Merge: admin posts take priority, then add defaults that don't exist in admin
+          const adminSlugs = publishedAdminPosts.map((p: any) => p.slug)
+          const defaultsNotInAdmin = defaultPosts.filter(p => !adminSlugs.includes(p.slug))
+          setPosts([...publishedAdminPosts, ...defaultsNotInAdmin])
+        }
+      } catch (e) {
+        console.error('Error loading posts:', e)
+      }
+    }
+  }, [])
 
   const filteredPosts = activeCategory === 'الكل'
-    ? defaultPosts
-    : defaultPosts.filter((post) => post.category === activeCategory)
+    ? posts
+    : posts.filter((post) => post.category === activeCategory)
 
   return (
     <div className="min-h-screen pt-24 pb-16">

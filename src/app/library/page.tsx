@@ -98,15 +98,23 @@ export default function LibraryPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [email, setEmail] = useState('')
 
-  // Load resources from localStorage (from admin)
+  // Load resources from localStorage (from admin) and merge with defaults
   useEffect(() => {
     const savedResources = localStorage.getItem('libraryResources')
     if (savedResources) {
-      const parsed = JSON.parse(savedResources)
-      // Only show published resources
-      const published = parsed.filter((r: any) => r.published)
-      if (published.length > 0) {
-        setResources(published)
+      try {
+        const adminResources = JSON.parse(savedResources)
+        // Filter published resources from admin
+        const publishedAdminResources = adminResources.filter((r: any) => r.published)
+        
+        if (publishedAdminResources.length > 0) {
+          // Merge: admin resources take priority, then add defaults that don't exist in admin
+          const adminIds = publishedAdminResources.map((r: any) => r.id)
+          const defaultsNotInAdmin = defaultResources.filter(r => !adminIds.includes(r.id))
+          setResources([...publishedAdminResources, ...defaultsNotInAdmin])
+        }
+      } catch (e) {
+        console.error('Error loading resources:', e)
       }
     }
   }, [])

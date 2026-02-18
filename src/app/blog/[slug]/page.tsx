@@ -1,9 +1,9 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Clock, Calendar, Share2, Tag } from 'lucide-react'
+import { ArrowRight, Clock, Calendar, Share2, Tag, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 
 interface BlogPost {
@@ -14,6 +14,8 @@ interface BlogPost {
   category: string
   date: string
   readingTime: number
+  image?: string
+  published?: boolean
 }
 
 const defaultPosts: Record<string, BlogPost> = {
@@ -308,7 +310,58 @@ export default function BlogPostPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = use(params)
-  const post = defaultPosts[slug]
+  const [post, setPost] = useState<BlogPost | null>(null)
+  const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // First try to get from localStorage (admin posts)
+    const savedPosts = localStorage.getItem('blogPosts')
+    let foundPost: BlogPost | null = null
+    let allPosts: BlogPost[] = Object.values(defaultPosts)
+
+    if (savedPosts) {
+      try {
+        const adminPosts: BlogPost[] = JSON.parse(savedPosts)
+        const publishedAdminPosts = adminPosts.filter(p => p.published)
+        
+        // Merge admin posts with defaults
+        const adminSlugs = publishedAdminPosts.map(p => p.slug)
+        const defaultsNotInAdmin = Object.values(defaultPosts).filter(p => !adminSlugs.includes(p.slug))
+        allPosts = [...publishedAdminPosts, ...defaultsNotInAdmin]
+        
+        // Find the post
+        foundPost = adminPosts.find(p => p.slug === slug && p.published) || null
+      } catch (e) {
+        console.error('Error loading posts:', e)
+      }
+    }
+
+    // If not found in localStorage, check defaults
+    if (!foundPost && defaultPosts[slug]) {
+      foundPost = defaultPosts[slug]
+    }
+
+    setPost(foundPost)
+
+    // Get related posts
+    if (foundPost) {
+      const related = allPosts
+        .filter(p => p.category === foundPost!.category && p.slug !== slug)
+        .slice(0, 3)
+      setRelatedPosts(related)
+    }
+
+    setLoading(false)
+  }, [slug])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    )
+  }
 
   if (!post) {
     return (
@@ -325,10 +378,6 @@ export default function BlogPostPage({
       </div>
     )
   }
-
-  const relatedPosts = Object.values(defaultPosts)
-    .filter(p => p.category === post.category && p.slug !== slug)
-    .slice(0, 3)
 
   const handleShare = async () => {
     if (navigator.share) {
