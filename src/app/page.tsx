@@ -51,7 +51,7 @@ export default function HomePage() {
     {
       icon: Zap,
       title: 'رد فوري 24/7',
-      description: 'يرد على واتساب بالذكاء الاصطناعي حتى وأنت نايم',
+      description: 'يرد على واتساب بالذكاء الاصطناعي حتى أثناء نومك',
     },
     {
       icon: Filter,
@@ -61,7 +61,7 @@ export default function HomePage() {
     {
       icon: Calendar,
       title: 'جدولة المعاينات',
-      description: 'يجدول المواعيد بدون ما تتدخل أنت',
+      description: 'يجدول المواعيد من دون تدخّل منك',
     },
   ]
 
@@ -119,7 +119,7 @@ export default function HomePage() {
     },
     {
       question: 'كم يستغرق الإعداد؟',
-      answer: '5-10 دقائق فقط. تربط واتساب، تضيف عقاراتك، وتخصص أسلوب الرد. وبس، صقر جاهز يشتغل.',
+      answer: '5-10 دقائق فقط. تربط واتساب، تضيف عقاراتك، وتخصص أسلوب الرد، فيبدأ صقر العمل فوراً.',
     },
     {
       question: 'ماذا يحدث بعد انتهاء التجربة؟',
@@ -175,7 +175,7 @@ export default function HomePage() {
               variants={fadeInUp}
               className="text-4xl md:text-6xl font-bold leading-tight mb-6"
             >
-              ما تخسر عميل بسبب
+              لا تخسر عميل بسبب
               <span className="text-primary"> رد متأخر </span>
               على واتساب
             </motion.h1>
@@ -184,7 +184,7 @@ export default function HomePage() {
               variants={fadeInUp}
               className="text-xl md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto"
             >
-              نظام صقر يرد على عملاءك فوراً، يصفي الجادين، ويجدول المعاينات - أنت نايم
+              نظام صقر يرد على عملائك فوراً، يصفي الجادين، ويجدول المعاينات حتى أثناء نومك
             </motion.p>
 
             <motion.div variants={fadeInUp} className="flex flex-col items-center gap-4">
@@ -249,10 +249,10 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-4">
-              هل تعاني من هذي المشاكل؟
+              هل تعاني من هذه المشاكل؟
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-400 text-lg">
-              معظم الوسطاء يخسرون صفقات بسبب هذي الأخطاء
+              معظم الوسطاء يخسرون صفقات بسبب هذه الأخطاء
             </motion.p>
           </motion.div>
 
@@ -293,7 +293,7 @@ export default function HomePage() {
               صقر يحل لك كل هذا
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-400 text-lg">
-              نظام ذكي يشتغل 24/7 عشانك تركز على إقفال الصفقات
+              نظام ذكي يعمل 24/7 لتتفرغ لإقفال الصفقات
             </motion.p>
           </motion.div>
 
@@ -332,7 +332,7 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-4">
-              كيف يشتغل صقر؟
+              كيف يعمل صقر؟
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-400 text-lg">
               3 خطوات بسيطة وتبدأ تستقبل عملاء جادين
@@ -425,7 +425,7 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-4">
-              خطة واحدة، كل شي مشمول
+              خطة واحدة، كل شيء مشمول
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-gray-400 text-lg">
               بدون خطط معقدة أو رسوم مخفية
