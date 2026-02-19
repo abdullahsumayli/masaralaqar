@@ -6,9 +6,9 @@
 
 @layer base {
   :root {
-    --primary: #1B4F72;
-    --primary-dark: #154360;
-    --primary-light: #5DADE2;
+    --primary: #F97316;
+    --primary-dark: #EA580C;
+    --primary-light: #FB923C;
     --secondary: #D4A017;
     --secondary-dark: #B8860B;
     --secondary-light: #F4D03F;
@@ -48,7 +48,16 @@
 
 @layer components {
   .glow-primary {
-    box-shadow: 0 0 30px rgba(27, 79, 114, 0.3);
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 30px rgba(212, 160, 23, 0.3);
+  }
+
+  .glow-border {
+    @apply border-primary/30;
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
   }
 
   .glow-secondary {

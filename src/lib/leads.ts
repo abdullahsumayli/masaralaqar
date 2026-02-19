@@ -5,6 +5,8 @@ export interface Lead {
   name: string
   phone: string
   email: string
+  subject?: string
+  message?: string
   source?: string
   status?: 'new' | 'contacted' | 'trial_started' | 'converted' | 'lost'
   created_at?: string

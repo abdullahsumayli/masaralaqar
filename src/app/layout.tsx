@@ -3,22 +3,45 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'نظام صقر — الرد الآلي الذكي للمكاتب العقارية',
-    template: '%s | نظام صقر',
+    default: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    template: '%s | مسار العقار',
   },
-  description: 'يرد على عملاءك فوراً على واتساب، يصفي الجادين، ويجدول المعاينات - أنت نايم. تجربة مجانية 14 يوم.',
-  keywords: ['نظام صقر','واتساب عقاري','رد آلي عقار','ذكاء اصطناعي عقاري','وسيط عقاري سعودي','أتمتة عقارية'],
+  description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري. نظام صقر للرد الآلي الذكي، الوساطة العقارية، والتدريب الاحترافي.',
+  keywords: ['مسار العقار','نظام صقر','واتساب عقاري','رد آلي عقار','ذكاء اصطناعي عقاري','وسيط عقاري','تدريب عقاري','أكاديمية عقارية','سوق العقار السعودي'],
   authors: [{ name: 'مسار العقار' }],
   creator: 'مسار العقار',
+  publisher: 'مسار العقار',
+  metadataBase: new URL('https://masaralaqar.com'),
   openGraph: {
     type: 'website',
     locale: 'ar_SA',
+    alternateLocale: 'en_US',
     url: 'https://masaralaqar.com',
-    siteName: 'نظام صقر',
-    title: 'نظام صقر — ما تخسر عميل بسبب رد متأخر',
-    description: 'يرد على عملاءك فوراً على واتساب، يصفي الجادين، ويجدول المعاينات - أنت نايم.',
+    siteName: 'مسار العقار',
+    title: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري. نظام صقر للرد الآلي الذكي، الوساطة العقارية، والتدريب الاحترافي.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'مسار العقار',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري.',
+    images: ['/og-image.jpg'],
   },
   robots: { index: true, follow: true },
+  alternates: {
+    languages: {
+      'ar': 'https://masaralaqar.com',
+      'en': 'https://masaralaqar.com/en',
+    },
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

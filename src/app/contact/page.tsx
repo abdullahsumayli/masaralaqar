@@ -13,6 +13,7 @@ import {
   Clock,
   CheckCircle,
 } from 'lucide-react'
+import { createLead } from '@/lib/leads'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -106,8 +107,27 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const subjectMap: Record<string, string> = {
+      saqr: 'استفسار عن نظام صقر',
+      brokerage: 'خدمات الوساطة العقارية',
+      academy: 'الأكاديمية والتدريب',
+      partnership: 'شراكات وتعاون',
+      support: 'دعم فني',
+      other: 'أخرى',
+    }
+
+    const { error } = await createLead({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+      subject: subjectMap[formData.subject] || formData.subject,
+      message: formData.message,
+      source: 'contact_form',
+    })
+    
+    if (error) {
+      alert('حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.')
+    }
     
     setIsSubmitting(false)
     setIsSubmitted(true)

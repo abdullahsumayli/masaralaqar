@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { getCurrentUser, getUserProfile } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 import { Loader } from 'lucide-react'
+
+// List of admin emails
+const ADMIN_EMAILS = ['sumayliabdullah@gmail.com']
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -26,9 +29,8 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
           return
         }
 
-        const profile = await getUserProfile(user.id)
-        
-        if (profile?.role === 'admin') {
+        // Check if email is in admin list
+        if (ADMIN_EMAILS.includes(user.email || '')) {
           setIsAuthorized(true)
         } else {
           // Not an admin, redirect to dashboard

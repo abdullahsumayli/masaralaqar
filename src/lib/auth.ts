@@ -159,3 +159,5 @@ export async function updatePassword(newPassword: string) {
     return { error: error.message }
   }
 }
+
+// Export lead functions

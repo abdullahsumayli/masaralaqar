@@ -20,6 +20,9 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError('')
 
+    // List of admin emails
+    const ADMIN_EMAILS = ['sumayliabdullah@gmail.com']
+
     try {
       // Sign in with Supabase
       await signIn(email, password)
@@ -32,9 +35,8 @@ export default function AdminLoginPage() {
         return
       }
 
-      const profile = await getUserProfile(user.id)
-      
-      if (profile?.role !== 'admin') {
+      // Check if email is in admin list
+      if (!ADMIN_EMAILS.includes(user.email || '')) {
         setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة')
         setIsLoading(false)
         return
