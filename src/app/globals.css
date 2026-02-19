@@ -6,15 +6,18 @@
 
 @layer base {
   :root {
-    --primary: #F97316;
-    --primary-dark: #EA6C0A;
-    --primary-light: #FED7AA;
-    --background: #0A0A0A;
-    --surface: #111111;
-    --border: #1F1F1F;
-    --text-primary: #FFFFFF;
-    --text-secondary: #A3A3A3;
-    --text-muted: #525252;
+    --primary: #1B4F72;
+    --primary-dark: #154360;
+    --primary-light: #5DADE2;
+    --secondary: #D4A017;
+    --secondary-dark: #B8860B;
+    --secondary-light: #F4D03F;
+    --background: #FFFFFF;
+    --surface: #F8F9FA;
+    --border: #E5E7EB;
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-muted: #9CA3AF;
 
     --radius: 0.75rem;
   }
@@ -28,7 +31,7 @@
   }
 
   body {
-    @apply bg-background text-text-primary font-ibm-arabic;
+    @apply bg-background text-text-primary font-cairo;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -44,33 +47,37 @@
 }
 
 @layer components {
-  .glow-orange {
-    box-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
+  .glow-primary {
+    box-shadow: 0 0 30px rgba(27, 79, 114, 0.3);
   }
 
-  .glow-orange-sm {
-    box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+  .glow-secondary {
+    box-shadow: 0 0 30px rgba(212, 160, 23, 0.3);
   }
 
   .glow-border {
-    @apply border border-primary/50;
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2), inset 0 0 20px rgba(249, 115, 22, 0.05);
+    @apply border border-primary/30;
+    box-shadow: 0 0 20px rgba(27, 79, 114, 0.15);
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:scale-[1.02] hover:glow-orange-sm;
+    @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg;
   }
 
   .btn-primary {
-    @apply bg-primary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary-dark hover:glow-orange-sm;
+    @apply bg-primary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary-dark hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-secondary-dark hover:shadow-lg;
   }
 
   .btn-outline {
-    @apply border border-primary/50 text-primary font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary/10 hover:border-primary;
+    @apply border-2 border-primary text-primary font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary hover:text-white;
   }
 
   .section-padding {
@@ -79,15 +86,6 @@
 
   .container-custom {
     @apply container mx-auto px-4 md:px-6 lg:px-8;
-  }
-
-  /* Particle background effect */
-  .particle-bg {
-    background-image: 
-      radial-gradient(circle at 20% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(249, 115, 22, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 60% 60%, rgba(249, 115, 22, 0.05) 0%, transparent 40%);
   }
 
   /* Custom scrollbar */

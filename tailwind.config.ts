@@ -12,16 +12,21 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#F97316',
-          dark: '#EA6C0A',
-          light: '#FED7AA',
+          DEFAULT: '#1B4F72',
+          dark: '#154360',
+          light: '#5DADE2',
         },
-        background: '#0A0A0A',
-        surface: '#111111',
-        border: '#1F1F1F',
-        'text-primary': '#FFFFFF',
-        'text-secondary': '#A3A3A3',
-        'text-muted': '#525252',
+        secondary: {
+          DEFAULT: '#D4A017',
+          dark: '#B8860B',
+          light: '#F4D03F',
+        },
+        background: '#FFFFFF',
+        surface: '#F8F9FA',
+        border: '#E5E7EB',
+        'text-primary': '#1F2937',
+        'text-secondary': '#6B7280',
+        'text-muted': '#9CA3AF',
       },
       fontFamily: {
         cairo: ['Cairo', 'sans-serif'],
