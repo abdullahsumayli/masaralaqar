@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { Lock, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { signIn, getCurrentUser, getUserProfile } from '@/lib/auth'
+import { signIn } from '@/lib/auth'
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -25,18 +25,16 @@ export default function AdminLoginPage() {
 
     try {
       // Sign in with Supabase
-      await signIn(email, password)
+      const result = await signIn(email, password)
       
-      // Check if user is admin
-      const user = await getCurrentUser()
-      if (!user) {
-        setError('فشل التحقق من بيانات المستخدم')
+      if (result.error) {
+        setError(result.error || 'بيانات الدخول غير صحيحة')
         setIsLoading(false)
         return
       }
-
+      
       // Check if email is in admin list
-      if (!ADMIN_EMAILS.includes(user.email || '')) {
+      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
         setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة')
         setIsLoading(false)
         return
