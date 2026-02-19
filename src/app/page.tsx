@@ -314,16 +314,14 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="https://saqr.masaralaqar.com"
-                  target="_blank"
+                  href="/products/saqr"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white font-bold rounded-xl hover:bg-secondary-dark transition-colors"
                 >
                   جرب صقر مجاناً
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="https://saqr.masaralaqar.com"
-                  target="_blank"
+                  href="/products/saqr"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-white/50 text-white font-bold rounded-xl hover:bg-white/10 transition-colors"
                 >
                   شاهد العرض
@@ -488,7 +486,7 @@ export default function HomePage() {
                 <li><Link href="/services#ai" className="hover:text-white transition-colors">حلول الذكاء الاصطناعي</Link></li>
                 <li><Link href="/services#brokerage" className="hover:text-white transition-colors">الوساطة العقارية</Link></li>
                 <li><Link href="/services#training" className="hover:text-white transition-colors">التدريب والاستشارات</Link></li>
-                <li><a href="https://saqr.masaralaqar.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">نظام صقر</a></li>
+                <li><Link href="/products/saqr" className="hover:text-white transition-colors">نظام صقر</Link></li>
               </ul>
             </div>
 
