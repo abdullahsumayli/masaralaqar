@@ -236,10 +236,13 @@ export default function SaqrPage() {
                 جرب مجاناً 14 يوم
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <button className="inline-flex items-center gap-2 px-8 py-4 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors text-lg">
+              <Link
+                href="/demo"
+                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors text-lg"
+              >
                 <Play className="w-5 h-5" />
                 شاهد العرض التوضيحي
-              </button>
+              </Link>
             </div>
 
             {/* Stats */}

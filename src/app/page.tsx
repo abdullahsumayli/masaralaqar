@@ -321,7 +321,7 @@ export default function HomePage() {
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/products/saqr"
+                  href="/demo"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-white/50 text-white font-bold rounded-xl hover:bg-white/10 transition-colors"
                 >
                   شاهد العرض
