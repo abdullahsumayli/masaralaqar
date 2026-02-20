@@ -645,7 +645,7 @@ export default function OnboardingPage() {
                 {/* Help */}
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
                   <p className="text-blue-400 text-sm">
-                    💡 تحتاج مساعدة في الربط؟ تواصل معنا عبر واتساب: <span dir="ltr" className="font-mono">+966 50 123 4567</span>
+                    💡 تحتاج مساعدة في الربط؟ تواصل معنا عبر واتساب: <span dir="ltr" className="font-mono">+966 54 537 4069</span>
                   </p>
                 </div>
               </div>

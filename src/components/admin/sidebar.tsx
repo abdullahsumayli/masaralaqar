@@ -96,7 +96,7 @@ export function AdminSidebar() {
       <div className="p-6 border-b border-[#21262d]">
         <Link href="/admin" className="flex items-center gap-3">
           <Image
-            src="/logo.jpeg"
+            src="/logo.png"
             alt="مسار العقار"
             width={44}
             height={44}

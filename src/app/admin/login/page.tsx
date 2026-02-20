@@ -61,7 +61,7 @@ export default function AdminLoginPage() {
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-8">
             <Image
-              src="/logo.jpeg"
+              src="/logo.png"
               alt="مسار العقار"
               width={56}
               height={56}

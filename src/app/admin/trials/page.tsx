@@ -20,7 +20,7 @@ const trials = [
     officeName: 'مكتب النخبة العقاري', 
     contactName: 'محمد العتيبي',
     email: 'mohammed@elite-office.sa',
-    phone: '+966501234567',
+    phone: '+966545374069',
     city: 'الرياض',
     employees: '5-10',
     requestDate: '2024-03-10 14:30',

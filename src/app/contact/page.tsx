@@ -23,9 +23,9 @@ const fadeInUp = {
 const contactInfo = [
   {
     icon: Phone,
-    label: 'الهاتف',
-    value: '+966 50 XXX XXXX',
-    href: 'tel:+966500000000',
+    label: 'الهاتف/واتساب',
+    value: '+966 54 537 4069',
+    href: 'https://wa.me/966545374069',
   },
   {
     icon: Mail,
@@ -68,7 +68,7 @@ const socialLinks = [
   },
   {
     name: 'واتساب',
-    href: 'https://wa.me/966500000000',
+    href: 'https://wa.me/966545374069',
     icon: <MessageCircle className="w-5 h-5" />,
   },
 ]
@@ -387,7 +387,7 @@ export default function ContactPage() {
                   تحدث مع فريقنا مباشرة عبر واتساب للحصول على رد سريع
                 </p>
                 <a
-                  href="https://wa.me/966500000000"
+                  href="https://wa.me/966545374069"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary rounded-xl font-bold hover:bg-white/90 transition-colors"

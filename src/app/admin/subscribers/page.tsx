@@ -20,7 +20,7 @@ const subscribers = [
     id: 1,
     name: 'مكتب دار الإعمار', 
     email: 'info@dar-alemar.sa',
-    phone: '+966501234567',
+    phone: '+966545374069',
     plan: 'الاحترافية', 
     price: '1,200 ر.س',
     startDate: '2024-01-15',
