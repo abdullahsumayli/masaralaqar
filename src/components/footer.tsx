@@ -12,7 +12,6 @@ const quickLinks = [
 
 const productLinks = [
   { href: '/products/saqr', label: 'نظام صقر' },
-  { href: '/products/eghlaq', label: 'منصة إغلاق' },
 ]
 
 const socialLinks = [
