@@ -1,142 +1,142 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { use } from 'react'
 import {
   Building2,
-  Phone,
-  ArrowLeft,
   ArrowRight,
   Calendar,
   Clock,
   User,
   Share2,
   MessageCircle,
+  Loader2,
 } from 'lucide-react'
+import { getBlogPostBySlug, getAllBlogPosts } from '@/lib/supabase'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
 }
 
-// Mock article data
-const getArticle = (slug: string) => {
-  const articles: Record<string, any> = {
-    'ai-in-real-estate': {
-      title: 'كيف يغير الذكاء الاصطناعي قطاع العقارات في السعودية؟',
-      excerpt: 'نظرة شاملة على تأثير التقنيات الحديثة في سوق العقار السعودي.',
-      category: 'ذكاء اصطناعي',
-      date: '15 فبراير 2026',
-      readTime: '8 دقائق',
-      author: 'فريق مسار العقار',
-      content: `
-        <h2>مقدمة</h2>
-        <p>يشهد قطاع العقارات في المملكة العربية السعودية تحولاً جذرياً بفضل التقنيات الحديثة، وعلى رأسها الذكاء الاصطناعي. هذا التحول يعيد تشكيل طريقة عمل الوسطاء العقاريين والشركات العقارية.</p>
-        
-        <h2>تطبيقات الذكاء الاصطناعي في العقار</h2>
-        <p>تتعدد تطبيقات الذكاء الاصطناعي في القطاع العقاري، ومن أبرزها:</p>
-        <ul>
-          <li>تحليل أسعار العقارات والتنبؤ بها</li>
-          <li>أتمتة خدمة العملاء عبر الشات بوت</li>
-          <li>تصفية العملاء المحتملين تلقائياً</li>
-          <li>إنشاء محتوى تسويقي ذكي</li>
-        </ul>
-        
-        <h2>فوائد الأتمتة للوسطاء</h2>
-        <p>يمكن للوسطاء العقاريين تحقيق العديد من الفوائد من خلال تبني الذكاء الاصطناعي:</p>
-        <ol>
-          <li>توفير الوقت في الرد على الاستفسارات المتكررة</li>
-          <li>التركيز على العملاء الجادين</li>
-          <li>تحسين تجربة العميل</li>
-          <li>زيادة معدل إغلاق الصفقات</li>
-        </ol>
-        
-        <h2>نظام صقر: مثال عملي</h2>
-        <p>يعتبر نظام صقر من مسار العقار مثالاً حياً على كيفية استخدام الذكاء الاصطناعي في خدمة الوسطاء العقاريين. يقدم النظام:</p>
-        <ul>
-          <li>رد آلي ذكي على رسائل واتساب</li>
-          <li>تصفية العملاء حسب الجدية</li>
-          <li>جدولة المعاينات تلقائياً</li>
-          <li>تقارير أداء مفصلة</li>
-        </ul>
-        
-        <h2>الخلاصة</h2>
-        <p>الذكاء الاصطناعي لم يعد ترفاً بل أصبح ضرورة للوسطاء الراغبين في البقاء في المنافسة. من يتبنى هذه التقنيات مبكراً سيكون في موقع أفضل للنجاح في السوق العقاري المتطور.</p>
-      `,
-    },
-    'real-estate-marketing-2026': {
-      title: 'أفضل استراتيجيات التسويق العقاري لعام 2026',
-      excerpt: 'تعرف على أحدث طرق التسويق العقاري الفعالة.',
-      category: 'نصائح للوسطاء',
-      date: '12 فبراير 2026',
-      readTime: '6 دقائق',
-      author: 'فريق مسار العقار',
-      content: `<h2>استراتيجيات التسويق العقاري</h2><p>محتوى المقالة...</p>`,
-    },
-  }
-  
-  return articles[slug] || articles['ai-in-real-estate']
+interface BlogPost {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  content: string
+  category: string
+  date: string
+  reading_time: number
+  image?: string
+  published: boolean
 }
-
-const relatedArticles = [
-  {
-    title: 'مستقبل الوساطة العقارية الرقمية',
-    category: 'ذكاء اصطناعي',
-    slug: 'digital-brokerage-future',
-  },
-  {
-    title: 'كيف تختار نظام CRM المناسب؟',
-    category: 'تقنية',
-    slug: 'choosing-crm-system',
-  },
-  {
-    title: 'أتمتة التسويق العقاري: دليل شامل',
-    category: 'تسويق',
-    slug: 'marketing-automation-guide',
-  },
-]
 
 export default function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
-  const article = getArticle(slug)
+  const [article, setArticle] = useState<BlogPost | null>(null)
+  const [relatedArticles, setRelatedArticles] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadArticle() {
+      setLoading(true)
+      try {
+        // Try to get from Supabase
+        const post = await getBlogPostBySlug(slug)
+        
+        if (post) {
+          setArticle(post)
+          
+          // Load related articles
+          const allPosts = await getAllBlogPosts(true)
+          const related = allPosts
+            .filter((p: BlogPost) => p.slug !== slug)
+            .slice(0, 3)
+          setRelatedArticles(related)
+        } else {
+          // Fallback to localStorage
+          const savedPosts = localStorage.getItem('blogPosts')
+          if (savedPosts) {
+            const posts = JSON.parse(savedPosts)
+            const found = posts.find((p: any) => p.slug === slug)
+            if (found) {
+              setArticle({
+                ...found,
+                reading_time: found.readingTime || found.reading_time || 5
+              })
+              const related = posts
+                .filter((p: any) => p.slug !== slug && p.published)
+                .slice(0, 3)
+              setRelatedArticles(related)
+            } else {
+              setError('المقال غير موجود')
+            }
+          } else {
+            setError('المقال غير موجود')
+          }
+        }
+      } catch (err) {
+        console.error('Error loading article:', err)
+        // Try localStorage as fallback
+        const savedPosts = localStorage.getItem('blogPosts')
+        if (savedPosts) {
+          const posts = JSON.parse(savedPosts)
+          const found = posts.find((p: any) => p.slug === slug)
+          if (found) {
+            setArticle({
+              ...found,
+              reading_time: found.readingTime || found.reading_time || 5
+            })
+          } else {
+            setError('المقال غير موجود')
+          }
+        } else {
+          setError('المقال غير موجود')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadArticle()
+  }, [slug])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error || !article) {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Navbar />
+        <div className="pt-32 pb-16 text-center">
+          <h1 className="text-2xl font-bold text-text-primary mb-4">المقال غير موجود</h1>
+          <p className="text-text-secondary mb-8">عذراً، لم نتمكن من العثور على المقال المطلوب.</p>
+          <Link href="/blog" className="btn-primary">
+            العودة للمدونة
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
 
   const shareUrl = `https://masaralaqar.com/blog/${slug}`
   const shareText = encodeURIComponent(article.title)
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
-              <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-primary font-medium">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
-            <Link href="/academy" className="text-text-secondary hover:text-primary transition-colors">الأكاديمية</Link>
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
-          </nav>
-
-          <Link
-            href="/contact"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-lg font-medium hover:bg-secondary-dark transition-colors"
-          >
-            <Phone className="w-4 h-4" />
-            تواصل معنا
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background text-text-primary" dir="rtl">
+      <Navbar />
 
       {/* Breadcrumb */}
       <div className="pt-24 pb-4 px-4 bg-surface">
@@ -168,7 +168,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             <div className="flex flex-wrap items-center gap-6 text-text-muted">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
-                <span>{article.author}</span>
+                <span>فريق مسار العقار</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                <span>{article.readTime} قراءة</span>
+                <span>{article.reading_time} دقائق قراءة</span>
               </div>
             </div>
           </motion.div>
@@ -186,7 +186,19 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       {/* Featured Image */}
       <section className="px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl -mt-4"></div>
+          {article.image ? (
+            <div className="relative aspect-video rounded-2xl overflow-hidden -mt-4">
+              <img
+                src={article.image}
+                alt={article.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl -mt-4 flex items-center justify-center">
+              <Building2 className="w-16 h-16 text-primary/40" />
+            </div>
+          )}
         </div>
       </section>
 
@@ -244,23 +256,40 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
       </section>
 
       {/* Related Articles */}
-      <section className="py-12 px-4 bg-surface">
-        <div className="max-w-4xl mx-auto">
-          <h3 className="text-2xl font-bold mb-8">مقالات ذات صلة</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {relatedArticles.map((related, index) => (
-              <Link
-                key={index}
-                href={`/blog/${related.slug}`}
-                className="bg-white border border-border rounded-xl p-6 hover:shadow-lg transition-shadow group"
-              >
-                <span className="text-sm text-primary mb-2 block">{related.category}</span>
-                <h4 className="font-bold group-hover:text-primary transition-colors">{related.title}</h4>
-              </Link>
-            ))}
+      {relatedArticles.length > 0 && (
+        <section className="py-12 px-4 bg-surface">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold mb-8">مقالات ذات صلة</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              {relatedArticles.map((related, index) => (
+                <Link
+                  key={index}
+                  href={`/blog/${related.slug}`}
+                  className="bg-white border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow group"
+                >
+                  {related.image ? (
+                    <div className="aspect-video">
+                      <img
+                        src={related.image}
+                        alt={related.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-primary/30" />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <span className="text-sm text-primary mb-2 block">{related.category}</span>
+                    <h4 className="font-bold group-hover:text-primary transition-colors line-clamp-2">{related.title}</h4>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Navigation */}
       <section className="py-8 px-4 border-t border-border">
@@ -275,20 +304,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-4 bg-primary text-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-lg">مسار العقار</span>
-          </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

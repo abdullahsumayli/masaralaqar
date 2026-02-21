@@ -1,16 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import {
   Building2,
-  Phone,
   Search,
   ArrowLeft,
   Calendar,
   Clock,
+  Loader2,
 } from 'lucide-react'
+import { getAllBlogPosts } from '@/lib/supabase'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -24,85 +27,66 @@ const staggerContainer = {
 
 const categories = [
   { id: 'all', name: 'الكل' },
-  { id: 'market', name: 'سوق عقاري' },
-  { id: 'ai', name: 'ذكاء اصطناعي' },
-  { id: 'tips', name: 'نصائح للوسطاء' },
-  { id: 'regulations', name: 'أنظمة وقوانين' },
-  { id: 'training', name: 'تدريب' },
+  { id: 'استراتيجية', name: 'استراتيجية' },
+  { id: 'أتمتة', name: 'أتمتة' },
+  { id: 'ذكاء اصطناعي', name: 'ذكاء اصطناعي' },
+  { id: 'تقنية عقارية', name: 'تقنية عقارية' },
+  { id: 'تسويق', name: 'تسويق' },
+  { id: 'مبيعات', name: 'مبيعات' },
 ]
 
-const articles = [
-  {
-    id: 1,
-    title: 'كيف يغير الذكاء الاصطناعي قطاع العقارات في السعودية؟',
-    excerpt: 'نظرة شاملة على تأثير التقنيات الحديثة في سوق العقار السعودي وكيف يمكن للوسطاء الاستفادة منها.',
-    category: 'ai',
-    categoryName: 'ذكاء اصطناعي',
-    date: '15 فبراير 2026',
-    readTime: '8 دقائق',
-    slug: 'ai-in-real-estate',
-    featured: true,
-  },
-  {
-    id: 2,
-    title: 'أفضل استراتيجيات التسويق العقاري لعام 2026',
-    excerpt: 'تعرف على أحدث طرق التسويق العقاري الفعالة التي يستخدمها المحترفون في السوق السعودي.',
-    category: 'tips',
-    categoryName: 'نصائح للوسطاء',
-    date: '12 فبراير 2026',
-    readTime: '6 دقائق',
-    slug: 'real-estate-marketing-2026',
-    featured: false,
-  },
-  {
-    id: 3,
-    title: 'دليل الوسيط العقاري المبتدئ: من أين تبدأ؟',
-    excerpt: 'كل ما تحتاج معرفته لبدء مسيرتك في الوساطة العقارية بالمملكة العربية السعودية.',
-    category: 'training',
-    categoryName: 'تدريب',
-    date: '10 فبراير 2026',
-    readTime: '12 دقائق',
-    slug: 'beginner-broker-guide',
-    featured: false,
-  },
-  {
-    id: 4,
-    title: 'تحديثات نظام الوساطة العقارية الجديد',
-    excerpt: 'ملخص شامل لأهم التعديلات في نظام الوساطة العقارية وتأثيرها على السوق.',
-    category: 'regulations',
-    categoryName: 'أنظمة وقوانين',
-    date: '8 فبراير 2026',
-    readTime: '5 دقائق',
-    slug: 'new-brokerage-regulations',
-    featured: false,
-  },
-  {
-    id: 5,
-    title: 'توقعات سوق العقار السعودي لعام 2026',
-    excerpt: 'تحليل معمق لاتجاهات السوق العقاري والفرص الاستثمارية المتوقعة.',
-    category: 'market',
-    categoryName: 'سوق عقاري',
-    date: '5 فبراير 2026',
-    readTime: '10 دقائق',
-    slug: 'saudi-real-estate-2026',
-    featured: false,
-  },
-  {
-    id: 6,
-    title: 'كيف تبني علاقات قوية مع العملاء؟',
-    excerpt: 'أسرار النجاح في بناء قاعدة عملاء وفية وتحقيق المبيعات المتكررة.',
-    category: 'tips',
-    categoryName: 'نصائح للوسطاء',
-    date: '3 فبراير 2026',
-    readTime: '7 دقائق',
-    slug: 'building-client-relationships',
-    featured: false,
-  },
-]
+interface Article {
+  id: string
+  title: string
+  excerpt: string
+  category: string
+  date: string
+  reading_time?: number
+  readingTime?: number
+  slug: string
+  image?: string
+  published: boolean
+}
 
 export default function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadArticles() {
+      setLoading(true)
+      try {
+        // Try Supabase first
+        const supabasePosts = await getAllBlogPosts(true)
+        if (supabasePosts && supabasePosts.length > 0) {
+          setArticles(supabasePosts)
+        } else {
+          // Fallback to localStorage
+          const savedPosts = localStorage.getItem('blogPosts')
+          if (savedPosts) {
+            const posts = JSON.parse(savedPosts)
+            const publishedPosts = posts.filter((p: any) => p.published)
+            setArticles(publishedPosts)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading articles:', error)
+        // Try localStorage as fallback
+        const savedPosts = localStorage.getItem('blogPosts')
+        if (savedPosts) {
+          const posts = JSON.parse(savedPosts)
+          const publishedPosts = posts.filter((p: any) => p.published)
+          setArticles(publishedPosts)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadArticles()
+  }, [])
 
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.includes(searchQuery) || article.excerpt.includes(searchQuery)
@@ -111,38 +95,8 @@ export default function BlogPage() {
   })
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
-              <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
-            </div>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-primary font-medium">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
-            <Link href="/academy" className="text-text-secondary hover:text-primary transition-colors">الأكاديمية</Link>
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
-          </nav>
-
-          <Link
-            href="/contact"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-lg font-medium hover:bg-secondary-dark transition-colors"
-          >
-            <Phone className="w-4 h-4" />
-            تواصل معنا
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background text-text-primary" dir="rtl">
+      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-12 px-4 bg-gradient-to-b from-primary/5 to-background">
@@ -198,9 +152,17 @@ export default function BlogPage() {
       {/* Articles Grid */}
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          {filteredArticles.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredArticles.length === 0 ? (
             <div className="text-center py-16">
+              <Building2 className="w-16 h-16 text-text-muted mx-auto mb-4" />
               <p className="text-text-secondary text-lg">لا توجد مقالات تطابق بحثك</p>
+              <Link href="/admin/blog" className="text-primary hover:underline mt-2 inline-block">
+                أضف مقالاً جديداً
+              </Link>
             </div>
           ) : (
             <motion.div
@@ -215,22 +177,34 @@ export default function BlogPage() {
                   variants={fadeInUp}
                   className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-shadow group"
                 >
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative">
-                    {article.featured && (
-                      <span className="absolute top-4 right-4 px-3 py-1 bg-secondary text-white text-xs font-bold rounded-full">
-                        مميز
-                      </span>
+                  {/* Article Image */}
+                  <Link href={`/blog/${article.slug}`}>
+                    {article.image ? (
+                      <div className="aspect-video overflow-hidden">
+                        <img
+                          src={article.image}
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <Building2 className="w-12 h-12 text-primary/30" />
+                      </div>
                     )}
-                  </div>
+                  </Link>
+                  
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full">
-                        {article.categoryName}
+                        {article.category}
                       </span>
                     </div>
-                    <h2 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {article.title}
-                    </h2>
+                    <Link href={`/blog/${article.slug}`}>
+                      <h2 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                        {article.title}
+                      </h2>
+                    </Link>
                     <p className="text-text-secondary text-sm mb-4 line-clamp-2">
                       {article.excerpt}
                     </p>
@@ -241,7 +215,7 @@ export default function BlogPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>{article.readTime}</span>
+                        <span>{article.reading_time || article.readingTime || 5} دقائق</span>
                       </div>
                     </div>
                     <Link
@@ -256,32 +230,10 @@ export default function BlogPage() {
               ))}
             </motion.div>
           )}
-
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-2 mt-12">
-            <button className="w-10 h-10 rounded-lg bg-primary text-white font-medium">1</button>
-            <button className="w-10 h-10 rounded-lg bg-surface text-text-secondary hover:bg-primary/10 transition-colors">2</button>
-            <button className="w-10 h-10 rounded-lg bg-surface text-text-secondary hover:bg-primary/10 transition-colors">3</button>
-            <span className="text-text-muted px-2">...</span>
-            <button className="w-10 h-10 rounded-lg bg-surface text-text-secondary hover:bg-primary/10 transition-colors">10</button>
-          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-4 bg-primary text-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-lg">مسار العقار</span>
-          </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

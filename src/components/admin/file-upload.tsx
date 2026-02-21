@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Upload, X, File, Image as ImageIcon, FileText, Video, Music, Archive, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { uploadToCloudinary, uploadFileToCloudinary, isCloudinaryConfigured } from '@/lib/cloudinary'
 
 interface UploadedFile {
   id: string
@@ -97,19 +98,32 @@ export function FileUpload({
         })
       }, 100)
 
-      let base64: string
+      let fileUrl: string
 
-      // Compress images before converting to base64
-      if (file.type && file.type.startsWith('image')) {
-        base64 = await compressImage(file, 500, 0.4)
+      // Try Cloudinary first
+      if (isCloudinaryConfigured()) {
+        const isImage = file.type && file.type.startsWith('image')
+        const uploadFn = isImage ? uploadToCloudinary : uploadFileToCloudinary
+        const { data, error: uploadError } = await uploadFn(file)
+        
+        if (uploadError || !data) {
+          console.warn('Cloudinary upload failed, falling back to base64:', uploadError)
+          // Fallback to base64
+          if (isImage) {
+            fileUrl = await compressImage(file, 800, 0.7)
+          } else {
+            fileUrl = await fileToBase64(file)
+          }
+        } else {
+          fileUrl = data.url
+        }
       } else {
-        // Convert to base64 for localStorage storage
-        base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = () => resolve(reader.result as string)
-          reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
-          reader.readAsDataURL(file)
-        })
+        // Use base64 directly (for local development without Cloudinary)
+        if (file.type && file.type.startsWith('image')) {
+          fileUrl = await compressImage(file, 500, 0.4)
+        } else {
+          fileUrl = await fileToBase64(file)
+        }
       }
 
       clearInterval(progressInterval)
@@ -121,16 +135,13 @@ export function FileUpload({
         name: file.name,
         size: file.size,
         type: file.type || 'application/octet-stream',
-        url: base64,
+        url: fileUrl,
         uploadedAt: new Date().toISOString(),
       }
 
-      // Skip saving to uploadedFiles to save space
-      // Just return the file for immediate use
-
       // Set preview for images
       if (file.type && file.type.startsWith('image')) {
-        setPreview(base64)
+        setPreview(fileUrl)
       }
 
       onUpload(uploadedFile)
@@ -183,6 +194,16 @@ export function FileUpload({
         img.onerror = () => reject(new Error('فشل في قراءة الصورة'))
         img.src = e.target?.result as string
       }
+      reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
       reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
       reader.readAsDataURL(file)
     })

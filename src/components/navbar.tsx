@@ -41,7 +41,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="مسار العقار"
               width={44}
               height={44}

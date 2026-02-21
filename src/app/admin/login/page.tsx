@@ -20,8 +20,9 @@ export default function AdminLoginPage() {
     setIsLoading(true)
     setError('')
 
-    // List of admin emails
-    const ADMIN_EMAILS = ['sumayliabdullah@gmail.com']
+    // List of admin emails from environment variable
+    const adminEmailsEnv = process.env.NEXT_PUBLIC_ADMIN_EMAILS || ''
+    const ADMIN_EMAILS = adminEmailsEnv.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
 
     try {
       // Sign in with Supabase
