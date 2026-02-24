@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { use } from 'react'
+import DOMPurify from 'dompurify'
 import {
   Building2,
   ArrowRight,
@@ -209,7 +210,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             {/* Main Content */}
             <article 
               className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
             />
 
             {/* Sidebar */}
