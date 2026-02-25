@@ -1,507 +1,700 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
-  Building2,
-  Phone,
+  Home,
+  BookOpen,
+  MessageSquare,
+  Calendar,
+  Trophy,
+  Users,
+  Bell,
+  Search,
   Play,
   Clock,
-  Users,
+  Heart,
+  MessageCircle,
+  Share2,
+  MoreHorizontal,
+  ChevronRight,
   Star,
+  Lock,
   CheckCircle,
+  Flame,
+  Crown,
+  Medal,
+  Award,
+  TrendingUp,
   GraduationCap,
-  BookOpen,
-  Trophy,
-  ArrowLeft,
-  Quote,
+  Zap,
 } from 'lucide-react'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+// Types
+interface Course {
+  id: string
+  title: string
+  description: string
+  thumbnail: string
+  instructor: string
+  duration: string
+  lessons: number
+  progress?: number
+  locked?: boolean
+  category: string
 }
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
+interface Discussion {
+  id: string
+  author: {
+    name: string
+    avatar: string
+    level: number
   }
+  content: string
+  image?: string
+  likes: number
+  comments: number
+  time: string
+  liked?: boolean
 }
 
-const learningPaths = [
-  {
-    level: 'مبتدئ',
-    title: 'أساسيات الوساطة العقارية',
-    description: 'ابدأ رحلتك في عالم العقار بأساسيات متينة',
-    courses: 8,
-    hours: 24,
-    students: 1250,
-    color: 'from-green-500 to-green-600',
-    topics: ['مقدمة في العقار', 'أنواع العقارات', 'التسويق الأساسي', 'خدمة العملاء'],
-  },
-  {
-    level: 'متوسط',
-    title: 'احتراف التسويق والمبيعات',
-    description: 'طوّر مهاراتك في التسويق والتفاوض وإغلاق الصفقات',
-    courses: 12,
-    hours: 40,
-    students: 890,
-    color: 'from-primary to-primary-dark',
-    topics: ['التسويق الرقمي', 'فن التفاوض', 'إدارة العلاقات', 'إغلاق الصفقات'],
-  },
-  {
-    level: 'متقدم',
-    title: 'التقنية والأتمتة',
-    description: 'استخدم الذكاء الاصطناعي والأتمتة لتتفوق على المنافسين',
-    courses: 6,
-    hours: 18,
-    students: 420,
-    color: 'from-secondary to-secondary-dark',
-    topics: ['الذكاء الاصطناعي', 'أتمتة العمليات', 'تحليل البيانات', 'أنظمة CRM'],
-  },
-]
+interface Member {
+  id: string
+  name: string
+  avatar: string
+  points: number
+  level: number
+  streak: number
+  badge?: 'gold' | 'silver' | 'bronze'
+}
 
-const featuredCourses = [
+// Mock Data
+const courses: Course[] = [
   {
-    title: 'دورة التسويق العقاري الرقمي',
+    id: '1',
+    title: 'أساسيات الوساطة العقارية',
+    description: 'تعلم أساسيات العمل كوسيط عقاري محترف من الصفر',
+    thumbnail: '/api/placeholder/400/225',
     instructor: 'أ. محمد الشهري',
-    duration: '8 ساعات',
+    duration: '10 ساعات',
     lessons: 24,
-    students: 450,
-    rating: 4.9,
-    price: 299,
-    level: 'متوسط',
+    progress: 65,
+    category: 'مبتدئ',
   },
   {
-    title: 'إتقان فن التفاوض العقاري',
+    id: '2',
+    title: 'التسويق العقاري الرقمي',
+    description: 'استراتيجيات التسويق الحديثة للعقارات عبر الإنترنت',
+    thumbnail: '/api/placeholder/400/225',
+    instructor: 'أ. سارة الدوسري',
+    duration: '8 ساعات',
+    lessons: 18,
+    progress: 30,
+    category: 'متوسط',
+  },
+  {
+    id: '3',
+    title: 'فن التفاوض وإغلاق الصفقات',
+    description: 'تقنيات احترافية للتفاوض وإغلاق الصفقات العقارية',
+    thumbnail: '/api/placeholder/400/225',
     instructor: 'أ. عبدالله القحطاني',
     duration: '6 ساعات',
-    lessons: 18,
-    students: 380,
-    rating: 4.8,
-    price: 249,
-    level: 'متقدم',
+    lessons: 15,
+    category: 'متقدم',
   },
   {
-    title: 'أساسيات الوساطة العقارية',
-    instructor: 'أ. سارة الدوسري',
-    duration: '10 ساعات',
-    lessons: 30,
-    students: 720,
-    rating: 4.9,
-    price: 199,
-    level: 'مبتدئ',
-  },
-  {
-    title: 'استخدام الذكاء الاصطناعي في العقار',
+    id: '4',
+    title: 'الذكاء الاصطناعي في العقار',
+    description: 'كيف تستخدم AI لأتمتة عملك العقاري',
+    thumbnail: '/api/placeholder/400/225',
     instructor: 'م. خالد العتيبي',
     duration: '5 ساعات',
-    lessons: 15,
-    students: 280,
-    rating: 4.7,
-    price: 349,
-    level: 'متقدم',
+    lessons: 12,
+    locked: true,
+    category: 'متقدم',
+  },
+  {
+    id: '5',
+    title: 'التصوير العقاري الاحترافي',
+    description: 'تعلم تصوير العقارات بشكل احترافي يجذب العملاء',
+    thumbnail: '/api/placeholder/400/225',
+    instructor: 'أ. فهد المالكي',
+    duration: '4 ساعات',
+    lessons: 10,
+    locked: true,
+    category: 'متوسط',
+  },
+  {
+    id: '6',
+    title: 'إدارة علاقات العملاء CRM',
+    description: 'استخدام أنظمة CRM لتنظيم وتتبع العملاء',
+    thumbnail: '/api/placeholder/400/225',
+    instructor: 'م. نورة الزهراني',
+    duration: '3 ساعات',
+    lessons: 8,
+    locked: true,
+    category: 'متوسط',
   },
 ]
 
-const testimonials = [
+const discussions: Discussion[] = [
   {
-    name: 'فهد المطيري',
-    role: 'وسيط عقاري',
-    content: 'بعد إكمال مسار المبتدئين، تضاعفت صفقاتي خلال 3 أشهر. المحتوى عملي جداً.',
-    rating: 5,
+    id: '1',
+    author: {
+      name: 'فهد المطيري',
+      avatar: '/api/placeholder/40/40',
+      level: 12,
+    },
+    content: 'شاركت اليوم في أول صفقة بعد تطبيق ما تعلمته من دورة التفاوض - النتيجة كانت مذهلة! العميل وافق على السعر المطلوب بالكامل. شكراً أكاديمية مسار العقار 🎉',
+    likes: 47,
+    comments: 12,
+    time: 'منذ ساعتين',
+    liked: true,
   },
   {
-    name: 'نورة الزهراني',
-    role: 'مسوقة عقارية',
-    content: 'دورة التسويق الرقمي غيرت طريقة عملي بالكامل. ممتازة للمحترفين.',
-    rating: 5,
+    id: '2',
+    author: {
+      name: 'نورة السالم',
+      avatar: '/api/placeholder/40/40',
+      level: 8,
+    },
+    content: 'سؤال للخبراء: ما هي أفضل استراتيجية للتسويق على انستقرام للعقارات السكنية؟ جربت عدة طرق لكن النتائج ليست كما توقعت.',
+    likes: 23,
+    comments: 34,
+    time: 'منذ 4 ساعات',
   },
   {
-    name: 'سعود الحربي',
-    role: 'مدير مبيعات',
-    content: 'محتوى الأكاديمية مميز ومحدث باستمرار. استثمار يستحق.',
-    rating: 5,
+    id: '3',
+    author: {
+      name: 'سعود الحربي',
+      avatar: '/api/placeholder/40/40',
+      level: 15,
+    },
+    content: 'نصيحة اليوم: لا تبدأ بعرض العقار مباشرة. اسأل العميل أولاً عن احتياجاته وأولوياته. هذا سيوفر عليك وقت كبير ويزيد نسبة الإغلاق بشكل ملحوظ.',
+    image: '/api/placeholder/600/300',
+    likes: 89,
+    comments: 28,
+    time: 'منذ 6 ساعات',
   },
 ]
 
-const benefits = [
-  {
-    icon: GraduationCap,
-    title: 'شهادات معتمدة',
-    description: 'احصل على شهادات إتمام معتمدة لكل دورة',
-  },
-  {
-    icon: BookOpen,
-    title: 'محتوى عملي',
-    description: 'تعلم من خلال أمثلة وحالات حقيقية من السوق السعودي',
-  },
-  {
-    icon: Users,
-    title: 'مجتمع داعم',
-    description: 'انضم لمجتمع من الوسطاء للتواصل وتبادل الخبرات',
-  },
-  {
-    icon: Trophy,
-    title: 'تحديث مستمر',
-    description: 'محتوى يتم تحديثه باستمرار ليواكب تطورات السوق',
-  },
+const leaderboard: Member[] = [
+  { id: '1', name: 'خالد العتيبي', avatar: '/api/placeholder/48/48', points: 2840, level: 24, streak: 45, badge: 'gold' },
+  { id: '2', name: 'سارة الدوسري', avatar: '/api/placeholder/48/48', points: 2650, level: 22, streak: 38, badge: 'silver' },
+  { id: '3', name: 'محمد الشهري', avatar: '/api/placeholder/48/48', points: 2420, level: 20, streak: 30, badge: 'bronze' },
+  { id: '4', name: 'فهد المطيري', avatar: '/api/placeholder/48/48', points: 2180, level: 18, streak: 25 },
+  { id: '5', name: 'نورة السالم', avatar: '/api/placeholder/48/48', points: 1950, level: 16, streak: 20 },
+  { id: '6', name: 'عبدالله القحطاني', avatar: '/api/placeholder/48/48', points: 1820, level: 15, streak: 18 },
+  { id: '7', name: 'ريم الزهراني', avatar: '/api/placeholder/48/48', points: 1650, level: 14, streak: 15 },
+  { id: '8', name: 'سعود الحربي', avatar: '/api/placeholder/48/48', points: 1520, level: 13, streak: 12 },
 ]
+
+const upcomingEvents = [
+  { title: 'ورشة التسويق الرقمي', date: 'الأحد 28 فبراير', time: '7:00 م', attendees: 45 },
+  { title: 'جلسة أسئلة وأجوبة مع الخبراء', date: 'الثلاثاء 2 مارس', time: '8:00 م', attendees: 120 },
+  { title: 'تحدي الـ 30 يوم للمبيعات', date: 'الأربعاء 3 مارس', time: '9:00 ص', attendees: 85 },
+]
+
+type TabType = 'community' | 'classroom' | 'calendar' | 'leaderboard'
 
 export default function AcademyPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('community')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const getBadgeIcon = (badge?: 'gold' | 'silver' | 'bronze') => {
+    switch (badge) {
+      case 'gold':
+        return <Crown className="w-5 h-5 text-yellow-500" />
+      case 'silver':
+        return <Medal className="w-5 h-5 text-gray-400" />
+      case 'bronze':
+        return <Award className="w-5 h-5 text-amber-600" />
+      default:
+        return null
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background text-text-primary">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <Navbar />
+      
+      {/* Top Header Bar */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo & Community Name */}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="font-bold text-gray-900">أكاديمية مسار العقار</h1>
+                <p className="text-xs text-gray-500">2,450 عضو • تعلم، تواصل، تطور</p>
+              </div>
             </div>
-            <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
-              <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
+
+            {/* Search */}
+            <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+              <div className="relative w-full">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="ابحث في المجتمع..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-100 rounded-xl pr-10 pl-4 py-2.5 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
-          </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
-            <Link href="/academy" className="text-primary font-medium">الأكاديمية</Link>
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
-          </nav>
-
-          <Link
-            href="/contact"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-lg font-medium hover:bg-secondary-dark transition-colors"
-          >
-            <Phone className="w-4 h-4" />
-            تواصل معنا
-          </Link>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 bg-gradient-to-b from-primary/5 to-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5"></div>
-        <div className="max-w-6xl mx-auto relative">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            className="text-center"
-          >
-            <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-              🎓 أكاديمية مسار العقار
-            </span>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              حوّل شغفك بالعقار إلى
-              <br />
-              <span className="text-primary">مهنة ناجحة</span>
-            </h1>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10">
-              دورات تدريبية متخصصة في الوساطة العقارية — من الأساسيات إلى الاحتراف، 
-              بواسطة خبراء السوق السعودي
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="#paths"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors text-lg"
-              >
-                استكشف المسارات
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <button className="inline-flex items-center gap-2 px-8 py-4 border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary/5 transition-colors text-lg">
-                <Play className="w-5 h-5" />
-                شاهد فيديو تعريفي
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               </button>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                م
+              </div>
             </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap justify-center gap-12 mt-16">
-              {[
-                { value: '+2,500', label: 'متدرب' },
-                { value: '+26', label: 'دورة' },
-                { value: '4.9', label: 'تقييم' },
-                { value: '+80', label: 'ساعة محتوى' },
-              ].map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-3xl font-bold text-primary">{stat.value}</div>
-                  <div className="text-text-muted">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Learning Paths */}
-      <section id="paths" className="py-20 px-4 bg-surface">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">اختر مسارك التعليمي</h2>
-            <p className="text-text-secondary text-lg">
-              ثلاث مسارات مصممة حسب مستواك وأهدافك
-            </p>
           </div>
+        </div>
+      </div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {learningPaths.map((path, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                className="bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all group"
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4">
+          <nav className="flex gap-1">
+            {[
+              { id: 'community', label: 'المجتمع', icon: Home },
+              { id: 'classroom', label: 'الدورات', icon: BookOpen },
+              { id: 'calendar', label: 'الفعاليات', icon: Calendar },
+              { id: 'leaderboard', label: 'المتصدرين', icon: Trophy },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`flex items-center gap-2 px-5 py-4 font-medium transition-colors border-b-2 ${
+                  activeTab === tab.id
+                    ? 'text-primary border-primary'
+                    : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
+                }`}
               >
-                <div className={`h-3 bg-gradient-to-l ${path.color}`}></div>
-                <div className="p-8">
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 bg-gradient-to-l ${path.color} text-white`}>
-                    {path.level}
-                  </span>
-                  <h3 className="font-bold text-xl mb-3">{path.title}</h3>
-                  <p className="text-text-secondary mb-6">{path.description}</p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-text-muted mb-6">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      {path.courses} دورات
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {path.hours} ساعة
-                    </span>
+                <tab.icon className="w-5 h-5" />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+          
+          {/* Main Content Area */}
+          <main>
+            <AnimatePresence mode="wait">
+              {activeTab === 'community' && (
+                <motion.div
+                  key="community"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-4"
+                >
+                  {/* Create Post */}
+                  <div className="bg-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        م
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="شارك شيئاً مع المجتمع..."
+                        className="flex-1 bg-gray-100 rounded-xl px-4 py-2.5 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2 mb-6">
-                    {path.topics.map((topic, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span>{topic}</span>
+                  {/* Discussions */}
+                  {discussions.map((post) => (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-xl p-5 border border-gray-200"
+                    >
+                      {/* Author */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                              {post.author.name.charAt(0)}
+                            </div>
+                            <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center font-bold">
+                              {post.author.level}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">{post.author.name}</h4>
+                            <p className="text-sm text-gray-500">{post.time}</p>
+                          </div>
+                        </div>
+                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                          <MoreHorizontal className="w-5 h-5" />
+                        </button>
                       </div>
+
+                      {/* Content */}
+                      <p className="text-gray-800 leading-relaxed mb-4">{post.content}</p>
+
+                      {/* Image */}
+                      {post.image && (
+                        <div className="mb-4 rounded-xl overflow-hidden bg-gray-100 aspect-video" />
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-6 pt-4 border-t border-gray-100">
+                        <button className={`flex items-center gap-2 transition-colors ${post.liked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}>
+                          <Heart className={`w-5 h-5 ${post.liked ? 'fill-current' : ''}`} />
+                          <span className="font-medium">{post.likes}</span>
+                        </button>
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">
+                          <MessageCircle className="w-5 h-5" />
+                          <span className="font-medium">{post.comments}</span>
+                        </button>
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">
+                          <Share2 className="w-5 h-5" />
+                          <span className="font-medium">مشاركة</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+
+              {activeTab === 'classroom' && (
+                <motion.div
+                  key="classroom"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  {/* Progress Banner */}
+                  <div className="bg-gradient-to-l from-primary to-orange-600 rounded-xl p-6 mb-6 text-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold mb-2">أكمل رحلتك التعليمية</h2>
+                        <p className="opacity-90">أنت في المستوى 8 - أكمل 3 دورات للوصول للمستوى التالي</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-bold">65%</div>
+                        <div className="text-sm opacity-90">مكتمل</div>
+                      </div>
+                    </div>
+                    <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full" style={{ width: '65%' }} />
+                    </div>
+                  </div>
+
+                  {/* Courses Grid */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {courses.map((course) => (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={`bg-white rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg transition-all ${course.locked ? 'opacity-75' : ''}`}
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {course.locked ? (
+                              <div className="w-12 h-12 rounded-full bg-gray-900/50 flex items-center justify-center">
+                                <Lock className="w-6 h-6 text-white" />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Play className="w-6 h-6 text-white fill-white mr-[-2px]" />
+                              </div>
+                            )}
+                          </div>
+                          {course.progress !== undefined && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-300">
+                              <div className="h-full bg-primary" style={{ width: `${course.progress}%` }} />
+                            </div>
+                          )}
+                          <span className={`absolute top-3 right-3 px-2 py-1 rounded-lg text-xs font-bold ${
+                            course.category === 'مبتدئ' ? 'bg-green-500 text-white' :
+                            course.category === 'متوسط' ? 'bg-yellow-500 text-white' :
+                            'bg-red-500 text-white'
+                          }`}>
+                            {course.category}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4">
+                          <h3 className="font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors">
+                            {course.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{course.description}</p>
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {course.duration}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Play className="w-4 h-4" />
+                                {course.lessons} درس
+                              </span>
+                            </div>
+                            {course.progress !== undefined && (
+                              <span className="text-primary font-medium">{course.progress}%</span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
                     ))}
                   </div>
+                </motion.div>
+              )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-border">
-                    <span className="text-sm text-text-muted flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {path.students.toLocaleString('ar-SA')} متدرب
-                    </span>
-                    <Link
-                      href="#"
-                      className="text-primary font-medium hover:underline flex items-center gap-1"
-                    >
-                      ابدأ المسار
-                      <ArrowLeft className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Featured Courses */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">الدورات المميزة</h2>
-              <p className="text-text-secondary">أكثر الدورات طلباً من متدربينا</p>
-            </div>
-            <Link
-              href="#"
-              className="hidden md:inline-flex items-center gap-2 text-primary font-medium hover:underline"
-            >
-              عرض جميع الدورات
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {featuredCourses.map((course, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-all group"
-              >
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 relative flex items-center justify-center">
-                  <Play className="w-12 h-12 text-primary/50" />
-                  <span className="absolute top-3 right-3 px-2 py-1 bg-white/90 rounded-full text-xs font-medium">
-                    {course.level}
-                  </span>
-                </div>
-                <div className="p-5">
-                  <h3 className="font-bold mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                    {course.title}
-                  </h3>
-                  <p className="text-text-muted text-sm mb-3">{course.instructor}</p>
+              {activeTab === 'calendar' && (
+                <motion.div
+                  key="calendar"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-4"
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">الفعاليات القادمة</h2>
                   
-                  <div className="flex items-center gap-3 text-xs text-text-muted mb-3">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {course.duration}
-                    </span>
-                    <span>{course.lessons} درس</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      <span className="font-medium">{course.rating}</span>
-                      <span className="text-text-muted text-xs">({course.students})</span>
-                    </div>
-                    <span className="font-bold text-primary">ر.س {course.price}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="py-20 px-4 bg-surface">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">لماذا أكاديمية مسار العقار؟</h2>
-            <p className="text-text-secondary text-lg">
-              مزايا تجعل تجربتك التعليمية فريدة
-            </p>
-          </div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {benefits.map((benefit, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                className="text-center"
-              >
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <benefit.icon className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-bold text-lg mb-2">{benefit.title}</h3>
-                <p className="text-text-secondary text-sm">{benefit.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">ماذا يقول متدربونا؟</h2>
-            <p className="text-text-secondary text-lg">
-              قصص نجاح من مجتمع مسار العقار
-            </p>
-          </div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid md:grid-cols-3 gap-8"
-          >
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                className="bg-white border border-border rounded-2xl p-8 relative"
-              >
-                <Quote className="w-10 h-10 text-primary/20 absolute top-6 left-6" />
-                <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  {upcomingEvents.map((event, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white rounded-xl p-5 border border-gray-200 flex items-center justify-between hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-orange-100 flex items-center justify-center">
+                          <Calendar className="w-7 h-7 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">{event.title}</h3>
+                          <p className="text-sm text-gray-500">{event.date} • {event.time}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <div className="flex items-center gap-1 text-gray-500">
+                            <Users className="w-4 h-4" />
+                            <span className="font-medium">{event.attendees}</span>
+                          </div>
+                          <span className="text-xs text-gray-400">مشارك</span>
+                        </div>
+                        <button className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                          سجل الآن
+                        </button>
+                      </div>
+                    </motion.div>
                   ))}
-                </div>
-                <p className="text-text-secondary mb-6">{testimonial.content}</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
-                    {testimonial.name[0]}
-                  </div>
-                  <div>
-                    <div className="font-bold">{testimonial.name}</div>
-                    <div className="text-text-muted text-sm">{testimonial.role}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+                </motion.div>
+              )}
 
-      {/* CTA */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary to-primary-dark text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              ابدأ رحلتك التعليمية اليوم
-            </h2>
-            <p className="text-white/80 text-lg mb-10">
-              انضم إلى أكثر من 2,500 وسيط عقاري طوّروا مهاراتهم معنا
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="#paths"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-secondary text-white rounded-xl font-bold hover:bg-secondary-dark transition-colors"
-              >
-                ابدأ التعلم مجاناً
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition-colors"
-              >
-                تواصل معنا
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+              {activeTab === 'leaderboard' && (
+                <motion.div
+                  key="leaderboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div className="p-5 border-b border-gray-100">
+                      <h2 className="text-xl font-bold text-gray-900">ترتيب الأعضاء</h2>
+                      <p className="text-gray-500">أكثر الأعضاء نشاطاً هذا الشهر</p>
+                    </div>
+                    
+                    {/* Top 3 */}
+                    <div className="grid grid-cols-3 gap-4 p-6 bg-gradient-to-b from-gray-50 to-white">
+                      {leaderboard.slice(0, 3).map((member, index) => (
+                        <motion.div
+                          key={member.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`text-center ${index === 1 ? 'order-first md:order-none' : ''}`}
+                        >
+                          <div className={`relative mx-auto mb-3 ${index === 0 ? 'w-20 h-20' : 'w-16 h-16'}`}>
+                            <div className={`w-full h-full rounded-full bg-gradient-to-br ${
+                              index === 0 ? 'from-yellow-400 to-yellow-600' :
+                              index === 1 ? 'from-gray-300 to-gray-500' :
+                              'from-amber-500 to-amber-700'
+                            } flex items-center justify-center text-white font-bold text-xl`}>
+                              {member.name.charAt(0)}
+                            </div>
+                            <span className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm ${
+                              index === 0 ? 'bg-yellow-500 text-white' :
+                              index === 1 ? 'bg-gray-400 text-white' :
+                              'bg-amber-600 text-white'
+                            }`}>
+                              {index + 1}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-gray-900">{member.name}</h4>
+                          <p className="text-sm text-gray-500">{member.points.toLocaleString()} نقطة</p>
+                          <div className="flex items-center justify-center gap-1 mt-1">
+                            <Flame className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm font-medium text-orange-500">{member.streak} يوم</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
 
-      {/* Footer */}
-      <footer className="py-8 px-4 bg-primary text-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+                    {/* Rest of Leaderboard */}
+                    <div className="divide-y divide-gray-100">
+                      {leaderboard.slice(3).map((member, index) => (
+                        <div key={member.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <span className="w-8 text-center font-bold text-gray-400">{index + 4}</span>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                              {member.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{member.name}</h4>
+                              <p className="text-sm text-gray-500">المستوى {member.level}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1 text-orange-500">
+                              <Flame className="w-4 h-4" />
+                              <span className="font-medium">{member.streak}</span>
+                            </div>
+                            <div className="text-left">
+                              <span className="font-bold text-gray-900">{member.points.toLocaleString()}</span>
+                              <span className="text-gray-500 text-sm mr-1">نقطة</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+
+          {/* Right Sidebar */}
+          <aside className="hidden lg:block space-y-6">
+            {/* Your Progress */}
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                تقدمك
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">المستوى</span>
+                  <span className="font-bold text-primary">8</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">النقاط</span>
+                  <span className="font-bold text-gray-900">1,240</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">الدورات المكتملة</span>
+                  <span className="font-bold text-gray-900">5</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">أيام متتالية</span>
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <span className="font-bold text-orange-500">12</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <span className="font-bold text-lg">مسار العقار</span>
-          </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
-          </p>
+
+            {/* Mini Leaderboard */}
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  المتصدرين
+                </span>
+                <button 
+                  onClick={() => setActiveTab('leaderboard')}
+                  className="text-primary text-sm hover:underline"
+                >
+                  عرض الكل
+                </button>
+              </h3>
+              <div className="space-y-3">
+                {leaderboard.slice(0, 5).map((member, index) => (
+                  <div key={member.id} className="flex items-center gap-3">
+                    <span className={`w-5 text-center font-bold ${
+                      index === 0 ? 'text-yellow-500' :
+                      index === 1 ? 'text-gray-400' :
+                      index === 2 ? 'text-amber-600' :
+                      'text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                      {member.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate text-sm">{member.name}</p>
+                    </div>
+                    <span className="text-sm font-medium text-gray-500">{member.points.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="bg-white rounded-xl p-5 border border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                فعاليات قادمة
+              </h3>
+              <div className="space-y-3">
+                {upcomingEvents.slice(0, 2).map((event, index) => (
+                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 text-sm">{event.title}</h4>
+                    <p className="text-xs text-gray-500 mt-1">{event.date}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="bg-gradient-to-br from-primary to-orange-600 rounded-xl p-5 text-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-6 h-6" />
+                <h3 className="font-bold">ترقية للـ Pro</h3>
+              </div>
+              <p className="text-sm opacity-90 mb-4">
+                احصل على وصول كامل لجميع الدورات والمحتوى الحصري
+              </p>
+              <button className="w-full bg-white text-primary font-bold py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+                ترقية الآن
+              </button>
+            </div>
+          </aside>
         </div>
-      </footer>
+      </div>
+
+      <Footer />
     </div>
   )
 }
