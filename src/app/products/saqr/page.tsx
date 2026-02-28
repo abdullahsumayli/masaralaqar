@@ -422,8 +422,8 @@ export default function SaqrPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/auth/signup"
+                <a
+                  href="https://app.masaralaqar.com/register"
                   className={`w-full block text-center py-3 rounded-xl font-bold transition-colors ${
                     plan.highlighted
                       ? 'bg-white text-primary hover:bg-white/90'
@@ -431,7 +431,7 @@ export default function SaqrPage() {
                   }`}
                 >
                   ابدأ التجربة المجانية
-                </Link>
+                </a>
               </motion.div>
             ))}
           </motion.div>
@@ -487,13 +487,13 @@ export default function SaqrPage() {
               ابدأ تجربتك المجانية اليوم واكتشف كيف يمكن لصقر مساعدتك
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/auth/signup"
+              <a
+                href="https://app.masaralaqar.com/register"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-secondary text-white rounded-xl font-bold hover:bg-secondary-dark transition-colors"
               >
                 جرب مجاناً 14 يوم
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
+              </a>
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition-colors"

@@ -65,14 +65,20 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button - Desktop */}
-          <div className="hidden md:block">
-            <Link
-              href="/contact"
+          {/* CTA Buttons - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            <a
+              href="https://app.masaralaqar.com"
+              className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium text-sm"
+            >
+              دخول النظام
+            </a>
+            <a
+              href="https://app.masaralaqar.com/register"
               className="btn-primary inline-flex items-center"
             >
-              تواصل معنا
-            </Link>
+              جرب مجاناً
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -106,14 +112,21 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <div className="px-4 pt-2">
-                  <Link
-                    href="/contact"
+                <div className="px-4 pt-2 space-y-2">
+                  <a
+                    href="https://app.masaralaqar.com/register"
                     onClick={() => setIsOpen(false)}
                     className="btn-primary inline-flex items-center justify-center w-full"
                   >
-                    تواصل معنا
-                  </Link>
+                    جرب مجاناً
+                  </a>
+                  <a
+                    href="https://app.masaralaqar.com"
+                    onClick={() => setIsOpen(false)}
+                    className="block text-center text-text-secondary hover:text-primary transition-colors py-2 text-sm font-medium"
+                  >
+                    دخول النظام
+                  </a>
                 </div>
               </div>
             </motion.div>
