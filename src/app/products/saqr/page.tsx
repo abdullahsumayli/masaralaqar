@@ -190,7 +190,7 @@ export default function SaqrPage() {
             <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
             <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
             <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
-            <Link href="/academy" className="text-text-secondary hover:text-primary transition-colors">الأكاديمية</Link>
+
             <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
             <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
           </nav>

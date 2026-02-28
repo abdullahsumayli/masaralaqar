@@ -53,11 +53,7 @@ const menuItems = [
     href: '/admin/library',
     icon: BookOpen,
   },
-  {
-    title: 'الأكاديمية',
-    href: '/admin/academy',
-    icon: GraduationCap,
-  },
+
   {
     title: 'مدير الملفات',
     href: '/admin/media',

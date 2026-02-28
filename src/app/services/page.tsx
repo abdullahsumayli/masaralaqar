@@ -129,8 +129,8 @@ const services = [
         description: 'برامج تدريب مخصصة للشركات والمكاتب العقارية',
       },
     ],
-    cta: 'استكشف الأكاديمية',
-    ctaLink: '/academy',
+    cta: 'تواصل معنا',
+    ctaLink: '/contact',
   },
 ]
 
@@ -184,7 +184,7 @@ export default function ServicesPage() {
             <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
             <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
             <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
-            <Link href="/academy" className="text-text-secondary hover:text-primary transition-colors">الأكاديمية</Link>
+
             <Link href="/services" className="text-primary font-medium">الخدمات</Link>
             <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
           </nav>

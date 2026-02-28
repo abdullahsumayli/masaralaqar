@@ -149,7 +149,7 @@ export default function HomePage() {
           <nav className="hidden lg:flex items-center gap-6">
             <Link href="/products/saqr" className="text-text-secondary hover:text-primary transition-colors font-medium">نظام صقر</Link>
             <Link href="/services" className="text-text-secondary hover:text-primary transition-colors font-medium">الخدمات</Link>
-            <Link href="/academy" className="text-text-secondary hover:text-primary transition-colors font-medium">الأكاديمية</Link>
+
             <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors font-medium">المدونة</Link>
           </nav>
 
@@ -506,7 +506,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-white/80">
                 <li><Link href="/products/saqr" className="hover:text-white transition-colors">نظام صقر</Link></li>
                 <li><Link href="/services" className="hover:text-white transition-colors">خدماتنا</Link></li>
-                <li><Link href="/academy" className="hover:text-white transition-colors">الأكاديمية</Link></li>
+
                 <li><Link href="/blog" className="hover:text-white transition-colors">المدونة</Link></li>
               </ul>
             </div>

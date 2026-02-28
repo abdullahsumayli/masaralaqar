@@ -12,7 +12,7 @@ const navLinks = [
   { href: '/blog', label: 'المدونة' },
   { href: '/products', label: 'المنتجات' },
   { href: '/library', label: 'المكتبة' },
-  { href: '/academy', label: 'الأكاديمية' },
+
 ]
 
 export function Navbar() {

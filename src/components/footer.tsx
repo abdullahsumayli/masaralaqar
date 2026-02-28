@@ -6,7 +6,7 @@ const quickLinks = [
   { href: '/', label: 'الرئيسية' },
   { href: '/blog', label: 'المدونة' },
   { href: '/library', label: 'المكتبة' },
-  { href: '/academy', label: 'الأكاديمية' },
+
   { href: '/contact', label: 'تواصل معنا' },
 ]
 
