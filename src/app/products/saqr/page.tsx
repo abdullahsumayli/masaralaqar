@@ -90,6 +90,7 @@ const plans = [
     price: '500',
     period: 'شهرياً',
     description: 'للمكاتب الصغيرة',
+    planKey: 'basic',
     features: [
       'رد آلي على واتساب',
       'حتى 500 محادثة/شهر',
@@ -103,6 +104,7 @@ const plans = [
     price: '1,000',
     period: 'شهرياً',
     description: 'للمكاتب المتوسطة',
+    planKey: 'advanced',
     features: [
       'كل مميزات الأساسي',
       'حتى 2,000 محادثة/شهر',
@@ -118,6 +120,7 @@ const plans = [
     price: '2,500',
     period: 'شهرياً',
     description: 'للشركات الكبيرة',
+    planKey: 'vip',
     features: [
       'كل مميزات المتقدم',
       'محادثات غير محدودة',
@@ -423,7 +426,7 @@ export default function SaqrPage() {
                   ))}
                 </ul>
                 <a
-                  href="https://app.masaralaqar.com/register"
+                  href={`https://app.masaralaqar.com/register?plan=${plan.planKey}`}
                   className={`w-full block text-center py-3 rounded-xl font-bold transition-colors ${
                     plan.highlighted
                       ? 'bg-white text-primary hover:bg-white/90'
