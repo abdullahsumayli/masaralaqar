@@ -426,7 +426,7 @@ export default function DemoPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://app.masaralaqar.com/register"
+                href="https://masaralaqar.com/register/app"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-white text-secondary rounded-xl font-bold hover:bg-white/90 transition-colors"
               >
                 ابدأ التجربة المجانية
