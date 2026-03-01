@@ -426,7 +426,7 @@ export default function SaqrPage() {
                   ))}
                 </ul>
                 <a
-                  href={`https://masaralaqar.com/register/app?plan=${plan.planKey}`}
+                  href="/auth/signup"
                   className={`w-full block text-center py-3 rounded-xl font-bold transition-colors ${
                     plan.highlighted
                       ? 'bg-white text-primary hover:bg-white/90'
@@ -491,7 +491,7 @@ export default function SaqrPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://masaralaqar.com/register/app"
+                href="/auth/signup"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-secondary text-white rounded-xl font-bold hover:bg-secondary-dark transition-colors"
               >
                 جرب مجاناً 14 يوم

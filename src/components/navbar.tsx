@@ -68,13 +68,13 @@ export function Navbar() {
           {/* CTA Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             <a
-              href="https://masaralaqar.com/app"
+              href="/login"
               className="text-text-secondary hover:text-primary transition-colors duration-200 font-medium text-sm"
             >
               دخول النظام
             </a>
             <a
-              href="https://masaralaqar.com/register/app"
+              href="/auth/signup"
               className="btn-primary inline-flex items-center"
             >
               جرب مجاناً
@@ -114,14 +114,14 @@ export function Navbar() {
                 ))}
                 <div className="px-4 pt-2 space-y-2">
                   <a
-                    href="https://masaralaqar.com/register/app"
+                    href="/auth/signup"
                     onClick={() => setIsOpen(false)}
                     className="btn-primary inline-flex items-center justify-center w-full"
                   >
                     جرب مجاناً
                   </a>
                   <a
-                    href="https://masaralaqar.com/app"
+                    href="/login"
                     onClick={() => setIsOpen(false)}
                     className="block text-center text-text-secondary hover:text-primary transition-colors py-2 text-sm font-medium"
                   >

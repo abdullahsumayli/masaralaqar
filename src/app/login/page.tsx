@@ -120,7 +120,7 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <p className="text-center text-gray-400 mt-6">
           لا تملك حساباً؟{' '}
-          <a href="https://masaralaqar.com/register/app" className="text-primary hover:underline">
+          <a href="/auth/signup" className="text-primary hover:underline">
             إنشاء حساب جديد
           </a>
         </p>
