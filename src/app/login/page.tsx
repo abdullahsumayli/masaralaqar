@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react'
 import { signIn } from '@/lib/auth'
 
@@ -121,9 +120,9 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <p className="text-center text-gray-400 mt-6">
           لا تملك حساباً؟{' '}
-          <Link href="/auth/signup" className="text-primary hover:underline">
+          <a href="https://app.masaralaqar.com/register" className="text-primary hover:underline">
             إنشاء حساب جديد
-          </Link>
+          </a>
         </p>
       </div>
     </div>

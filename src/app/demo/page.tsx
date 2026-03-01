@@ -425,13 +425,13 @@ export default function DemoPage() {
               14 يوم مجاناً — بدون بطاقة ائتمانية
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/auth/signup"
+              <a
+                href="https://app.masaralaqar.com/register"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-white text-secondary rounded-xl font-bold hover:bg-white/90 transition-colors"
               >
                 ابدأ التجربة المجانية
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
+              </a>
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition-colors"
