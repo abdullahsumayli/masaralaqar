@@ -15,7 +15,7 @@ const productLinks = [
 ]
 
 const socialLinks = [
-  { href: 'https://linkedin.com', label: 'LinkedIn', icon: Linkedin },
+  { href: 'https://www.linkedin.com/in/abdullah-sumayli/', label: 'LinkedIn', icon: Linkedin },
   { href: 'https://twitter.com', label: 'Twitter', icon: Twitter },
   { href: 'https://wa.me/966545374069', label: 'WhatsApp', icon: MessageCircle },
 ]
