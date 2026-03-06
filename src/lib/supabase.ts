@@ -1,9 +1,21 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Lazy initialization to prevent build errors
+let _supabase: SupabaseClient | null = null
+
+export const supabase = (() => {
+  if (!_supabase && supabaseUrl && supabaseAnonKey) {
+    _supabase = createClient(supabaseUrl, supabaseAnonKey)
+  }
+  // Return a mock client for build time if credentials are not available
+  if (!_supabase) {
+    return createClient('https://placeholder.supabase.co', 'placeholder-key')
+  }
+  return _supabase
+})()
 
 // Types for blog posts
 export interface BlogPost {
@@ -210,4 +222,15 @@ export async function uploadImage(file: File, bucket: string = 'blog-images'): P
     console.error('Error uploading image:', error)
     return { url: null, error: error.message }
   }
+}
+
+// Bot subscription functions
+export async function getBotSubscriptionByPhone(phone: string) {
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .select('*')
+    .eq('phone', phone)
+    .single()
+
+  return { data, error }
 }

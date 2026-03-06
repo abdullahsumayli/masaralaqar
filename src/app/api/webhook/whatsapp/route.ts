@@ -95,9 +95,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Skip outgoing messages early (before parsing)
-    if (payload?.data?.fromMe === true || payload?.data?.fromMe === 'true') {
+    if (payload?.data?.fromMe === true || payload?.data?.fromMe === "true") {
       console.log("Skipping outgoing message (fromMe=true)");
-      return NextResponse.json({ success: true, message: "Outgoing message ignored" });
+      return NextResponse.json({
+        success: true,
+        message: "Outgoing message ignored",
+      });
     }
 
     // Parse incoming message using UltraMsg format
@@ -116,7 +119,7 @@ export async function POST(request: NextRequest) {
       console.log("Duplicate message skipped:", message.id);
       return NextResponse.json({ success: true, message: "Duplicate ignored" });
     }
-    
+
     // Add to processed cache
     addToProcessedCache(message.id);
 

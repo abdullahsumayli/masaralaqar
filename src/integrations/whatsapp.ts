@@ -91,17 +91,17 @@ export class WhatsAppService {
       // UltraMsg webhook format
       if (payload && payload.data) {
         const data = payload.data;
-        
+
         // IMPORTANT: Skip outgoing messages (fromMe = true)
         // This prevents the bot from responding to its own messages
-        if (data.fromMe === true || data.fromMe === 'true') {
-          console.log('Skipping outgoing message (fromMe=true)');
+        if (data.fromMe === true || data.fromMe === "true") {
+          console.log("Skipping outgoing message (fromMe=true)");
           return null;
         }
 
         // Skip if message type is not 'chat' (could be notification, etc.)
-        if (data.type && data.type !== 'chat') {
-          console.log('Skipping non-chat message type:', data.type);
+        if (data.type && data.type !== "chat") {
+          console.log("Skipping non-chat message type:", data.type);
           return null;
         }
 
