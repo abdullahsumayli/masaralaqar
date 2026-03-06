@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #F97316;
+    --primary-dark: #EA580C;
+    --primary-light: #FB923C;
+    --secondary: #D4A017;
+    --secondary-dark: #B8860B;
+    --secondary-light: #F4D03F;
+    --background: #FFFFFF;
+    --surface: #F8F9FA;
+    --border: #E5E7EB;
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-muted: #9CA3AF;
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-cairo;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cairo font-bold;
+  }
+
+  code, pre {
+    @apply font-jetbrains;
+  }
+}
+
+@layer components {
+  .glow-primary {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.3);
+  }
+
+  .glow-secondary {
+    box-shadow: 0 0 30px rgba(212, 160, 23, 0.3);
+  }
+
+  .glow-border {
+    @apply border border-primary/30;
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15);
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary-dark hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-secondary-dark hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:bg-primary hover:text-white;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24 lg:py-32;
+  }
+
+  .container-custom {
+    @apply container mx-auto px-4 md:px-6 lg:px-8;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-text-muted rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-secondary;
+  }
+
+  /* MDX prose styling */
+  .prose {
+    @apply text-text-secondary;
+  }
+
+  .prose h1, .prose h2, .prose h3, .prose h4 {
+    @apply text-text-primary font-cairo;
+  }
+
+  .prose a {
+    @apply text-primary hover:text-primary-dark transition-colors;
+  }
+
+  .prose code {
+    @apply bg-surface px-2 py-1 rounded text-primary font-jetbrains text-sm;
+  }
+
+  .prose pre {
+    @apply bg-surface border border-border rounded-lg p-4 overflow-x-auto;
+  }
+
+  .prose blockquote {
+    @apply border-r-4 border-primary pr-4 italic text-text-secondary;
+  }
+
+  .prose ul, .prose ol {
+    @apply pr-6;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  .prose img {
+    @apply rounded-lg;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+}
