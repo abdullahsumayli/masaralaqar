@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, Lock, User, Building2, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, Building2, Loader2, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react'
 import { signUp } from '@/lib/auth'
 
 export default function SignUpPage() {
@@ -88,6 +88,14 @@ export default function SignUpPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#0a0e27] to-black flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
+        {/* Back to home */}
+        <div className="mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+            <ArrowRight className="w-4 h-4" />
+            العودة للرئيسية
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب</h1>

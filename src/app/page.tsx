@@ -201,7 +201,7 @@ export default function HomePage() {
 
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/products/saqr"
+                href="/auth/signup"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-white text-lg font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30"
               >
                 جرب صقر مجاناً
@@ -354,7 +354,7 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
-                  href="/products/saqr"
+                  href="/auth/signup"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white font-bold rounded-xl hover:bg-secondary-dark transition-colors"
                 >
                   جرب مجاناً 14 يوم
@@ -474,7 +474,7 @@ export default function HomePage() {
                 تواصل عبر واتساب
               </a>
               <Link
-                href="/products/saqr"
+                href="/auth/signup"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/50 text-white text-lg font-bold rounded-xl hover:bg-white/10 transition-colors"
               >
                 جرب مجاناً

@@ -211,3 +211,159 @@ export async function uploadImage(file: File, bucket: string = 'blog-images'): P
     return { url: null, error: error.message }
   }
 }
+
+// Types for bot subscriptions
+export interface BotSubscription {
+  id: string
+  user_id: string
+  phone: string
+  plan_type: 'free' | 'basic' | 'pro'
+  status: 'active' | 'inactive' | 'suspended'
+  usage_count: number
+  monthly_limit: number
+  activated_at: string
+  expires_at?: string
+  created_at: string
+  updated_at: string
+}
+
+// Bot subscription functions
+export async function getBotSubscription(userId: string) {
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 = no rows found, which is acceptable
+    console.error('Error fetching bot subscription:', error)
+  }
+
+  return { data, error }
+}
+
+export async function getBotSubscriptionByPhone(phone: string) {
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .select('*')
+    .eq('phone', phone)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching bot subscription by phone:', error)
+  }
+
+  return { data, error }
+}
+
+export async function createBotSubscription(
+  userId: string,
+  phone: string,
+  planType: 'free' | 'basic' | 'pro'
+) {
+  const monthlyLimits: Record<'free' | 'basic' | 'pro', number> = {
+    free: 10,
+    basic: 100,
+    pro: -1, // Unlimited
+  }
+
+  const expiresAt = new Date()
+  expiresAt.setMonth(expiresAt.getMonth() + 1)
+
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .insert([
+      {
+        user_id: userId,
+        phone,
+        plan_type: planType,
+        status: 'active',
+        monthly_limit: monthlyLimits[planType],
+        expires_at: expiresAt.toISOString(),
+      },
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating bot subscription:', error)
+  }
+
+  return { data, error }
+}
+
+export async function updateBotSubscriptionUsage(
+  subscriptionId: string,
+  newUsageCount: number
+) {
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .update({
+      usage_count: newUsageCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating bot subscription usage:', error)
+  }
+
+  return { data, error }
+}
+
+export async function updateBotSubscriptionStatus(
+  subscriptionId: string,
+  status: 'active' | 'inactive' | 'suspended'
+) {
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating bot subscription status:', error)
+  }
+
+  return { data, error }
+}
+
+export async function upgradeBotSubscription(
+  subscriptionId: string,
+  newPlanType: 'free' | 'basic' | 'pro'
+) {
+  const monthlyLimits: Record<'free' | 'basic' | 'pro', number> = {
+    free: 10,
+    basic: 100,
+    pro: -1,
+  }
+
+  const expiresAt = new Date()
+  expiresAt.setMonth(expiresAt.getMonth() + 1)
+
+  const { data, error } = await supabase
+    .from('bot_subscriptions')
+    .update({
+      plan_type: newPlanType,
+      monthly_limit: monthlyLimits[newPlanType],
+      usage_count: 0, // Reset usage on upgrade
+      expires_at: expiresAt.toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error upgrading bot subscription:', error)
+  }
+
+  return { data, error }
+}

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
+import { Mail, Lock, Loader2, AlertCircle, ArrowRight } from 'lucide-react'
 import { signIn } from '@/lib/auth'
 
 export default function LoginPage() {
@@ -50,6 +51,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#0a0e27] to-black flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
+        {/* Back to home */}
+        <div className="mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm">
+            <ArrowRight className="w-4 h-4" />
+            العودة للرئيسية
+          </Link>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">دخول</h1>
@@ -120,9 +129,9 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <p className="text-center text-gray-400 mt-6">
           لا تملك حساباً؟{' '}
-          <a href="/auth/signup" className="text-primary hover:underline">
+          <Link href="/auth/signup" className="text-primary hover:underline">
             إنشاء حساب جديد
-          </a>
+          </Link>
         </p>
       </div>
     </div>

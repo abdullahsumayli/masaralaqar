@@ -304,6 +304,48 @@ export async function markInvoicePaid(invoiceId: string): Promise<Invoice> {
   return data
 }
 
+// Bot Subscription Activation
+export async function activateBotSubscription(
+  userId: string,
+  phone: string,
+  planType: 'free' | 'basic' | 'pro'
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch('/api/bot/subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        phone,
+        planType,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Bot activation failed:', data)
+      return {
+        success: false,
+        message: data.message || 'Failed to activate bot subscription',
+      }
+    }
+
+    return {
+      success: true,
+      message: data.message,
+    }
+  } catch (error) {
+    console.error('Error activating bot subscription:', error)
+    return {
+      success: false,
+      message: 'Failed to activate bot subscription',
+    }
+  }
+}
+
 // Calculate subscription validity
 export function isSubscriptionValid(subscription: UserSubscription): boolean {
   if (!subscription) return false
