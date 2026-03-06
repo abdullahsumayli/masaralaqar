@@ -1,236 +1,243 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 // Lazy initialization to prevent build errors
-let _supabase: SupabaseClient | null = null
+let _supabase: SupabaseClient | null = null;
 
 export const supabase = (() => {
   if (!_supabase && supabaseUrl && supabaseAnonKey) {
-    _supabase = createClient(supabaseUrl, supabaseAnonKey)
+    _supabase = createClient(supabaseUrl, supabaseAnonKey);
   }
   // Return a mock client for build time if credentials are not available
   if (!_supabase) {
-    return createClient('https://placeholder.supabase.co', 'placeholder-key')
+    return createClient("https://placeholder.supabase.co", "placeholder-key");
   }
-  return _supabase
-})()
+  return _supabase;
+})();
 
 // Types for blog posts
 export interface BlogPost {
-  id: string
-  slug: string
-  title: string
-  excerpt: string
-  content: string
-  category: string
-  date: string
-  reading_time: number
-  image?: string
-  published: boolean
-  created_at?: string
-  updated_at?: string
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  date: string;
+  reading_time: number;
+  image?: string;
+  published: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Types for library resources
 export interface LibraryResource {
-  id: string
-  title: string
-  description: string
-  type: 'book' | 'course' | 'template' | 'tool'
-  category: string
-  download_url?: string
-  external_url?: string
-  published: boolean
-  created_at?: string
-  updated_at?: string
+  id: string;
+  title: string;
+  description: string;
+  type: "book" | "course" | "template" | "tool";
+  category: string;
+  download_url?: string;
+  external_url?: string;
+  published: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Blog functions
 export async function getAllBlogPosts(publishedOnly = true) {
   let query = supabase
-    .from('blog_posts')
-    .select('*')
-    .order('created_at', { ascending: false })
-  
+    .from("blog_posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
   if (publishedOnly) {
-    query = query.eq('published', true)
+    query = query.eq("published", true);
   }
-  
-  const { data, error } = await query
-  
+
+  const { data, error } = await query;
+
   if (error) {
-    console.error('Error fetching blog posts:', error)
-    return []
+    console.error("Error fetching blog posts:", error);
+    return [];
   }
-  
-  return data || []
+
+  return data || [];
 }
 
 export async function getBlogPostBySlug(slug: string) {
   const { data, error } = await supabase
-    .from('blog_posts')
-    .select('*')
-    .eq('slug', slug)
-    .eq('published', true)
-    .single()
-  
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("published", true)
+    .single();
+
   if (error) {
-    console.error('Error fetching blog post:', error)
-    return null
+    console.error("Error fetching blog post:", error);
+    return null;
   }
-  
-  return data
+
+  return data;
 }
 
-export async function createBlogPost(post: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) {
+export async function createBlogPost(
+  post: Omit<BlogPost, "id" | "created_at" | "updated_at">,
+) {
   const { data, error } = await supabase
-    .from('blog_posts')
+    .from("blog_posts")
     .insert([post])
     .select()
-    .single()
-  
+    .single();
+
   if (error) {
-    console.error('Error creating blog post:', error)
-    return null
+    console.error("Error creating blog post:", error);
+    return null;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function updateBlogPost(id: string, updates: Partial<BlogPost>) {
   const { data, error } = await supabase
-    .from('blog_posts')
+    .from("blog_posts")
     .update(updates)
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
-  
+    .single();
+
   if (error) {
-    console.error('Error updating blog post:', error)
-    return null
+    console.error("Error updating blog post:", error);
+    return null;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function deleteBlogPost(id: string) {
-  const { error } = await supabase
-    .from('blog_posts')
-    .delete()
-    .eq('id', id)
-  
+  const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+
   if (error) {
-    console.error('Error deleting blog post:', error)
-    return false
+    console.error("Error deleting blog post:", error);
+    return false;
   }
-  
-  return true
+
+  return true;
 }
 
 // Library functions
 export async function getAllLibraryResources(publishedOnly = true) {
   let query = supabase
-    .from('library_resources')
-    .select('*')
-    .order('created_at', { ascending: false })
-  
+    .from("library_resources")
+    .select("*")
+    .order("created_at", { ascending: false });
+
   if (publishedOnly) {
-    query = query.eq('published', true)
+    query = query.eq("published", true);
   }
-  
-  const { data, error } = await query
-  
+
+  const { data, error } = await query;
+
   if (error) {
-    console.error('Error fetching library resources:', error)
-    return []
+    console.error("Error fetching library resources:", error);
+    return [];
   }
-  
-  return data || []
+
+  return data || [];
 }
 
-export async function createLibraryResource(resource: Omit<LibraryResource, 'id' | 'created_at' | 'updated_at'>) {
+export async function createLibraryResource(
+  resource: Omit<LibraryResource, "id" | "created_at" | "updated_at">,
+) {
   const { data, error } = await supabase
-    .from('library_resources')
+    .from("library_resources")
     .insert([resource])
     .select()
-    .single()
-  
+    .single();
+
   if (error) {
-    console.error('Error creating library resource:', error)
-    return null
+    console.error("Error creating library resource:", error);
+    return null;
   }
-  
-  return data
+
+  return data;
 }
 
-export async function updateLibraryResource(id: string, updates: Partial<LibraryResource>) {
+export async function updateLibraryResource(
+  id: string,
+  updates: Partial<LibraryResource>,
+) {
   const { data, error } = await supabase
-    .from('library_resources')
+    .from("library_resources")
     .update(updates)
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
-  
+    .single();
+
   if (error) {
-    console.error('Error updating library resource:', error)
-    return null
+    console.error("Error updating library resource:", error);
+    return null;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function deleteLibraryResource(id: string) {
   const { error } = await supabase
-    .from('library_resources')
+    .from("library_resources")
     .delete()
-    .eq('id', id)
-  
+    .eq("id", id);
+
   if (error) {
-    console.error('Error deleting library resource:', error)
-    return false
+    console.error("Error deleting library resource:", error);
+    return false;
   }
-  
-  return true
+
+  return true;
 }
 
 // Upload image to Supabase Storage
-export async function uploadImage(file: File, bucket: string = 'blog-images'): Promise<{ url: string | null; error: string | null }> {
+export async function uploadImage(
+  file: File,
+  bucket: string = "blog-images",
+): Promise<{ url: string | null; error: string | null }> {
   try {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from(bucket)
-      .upload(fileName, file, { 
-        cacheControl: '3600',
-        upsert: false 
-      })
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
-      throw uploadError
+      console.error("Upload error:", uploadError);
+      throw uploadError;
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName)
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(fileName);
 
-    return { url: publicUrl, error: null }
+    return { url: publicUrl, error: null };
   } catch (error: any) {
-    console.error('Error uploading image:', error)
-    return { url: null, error: error.message }
+    console.error("Error uploading image:", error);
+    return { url: null, error: error.message };
   }
 }
 
 // Bot subscription functions
 export async function getBotSubscriptionByPhone(phone: string) {
   const { data, error } = await supabase
-    .from('bot_subscriptions')
-    .select('*')
-    .eq('phone', phone)
-    .single()
+    .from("bot_subscriptions")
+    .select("*")
+    .eq("phone", phone)
+    .single();
 
-  return { data, error }
+  return { data, error };
 }
