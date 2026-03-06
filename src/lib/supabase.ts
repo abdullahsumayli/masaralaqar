@@ -367,3 +367,149 @@ export async function upgradeBotSubscription(
 
   return { data, error }
 }
+
+// Types for properties
+export interface Property {
+  id: string
+  user_id: string
+  title: string
+  description?: string
+  price: number
+  location?: string
+  area?: number
+  type: 'apartment' | 'villa' | 'land' | 'commercial'
+  bedrooms?: number
+  bathrooms?: number
+  image_url?: string
+  featured?: boolean
+  status: 'available' | 'sold' | 'rented' | 'archived'
+  views_count: number
+  created_at: string
+  updated_at: string
+}
+
+// Property functions
+export async function getUserProperties(userId: string) {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching user properties:', error)
+  }
+
+  return { data: data || [], error }
+}
+
+export async function getFeaturedProperties() {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('featured', true)
+    .eq('status', 'available')
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (error) {
+    console.error('Error fetching featured properties:', error)
+  }
+
+  return { data: data || [], error }
+}
+
+export async function getPropertyById(id: string) {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching property:', error)
+  }
+
+  return { data, error }
+}
+
+export async function createProperty(
+  userId: string,
+  property: Omit<Property, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'views_count'>
+) {
+  const { data, error } = await supabase
+    .from('properties')
+    .insert([
+      {
+        user_id: userId,
+        ...property,
+        status: property.status || 'available',
+        views_count: 0,
+      },
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating property:', error)
+  }
+
+  return { data, error }
+}
+
+export async function updateProperty(
+  propertyId: string,
+  updates: Partial<Property>
+) {
+  const { data, error } = await supabase
+    .from('properties')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', propertyId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating property:', error)
+  }
+
+  return { data, error }
+}
+
+export async function deleteProperty(propertyId: string) {
+  const { error } = await supabase
+    .from('properties')
+    .delete()
+    .eq('id', propertyId)
+
+  if (error) {
+    console.error('Error deleting property:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function incrementPropertyViews(propertyId: string) {
+  const { data: property } = await getPropertyById(propertyId)
+  
+  if (!property) return { data: null, error: null }
+
+  const { data, error } = await supabase
+    .from('properties')
+    .update({
+      views_count: (property.views_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', propertyId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error incrementing property views:', error)
+  }
+
+  return { data, error }
+}

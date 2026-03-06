@@ -6,6 +6,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { WhatsAppQR } from '@/components/WhatsAppQR'
+import { PropertyCatalog } from '@/components/PropertyCatalog'
 import { 
   LayoutDashboard, 
   Building2, 
@@ -163,6 +165,15 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Property Catalog */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="bg-background rounded-xl p-6 border border-border"
+            >
+              <PropertyCatalog />
+            </motion.div>
             {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -222,6 +233,14 @@ export default function DashboardPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* WhatsApp QR Code */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <WhatsAppQR phoneNumber="966501234567" size={200} />
+            </motion.div>
             {/* Recent Activity */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
