@@ -1,6 +1,6 @@
 /**
  * WhatsApp Webhook Handler
- * Receives messages from WhatsApp Cloud API
+ * Receives messages from UltraMsg API
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -9,41 +9,40 @@ import { TenantService } from '@/services/tenant.service'
 import { LeadService } from '@/services/lead.service'
 import { PropertyService } from '@/services/property.service'
 import { AIService } from '@/services/ai.service'
-import { OpenAIService } from '@/integrations/openai'
-import { WebhookPayload } from '@/types/message'
 import { TenantContext } from '@/types/message'
+
+// Fixed webhook secret for initial setup
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'masar2024secret'
 
 /**
  * GET: Webhook verification
- * WhatsApp sends GET requests to verify the webhook URL
+ * UltraMsg sends GET requests to verify the webhook URL
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
+  const secret = searchParams.get('secret')
+
+  // Simple secret verification
+  if (secret === WEBHOOK_SECRET) {
+    console.log('UltraMsg Webhook verified')
+    return NextResponse.json({ status: 'ok', message: 'Webhook verified' })
+  }
+
+  // WhatsApp Cloud API verification (fallback)
   const mode = searchParams.get('hub.mode')
   const token = searchParams.get('hub.verify_token')
   const challenge = searchParams.get('hub.challenge')
 
-  // Get webhook secret from query
-  const secret = searchParams.get('secret')
-
-  if (!secret) {
-    return NextResponse.json({ error: 'Missing webhook secret' }, { status: 400 })
-  }
-
-  // Verify token matches environment variable
-  const expectedToken = process.env.WHATSAPP_VERIFY_TOKEN || 'default_token'
-
-  if (mode === 'subscribe' && token === expectedToken) {
+  if (mode === 'subscribe' && token === WEBHOOK_SECRET) {
     console.log('Webhook verified')
-    return NextResponse.json(challenge)
+    return new NextResponse(challenge || 'ok')
   }
 
   return NextResponse.json({ error: 'Verification failed' }, { status: 403 })
 }
 
 /**
- * POST: Handle incoming messages
- * Processes messages from WhatsApp Cloud API
+ * POST: Handle incoming messages from UltraMsg
  */
 export async function POST(request: NextRequest) {
   try {
@@ -51,71 +50,78 @@ export async function POST(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const secret = searchParams.get('secret')
 
-    if (!secret) {
-      return NextResponse.json({ error: 'Missing webhook secret' }, { status: 400 })
+    // Verify secret
+    if (secret !== WEBHOOK_SECRET) {
+      console.warn('Invalid webhook secret:', secret)
+      return NextResponse.json({ error: 'Invalid secret' }, { status: 403 })
     }
 
-    // Get raw body for signature verification
+    // Parse request body
     const bodyText = await request.text()
+    console.log('Webhook received:', bodyText)
 
-    // Verify signature
-    const signature = request.headers.get('x-hub-signature-256')
-    if (!WhatsAppService.verifyWebhookSignature(bodyText, signature || '', secret)) {
-      console.warn('Invalid webhook signature')
-      // For now, we'll allow it through - in production, return 403
-      // return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
+    let payload: any
+    try {
+      payload = JSON.parse(bodyText)
+    } catch {
+      // UltraMsg may send form-urlencoded data
+      const formData = new URLSearchParams(bodyText)
+      payload = {
+        data: {
+          from: formData.get('from'),
+          body: formData.get('body'),
+          id: formData.get('id'),
+        }
+      }
     }
 
-    // Parse payload
-    const payload: WebhookPayload = JSON.parse(bodyText)
-
-    // Find tenant by webhook secret
-    const tenant = await TenantService.getTenantByWebhook(secret)
-
-    if (!tenant) {
-      console.error('Tenant not found for webhook secret')
-      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
-    }
-
-    // Parse incoming message
+    // Parse incoming message using UltraMsg format
     const message = WhatsAppService.parseIncomingMessage(payload)
 
     if (!message) {
-      // Not a message event (could be delivery status, etc.)
-      return NextResponse.json({ success: true })
+      console.log('No valid message in payload')
+      return NextResponse.json({ success: true, message: 'No message to process' })
     }
 
     console.log('Received message:', message)
 
-    // Create tenant context
+    // For now, use a default tenant context (single tenant mode)
+    // In multi-tenant mode, lookup tenant by webhook secret
+    let tenant = null
+    try {
+      tenant = await TenantService.getTenantByWebhook(secret)
+    } catch (error) {
+      console.log('Tenant lookup failed, using default context')
+    }
+
     const tenantContext: TenantContext = {
-      tenantId: tenant.id,
-      whatsappNumber: tenant.whatsappNumber,
-      aiPersona: tenant.aiPersona || {
-        greeting: 'السلام عليكم ورحمة الله وبركاته',
-        style: 'professional',
+      tenantId: tenant?.id || 'default',
+      whatsappNumber: tenant?.whatsappNumber || '',
+      aiPersona: tenant?.aiPersona || {
+        agentName: 'مساعد مسار العقار',
+        responseStyle: 'friendly',
+        welcomeMessage: 'السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠'
       },
     }
 
-    // Create or update lead
-    let lead = await LeadService.createLeadFromMessage(
-      tenant.id,
-      message.phone,
-      '', // Name will be fetched from WhatsApp contact
-      message.text
-    )
-
-    if (!lead) {
-      console.error('Failed to create/update lead')
-      // Still send response even if lead creation fails
+    // Create or update lead (skip if no tenant)
+    let lead = null
+    if (tenant?.id) {
+      lead = await LeadService.createLeadFromMessage(
+        tenant.id,
+        message.phone,
+        '',
+        message.text
+      )
     }
 
     // Analyze message
     const analysis = AIService.analyzeMessage(message.text, tenantContext)
+    console.log('Message analysis:', analysis)
 
-    // Search for matching properties
-    let matchedProperties = []
-    if (analysis.extractedData.propertyType || analysis.extractedData.budget) {
+    // Search for matching properties (if tenant exists)
+    let matchedProperties: any[] = []
+    if (tenant?.id && (analysis.extractedData.propertyType || analysis.extractedData.budget)) {
       const searchResult = await PropertyService.searchProperties(tenant.id, {
         type: analysis.extractedData.propertyType,
         minPrice: analysis.extractedData.budget?.min,
@@ -123,15 +129,16 @@ export async function POST(request: NextRequest) {
         city: analysis.extractedData.city,
         bedrooms: analysis.extractedData.bedrooms,
       })
-      matchedProperties = searchResult.properties
+      matchedProperties = searchResult.properties || []
     }
 
     // Generate reply
     const response = AIService.generatePropertyReply(analysis, matchedProperties, tenantContext)
+    console.log('Generated response:', response.reply)
 
     // Update lead with preferences if extracted
     if (lead && Object.keys(analysis.extractedData).length > 0) {
-      await LeadService.updateLeadPreferences(tenant.id, message.phone, {
+      await LeadService.updateLeadPreferences(tenant!.id, message.phone, {
         city: analysis.extractedData.city,
         budget: analysis.extractedData.budget,
         propertyType: analysis.extractedData.propertyType,
@@ -141,11 +148,11 @@ export async function POST(request: NextRequest) {
 
     // Add response to conversation
     if (lead) {
-      await LeadService.addMessageToLead(tenant.id, lead.id, response.reply, 'outgoing')
+      await LeadService.addMessageToLead(tenant!.id, lead.id, response.reply, 'outgoing')
     }
 
-    // Send reply back to user
-    const sent = await WhatsAppService.sendMessage(message.phone, response.reply, tenant.id)
+    // Send reply back to user via UltraMsg
+    const sent = await WhatsAppService.sendMessage(message.phone, response.reply, tenant?.id || 'default')
 
     if (!sent) {
       console.error('Failed to send WhatsApp reply')
