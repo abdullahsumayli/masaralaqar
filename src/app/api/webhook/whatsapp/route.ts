@@ -173,9 +173,9 @@ export async function POST(request: NextRequest) {
       matchedProperties = searchResult.properties || [];
     }
 
-    // Generate reply
-    const response = AIService.generatePropertyReply(
-      analysis,
+    // Generate smart reply using GPT-4o-mini
+    const response = await AIService.generateSmartReply(
+      message.text,
       matchedProperties,
       tenantContext,
     );

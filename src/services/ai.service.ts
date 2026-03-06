@@ -5,6 +5,7 @@
 
 import { MessageAnalysis, AIResponse, TenantContext } from '@/types/message'
 import { Property } from '@/types/property'
+import { OpenAIService } from '@/integrations/openai'
 import {
   extractCity,
   extractBudget,
@@ -54,7 +55,39 @@ export class AIService {
   }
 
   /**
-   * Generate AI response based on analysis and available properties
+   * Generate AI response using GPT-4o-mini
+   */
+  static async generateSmartReply(
+    userMessage: string,
+    matchedProperties: Property[],
+    tenantContext: TenantContext
+  ): Promise<AIResponse> {
+    try {
+      // Use OpenAI for smart reply
+      const reply = await OpenAIService.generateSmartReply(userMessage, {
+        agentName: tenantContext.aiPersona?.agentName || 'مساعد مسار العقار',
+        availableProperties: matchedProperties,
+      })
+
+      return {
+        reply,
+        suggestions: [],
+        shouldCreateLead: true,
+        leadData: {},
+      }
+    } catch (error) {
+      console.error('AIService.generateSmartReply error:', error)
+      // Fallback to basic reply
+      return this.generatePropertyReply(
+        this.analyzeMessage(userMessage, tenantContext),
+        matchedProperties,
+        tenantContext
+      )
+    }
+  }
+
+  /**
+   * Generate AI response based on analysis and available properties (fallback)
    */
   static generatePropertyReply(
     analysis: MessageAnalysis,
@@ -70,7 +103,7 @@ export class AIService {
 
     // Greeting response
     if (intent === 'greeting') {
-      reply = tenantContext.aiPersona?.greeting || 'السلام عليكم ورحمة الله وبركاته'
+      reply = tenantContext.aiPersona?.welcomeMessage || 'السلام عليكم ورحمة الله وبركاته! أهلاً بك في مسار العقار 🏠 كيف يمكنني مساعدتك؟'
       suggestions.push('ابحث عن عقار')
       suggestions.push('اعرض آخر العروض')
     }

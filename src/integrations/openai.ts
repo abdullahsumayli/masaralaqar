@@ -1,6 +1,6 @@
 /**
  * OpenAI Integration
- * AI-powered message analysis and response generation
+ * AI-powered message analysis and response generation using GPT-4o-mini
  */
 
 import { MessageAnalysis } from '@/types/message'
@@ -15,15 +15,150 @@ import {
 
 export class OpenAIService {
   private static apiKey: string = process.env.OPENAI_API_KEY || ''
+  private static apiUrl: string = 'https://api.openai.com/v1/chat/completions'
+
+  /**
+   * Call OpenAI API
+   */
+  private static async callOpenAI(
+    messages: Array<{ role: string; content: string }>,
+    maxTokens: number = 500
+  ): Promise<string | null> {
+    try {
+      if (!this.apiKey) {
+        console.warn('OpenAI API key not configured')
+        return null
+      }
+
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+        }),
+      })
+
+      if (!response.ok) {
+        console.error('OpenAI API error:', await response.text())
+        return null
+      }
+
+      const data = await response.json()
+      return data.choices?.[0]?.message?.content || null
+    } catch (error) {
+      console.error('OpenAI API call failed:', error)
+      return null
+    }
+  }
+
+  /**
+   * Generate smart reply using GPT-4o-mini
+   */
+  static async generateSmartReply(
+    userMessage: string,
+    context: {
+      agentName?: string
+      availableProperties?: any[]
+      conversationHistory?: Array<{ role: string; content: string }>
+    } = {}
+  ): Promise<string> {
+    const systemPrompt = `أنت مساعد ذكي متخصص في العقارات في السعودية. اسمك "${context.agentName || 'مساعد مسار العقار'}".
+
+مهامك:
+1. الرد على استفسارات العملاء بشكل ودود ومهني
+2. فهم احتياجات العميل (نوع العقار، المدينة، الميزانية، عدد الغرف)
+3. عرض العقارات المتاحة إن وجدت
+4. جدولة الزيارات والمواعيد
+5. الرد باللغة العربية دائماً
+
+${context.availableProperties && context.availableProperties.length > 0 
+  ? `العقارات المتاحة:\n${context.availableProperties.map(p => 
+      `- ${p.title}: ${p.price?.toLocaleString()} ريال، ${p.location}`
+    ).join('\n')}`
+  : 'لا توجد عقارات محددة حالياً'
+}
+
+كن موجزاً ومفيداً. لا تكتب أكثر من 3-4 جمل.`
+
+    const messages: Array<{ role: string; content: string }> = [
+      { role: 'system', content: systemPrompt },
+    ]
+
+    // Add conversation history if available
+    if (context.conversationHistory) {
+      messages.push(...context.conversationHistory.slice(-5)) // Last 5 messages
+    }
+
+    messages.push({ role: 'user', content: userMessage })
+
+    const reply = await this.callOpenAI(messages, 300)
+
+    if (reply) {
+      return reply
+    }
+
+    // Fallback to basic response if API fails
+    return this.generateBasicReply(userMessage)
+  }
+
+  /**
+   * Basic reply fallback (no API)
+   */
+  private static generateBasicReply(message: string): string {
+    const intent = detectIntent(message)
+    
+    switch (intent) {
+      case 'greeting':
+        return 'السلام عليكم ورحمة الله وبركاته! 👋 أهلاً بك في مسار العقار. كيف يمكنني مساعدتك؟'
+      case 'search':
+        return 'أفهم أنك تبحث عن عقار. يرجى تحديد المدينة ونوع العقار والميزانية لنساعدك بشكل أفضل.'
+      case 'schedule':
+        return 'تم استلام طلب الموعد. سيتواصل معك فريقنا قريباً لتأكيد الزيارة.'
+      case 'contact':
+        return 'يسعدنا تواصلك معنا! سيقوم أحد مستشارينا بالرد عليك في أقرب وقت.'
+      default:
+        return 'شكراً لتواصلك! كيف يمكنني مساعدتك في البحث عن عقار مناسب؟'
+    }
+  }
 
   /**
    * Analyze message intent using OpenAI
    */
   static async analyzeIntentWithAI(message: string): Promise<string> {
     try {
-      // For now, use local parser
-      // In production, this would call OpenAI's GPT-4o model
-      return detectIntent(message)
+      // Use local parser for speed, OpenAI for complex cases
+      const localIntent = detectIntent(message)
+      if (localIntent !== 'general') {
+        return localIntent
+      }
+
+      // If local parser couldn't determine, use AI
+      if (this.apiKey) {
+        const prompt = `حدد نية المستخدم من هذه الرسالة. أجب بكلمة واحدة فقط من: search, greeting, schedule, contact, inquire, general
+
+الرسالة: "${message}"
+
+النية:`
+
+        const result = await this.callOpenAI([
+          { role: 'user', content: prompt }
+        ], 10)
+
+        if (result) {
+          const intent = result.toLowerCase().trim()
+          if (['search', 'greeting', 'schedule', 'contact', 'inquire'].includes(intent)) {
+            return intent
+          }
+        }
+      }
+
+      return localIntent
     } catch (error) {
       console.error('OpenAIService.analyzeIntentWithAI error:', error)
       return 'general'
