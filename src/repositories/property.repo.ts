@@ -23,7 +23,8 @@ export class PropertyRepository {
 
       // Apply filters
       if (filters.city) {
-        query = query.ilike('location', `%${filters.city}%`)
+        // Search in both city and location fields
+        query = query.or(`city.ilike.%${filters.city}%,location.ilike.%${filters.city}%`)
       }
 
       if (filters.type) {
@@ -46,7 +47,8 @@ export class PropertyRepository {
         query = query.eq('featured', true)
       }
 
-      const { data, error, count } = await query.limit(10)
+      // Limit to 5 properties for WhatsApp responses
+      const { data, error, count } = await query.limit(5)
 
       if (error) {
         console.error('Property search error:', error)

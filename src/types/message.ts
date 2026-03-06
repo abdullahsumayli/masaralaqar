@@ -33,10 +33,18 @@ export interface MessageAnalysis {
 
 export interface AIResponse {
   reply: string
-  suggestions?: {
-    propertyIds?: string[]
-    nextAction?: string
-  }
+  suggestions?: string[]
+  properties?: Array<{
+    id: string
+    title: string
+    price: number
+    location: string
+    city?: string
+    type: string
+    bedrooms?: number
+    image_url?: string
+    images?: string[]
+  }>
   shouldCreateLead: boolean
   leadData?: {
     name?: string

@@ -215,6 +215,28 @@ export async function POST(request: NextRequest) {
       console.error("Failed to send WhatsApp reply");
     }
 
+    // Send property images if available (max 3 images)
+    if (response.properties && response.properties.length > 0) {
+      let imagesSent = 0;
+      for (const property of response.properties) {
+        if (imagesSent >= 3) break; // Limit to 3 images
+        
+        const imageUrl = property.images?.[0] || property.image_url;
+        if (imageUrl) {
+          const caption = `🏠 ${property.title}\n📍 ${property.city || property.location}\n💰 ${property.price?.toLocaleString()} ريال`;
+          await WhatsAppService.sendMediaMessage(
+            message.phone,
+            imageUrl,
+            caption,
+            tenant?.id || "default",
+          );
+          imagesSent++;
+          // Small delay between image sends
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    }
+
     // Send suggestions if any
     if (response.suggestions && response.suggestions.length > 0) {
       const suggestionsText =

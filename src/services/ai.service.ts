@@ -72,9 +72,21 @@ export class AIService {
         availableProperties: matchedProperties,
       });
 
+      // Return properties for image sending
       return {
         reply,
         suggestions: [],
+        properties: matchedProperties.slice(0, 5).map(p => ({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          location: p.location,
+          city: p.city,
+          type: p.type,
+          bedrooms: p.bedrooms,
+          image_url: p.image_url,
+          images: p.images,
+        })),
         shouldCreateLead: true,
         leadData: {},
       };
@@ -87,6 +99,33 @@ export class AIService {
         tenantContext,
       );
     }
+  }
+
+  /**
+   * Get Arabic property type name
+   */
+  private static getPropertyTypeArabic(type: string): string {
+    const types: Record<string, string> = {
+      apartment: 'شقة',
+      villa: 'فيلا',
+      land: 'أرض',
+      commercial: 'تجاري',
+    };
+    return types[type] || type;
+  }
+
+  /**
+   * Format single property for WhatsApp
+   */
+  static formatPropertyMessage(prop: Property): string {
+    const typeArabic = this.getPropertyTypeArabic(prop.type);
+    let msg = `🏠 *${typeArabic} للبيع*\n`;
+    msg += `📍 ${prop.city || prop.location}\n`;
+    msg += `💰 ${prop.price?.toLocaleString()} ريال\n`;
+    if (prop.bedrooms) msg += `🛏️ ${prop.bedrooms} غرف\n`;
+    if (prop.bathrooms) msg += `🚿 ${prop.bathrooms} حمام\n`;
+    if (prop.area) msg += `📐 ${prop.area} م²\n`;
+    return msg;
   }
 
   /**
@@ -113,27 +152,22 @@ export class AIService {
       suggestions.push("اعرض آخر العروض");
     }
 
-    // Search response
+    // Search response with improved formatting
     if (intent === "search" || intent === "inquire") {
       if (matchedProperties.length === 0) {
         reply = `للأسف لم أجد عقارات تطابق معايير بحثك. الرجاء تحديد المعايير بشكل أدق.`;
         suggestions.push("جرب تغيير الميزانية");
         suggestions.push("جرب نوع عقار آخر");
-      } else if (matchedProperties.length === 1) {
-        const prop = matchedProperties[0];
-        reply = `وجدت عقار واحد يطابق معايير بحثك:\n\n🏠 ${prop.title}\n💰 ${prop.price.toLocaleString()} ریال سعودي\n📍 ${prop.location}\n`;
-        suggestions.push("هل تريد المزيد من التفاصيل؟");
-        suggestions.push("هل تريد زيارة العقار؟");
       } else {
-        reply = `وجدت ${matchedProperties.length} عقار يطابق معايير بحثك:\n`;
-        matchedProperties.slice(0, 3).forEach((prop) => {
-          reply += `\n🏠 ${prop.title}\n💰 ${prop.price.toLocaleString()} ریال\n`;
+        reply = `وجدت ${matchedProperties.length} عقار يناسب بحثك:\n\n`;
+        matchedProperties.slice(0, 5).forEach((prop, idx) => {
+          reply += this.formatPropertyMessage(prop);
+          if (idx < Math.min(matchedProperties.length - 1, 4)) {
+            reply += '\n---\n';
+          }
         });
-        if (matchedProperties.length > 3) {
-          reply += `\n... و${matchedProperties.length - 3} عقار آخر`;
-        }
-        suggestions.push("اعرض العقار الأول");
-        suggestions.push("اعرض المزيد من العقارات");
+        suggestions.push("أرسل صور العقارات");
+        suggestions.push("احجز موعد زيارة");
       }
 
       shouldCreateLead = true;
@@ -162,6 +196,17 @@ export class AIService {
     return {
       reply,
       suggestions,
+      properties: matchedProperties.slice(0, 5).map(p => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        location: p.location,
+        city: p.city,
+        type: p.type,
+        bedrooms: p.bedrooms,
+        image_url: p.image_url,
+        images: p.images,
+      })),
       shouldCreateLead,
       leadData: shouldCreateLead ? leadData : undefined,
     };

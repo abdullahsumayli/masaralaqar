@@ -13,16 +13,31 @@ export interface Property {
   description?: string
   price: number // في الريال
   location: string
+  city?: string
   area: number // بالمتر المربع
   type: PropertyType
   bedrooms?: number
   bathrooms?: number
   image_url?: string
+  images?: string[] // Array of image URLs
   featured: boolean
   status: PropertyStatus
   views_count: number
   created_at: string
   updated_at: string
+}
+
+export interface PropertyCreateInput {
+  title: string
+  description?: string
+  price: number
+  city: string
+  location: string
+  type: PropertyType
+  bedrooms?: number
+  bathrooms?: number
+  area?: number
+  images?: string[]
 }
 
 export interface PropertySearchFilters {
