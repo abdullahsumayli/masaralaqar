@@ -121,12 +121,6 @@ export async function POST(request: NextRequest) {
     addToProcessedCache(message.id);
 
     console.log("Received message:", message);
-        success: true,
-        message: "No message to process",
-      });
-    }
-
-    console.log("Received message:", message);
 
     // For now, use a default tenant context (single tenant mode)
     // In multi-tenant mode, lookup tenant by webhook secret
@@ -225,7 +219,7 @@ export async function POST(request: NextRequest) {
       await WhatsAppService.sendMessage(
         message.phone,
         suggestionsText,
-        tenant.id,
+        tenant?.id || "default",
       );
     }
 
