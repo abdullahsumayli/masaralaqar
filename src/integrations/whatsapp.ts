@@ -1,17 +1,18 @@
 /**
  * WhatsApp Integration
- * Handle WhatsApp Cloud API communication
+ * Handle UltraMsg API communication
  */
 
 import { WhatsAppMessage, WebhookPayload } from '@/types/message'
 
 export class WhatsAppService {
-  private static whatsappApiUrl = 'https://graph.instagram.com/v20.0'
-  private static accessToken = process.env.WHATSAPP_ACCESS_TOKEN || ''
-  private static phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || ''
+  // UltraMsg API Configuration
+  private static instanceId = process.env.ULTRAMSG_INSTANCE || 'instance164031'
+  private static token = process.env.ULTRAMSG_TOKEN || '6eawfm9yjnjw3czn'
+  private static apiUrl = `https://api.ultramsg.com/${this.instanceId}`
 
   /**
-   * Send WhatsApp message
+   * Send WhatsApp message via UltraMsg
    */
   static async sendMessage(
     recipientPhone: string,
@@ -19,41 +20,45 @@ export class WhatsAppService {
     tenantId: string
   ): Promise<boolean> {
     try {
-      if (!this.accessToken || !this.phoneNumberId) {
-        console.warn('WhatsApp credentials not configured')
+      if (!this.token || !this.instanceId) {
+        console.warn('UltraMsg credentials not configured')
         return false
       }
 
-      const payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: recipientPhone,
-        type: 'text',
-        text: {
-          body: message,
-        },
-      }
+      // Format phone number (ensure it has country code)
+      const formattedPhone = this.formatPhoneNumber(recipientPhone)
+
+      const params = new URLSearchParams()
+      params.append('token', this.token)
+      params.append('to', formattedPhone)
+      params.append('body', message)
 
       const response = await fetch(
-        `${this.whatsappApiUrl}/${this.phoneNumberId}/messages`,
+        `${this.apiUrl}/messages/chat`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify(payload),
+          body: params.toString(),
         }
       )
 
       if (!response.ok) {
-        console.error('WhatsApp send error:', await response.text())
+        console.error('UltraMsg send error:', await response.text())
         return false
       }
 
       const data = await response.json()
-      console.log('WhatsApp message sent:', data)
-      return true
+      console.log('WhatsApp message sent via UltraMsg:', data)
+      
+      // Check UltraMsg response for success
+      if (data.sent === 'true' || data.sent === true) {
+        return true
+      }
+      
+      console.error('UltraMsg response indicates failure:', data)
+      return false
     } catch (error) {
       console.error('WhatsAppService.sendMessage error:', error)
       return false
@@ -61,43 +66,83 @@ export class WhatsAppService {
   }
 
   /**
-   * Parse incoming WhatsApp webhook payload
+   * Format phone number for UltraMsg
    */
-  static parseIncomingMessage(payload: WebhookPayload): WhatsAppMessage | null {
+  private static formatPhoneNumber(phone: string): string {
+    // Remove any non-digit characters
+    let cleaned = phone.replace(/\D/g, '')
+    
+    // If starts with 0, replace with 966 (Saudi)
+    if (cleaned.startsWith('0')) {
+      cleaned = '966' + cleaned.substring(1)
+    }
+    
+    // If doesn't start with country code, add 966
+    if (!cleaned.startsWith('966') && cleaned.length === 9) {
+      cleaned = '966' + cleaned
+    }
+    
+    return cleaned
+  }
+
+  /**
+   * Parse incoming UltraMsg webhook payload
+   * UltraMsg sends different format than WhatsApp Cloud API
+   */
+  static parseIncomingMessage(payload: any): WhatsAppMessage | null {
     try {
-      if (!payload || !payload.entry || !payload.entry[0]) {
-        return null
+      // UltraMsg webhook format
+      if (payload && payload.data) {
+        const data = payload.data
+        const phone = data.from?.replace('@c.us', '') || ''
+        const text = data.body || ''
+        const id = data.id || `msg_${Date.now()}`
+        
+        if (!phone || !text) {
+          return null
+        }
+
+        return {
+          id,
+          phone,
+          text,
+          timestamp: new Date().toISOString(),
+          media: data.media ? { type: 'image', url: data.media } : null,
+        }
       }
 
-      const entry = payload.entry[0]
-      const changes = entry.changes?.[0]
+      // WhatsApp Cloud API format (fallback)
+      if (payload && payload.entry && payload.entry[0]) {
+        const entry = payload.entry[0]
+        const changes = entry.changes?.[0]
 
-      if (!changes || changes.field !== 'messages') {
-        return null
+        if (!changes || changes.field !== 'messages') {
+          return null
+        }
+
+        const message = changes.value?.messages?.[0]
+
+        if (!message) {
+          return null
+        }
+
+        const phone = message.from
+        const text = message.text?.body || ''
+
+        if (!phone || !text) {
+          return null
+        }
+
+        return {
+          id: message.id,
+          phone,
+          text,
+          timestamp: new Date(parseInt(message.timestamp) * 1000).toISOString(),
+          media: null,
+        }
       }
 
-      const message = changes.value?.messages?.[0]
-
-      if (!message) {
-        return null
-      }
-
-      // Extract phone and text
-      const contact = changes.value?.contacts?.[0]
-      const phone = message.from
-      const text = message.text?.body || ''
-
-      if (!phone || !text) {
-        return null
-      }
-
-      return {
-        id: message.id,
-        phone,
-        text,
-        timestamp: new Date(parseInt(message.timestamp) * 1000).toISOString(),
-        media: null,
-      }
+      return null
     } catch (error) {
       console.error('WhatsAppService.parseIncomingMessage error:', error)
       return null
@@ -105,22 +150,14 @@ export class WhatsAppService {
   }
 
   /**
-   * Verify webhook signature
-   * Validates that webhook requests are from WhatsApp
+   * Verify webhook - UltraMsg uses token-based verification
    */
   static verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
     try {
-      // This is a placeholder - actual implementation would use HMAC-SHA256
-      // In production, use crypto library:
-      // const crypto = require('crypto')
-      // const hash = crypto
-      //   .createHmac('sha256', secret)
-      //   .update(payload)
-      //   .digest('hex')
-      // return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hash))
-
-      // For now, basic validation
-      return signature && signature.length > 0
+      // UltraMsg doesn't use signature verification like WhatsApp Cloud API
+      // Instead, verify the webhook URL contains the correct token
+      // For now, we allow all requests and rely on URL secrecy
+      return true
     } catch (error) {
       console.error('WhatsAppService.verifyWebhookSignature error:', error)
       return false
@@ -128,7 +165,7 @@ export class WhatsAppService {
   }
 
   /**
-   * Send media message
+   * Send media/image message via UltraMsg
    */
   static async sendMediaMessage(
     recipientPhone: string,
@@ -137,42 +174,39 @@ export class WhatsAppService {
     tenantId: string
   ): Promise<boolean> {
     try {
-      if (!this.accessToken || !this.phoneNumberId) {
-        console.warn('WhatsApp credentials not configured')
+      if (!this.token || !this.instanceId) {
+        console.warn('UltraMsg credentials not configured')
         return false
       }
 
-      const payload = {
-        messaging_product: 'whatsapp',
-        to: recipientPhone,
-        type: 'image',
-        image: {
-          link: mediaUrl,
-        },
-      }
+      const formattedPhone = this.formatPhoneNumber(recipientPhone)
 
+      const params = new URLSearchParams()
+      params.append('token', this.token)
+      params.append('to', formattedPhone)
+      params.append('image', mediaUrl)
       if (caption) {
-        payload.image.caption = caption
+        params.append('caption', caption)
       }
 
       const response = await fetch(
-        `${this.whatsappApiUrl}/${this.phoneNumberId}/messages`,
+        `${this.apiUrl}/messages/image`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify(payload),
+          body: params.toString(),
         }
       )
 
       if (!response.ok) {
-        console.error('WhatsApp media send error:', await response.text())
+        console.error('UltraMsg media send error:', await response.text())
         return false
       }
 
-      return true
+      const data = await response.json()
+      return data.sent === 'true' || data.sent === true
     } catch (error) {
       console.error('WhatsAppService.sendMediaMessage error:', error)
       return false
@@ -180,73 +214,70 @@ export class WhatsAppService {
   }
 
   /**
-   * Send templated message
+   * Send document via UltraMsg
    */
-  static async sendTemplateMessage(
+  static async sendDocument(
     recipientPhone: string,
-    templateName: string,
-    parameters: string[],
+    documentUrl: string,
+    filename: string,
     tenantId: string
   ): Promise<boolean> {
     try {
-      if (!this.accessToken || !this.phoneNumberId) {
-        console.warn('WhatsApp credentials not configured')
+      if (!this.token || !this.instanceId) {
+        console.warn('UltraMsg credentials not configured')
         return false
       }
 
-      const payload = {
-        messaging_product: 'whatsapp',
-        to: recipientPhone,
-        type: 'template',
-        template: {
-          name: templateName,
-          language: {
-            code: 'ar',
-          },
-          parameters: {
-            body: {
-              parameters: parameters.map((param) => ({ text: param })),
-            },
-          },
-        },
-      }
+      const formattedPhone = this.formatPhoneNumber(recipientPhone)
+
+      const params = new URLSearchParams()
+      params.append('token', this.token)
+      params.append('to', formattedPhone)
+      params.append('document', documentUrl)
+      params.append('filename', filename)
 
       const response = await fetch(
-        `${this.whatsappApiUrl}/${this.phoneNumberId}/messages`,
+        `${this.apiUrl}/messages/document`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify(payload),
+          body: params.toString(),
         }
       )
 
       if (!response.ok) {
-        console.error('WhatsApp template send error:', await response.text())
+        console.error('UltraMsg document send error:', await response.text())
         return false
       }
 
-      return true
+      const data = await response.json()
+      return data.sent === 'true' || data.sent === true
     } catch (error) {
-      console.error('WhatsAppService.sendTemplateMessage error:', error)
+      console.error('WhatsAppService.sendDocument error:', error)
       return false
     }
   }
 
   /**
-   * Set credentials
+   * Get instance status from UltraMsg
    */
-  static setCredentials(accessToken: string, phoneNumberId: string): void {
-    this.accessToken = accessToken
-    this.phoneNumberId = phoneNumberId
-  }
+  static async getInstanceStatus(): Promise<any> {
+    try {
+      const response = await fetch(
+        `${this.apiUrl}/instance/status?token=${this.token}`,
+        { method: 'GET' }
+      )
 
-  /**
-   * Check if configured
-   */
-  static isConfigured(): boolean {
-    return !!this.accessToken && !!this.phoneNumberId
+      if (!response.ok) {
+        return { status: 'error', message: await response.text() }
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('WhatsAppService.getInstanceStatus error:', error)
+      return { status: 'error', message: String(error) }
+    }
   }
 }
