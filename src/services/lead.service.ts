@@ -4,7 +4,8 @@
  */
 
 import { LeadRepository } from "@/repositories/lead.repo";
-import { Lead, LeadFilter, LeadUpdatePayload } from "@/types/lead";
+import { ConversationMessage, Lead, LeadFilter, LeadUpdatePayload } from "@/types/lead";
+import crypto from "crypto";
 
 export class LeadService {
   /**
@@ -18,24 +19,36 @@ export class LeadService {
     source: string = "whatsapp",
   ): Promise<Lead | null> {
     try {
-      // Check if lead already exists
       const existing = await LeadRepository.findLeadByPhone(tenantId, phone);
 
+      const newMessage: ConversationMessage = {
+        id: crypto.randomUUID(),
+        role: "user",
+        message,
+        timestamp: new Date().toISOString(),
+      };
+
       if (existing) {
-        // Update existing lead - skip conversation history if column doesn't exist
-        return existing;
+        // Append incoming message to conversation history and update last contact
+        const history: ConversationMessage[] = Array.isArray(existing.conversation_history)
+          ? existing.conversation_history
+          : [];
+        return await LeadRepository.updateLead(tenantId, existing.id, {
+          message,
+          conversation_history: [...history, newMessage],
+          last_contacted_at: new Date().toISOString(),
+        });
       }
 
-      // Create new lead with minimal required fields
-      const leadData: Partial<Lead> = {
+      return await LeadRepository.createLead(tenantId, {
         phone,
         name: name || "Unknown",
         message,
         source: source as any,
         status: "new" as any,
-      };
-
-      return await LeadRepository.createLead(tenantId, leadData);
+        conversation_history: [newMessage],
+        last_contacted_at: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("LeadService.createLeadFromMessage error:", error);
       return null;
@@ -43,8 +56,7 @@ export class LeadService {
   }
 
   /**
-   * Add message to existing lead conversation
-   * Note: Skips conversation_history update if column doesn't exist
+   * Add message to existing lead conversation history
    */
   static async addMessageToLead(
     tenantId: string,
@@ -59,13 +71,21 @@ export class LeadService {
         return null;
       }
 
-      // Simple update - just update last_message timestamp
-      const updates: LeadUpdatePayload = {
-        message: message,
-        status: lead.status,
+      const history: ConversationMessage[] = Array.isArray(lead.conversation_history)
+        ? lead.conversation_history
+        : [];
+
+      const newMessage: ConversationMessage = {
+        id: crypto.randomUUID(),
+        role: type === "outgoing" ? "assistant" : "user",
+        message,
+        timestamp: new Date().toISOString(),
       };
 
-      return await LeadRepository.updateLead(tenantId, leadId, updates);
+      return await LeadRepository.updateLead(tenantId, leadId, {
+        conversation_history: [...history, newMessage],
+        last_contacted_at: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("LeadService.addMessageToLead error:", error);
       return null;
