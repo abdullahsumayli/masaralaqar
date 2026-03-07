@@ -36,6 +36,7 @@ export interface LeadUpdatePayload {
   phone?: string
   name?: string
   email?: string
+  message?: string
   location_interest?: string
   budget?: number
   property_type_interest?: string

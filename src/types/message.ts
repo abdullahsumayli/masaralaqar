@@ -7,18 +7,31 @@ export interface WhatsAppMessage {
   id: string;
   phone: string;
   text: string;
-  timestamp: number;
+  timestamp: string;
   media?: {
     type: "image" | "document" | "audio";
     url: string;
   };
 }
 
+export type MessageIntent =
+  | "search"
+  | "inquiry"
+  | "inquire"
+  | "booking"
+  | "schedule"
+  | "contact"
+  | "complaint"
+  | "greeting"
+  | "general"
+  | "other";
+
 export interface MessageAnalysis {
-  intent: "search" | "inquiry" | "booking" | "complaint" | "other";
+  intent: MessageIntent;
   extractedData: {
-    budget?: number;
+    budget?: { min?: number; max?: number };
     location?: string;
+    city?: string;
     propertyType?: string;
     bedrooms?: number;
     bathrooms?: number;
@@ -26,9 +39,10 @@ export interface MessageAnalysis {
       min?: number;
       max?: number;
     };
+    intent?: string;
   };
   confidence: number; // 0-1
-  rawMessage: string;
+  rawMessage?: string;
 }
 
 export interface AIResponse {
@@ -48,7 +62,7 @@ export interface AIResponse {
   shouldCreateLead: boolean;
   leadData?: {
     name?: string;
-    phone: string;
+    phone?: string;
     interest?: string;
     budget?: number;
   };

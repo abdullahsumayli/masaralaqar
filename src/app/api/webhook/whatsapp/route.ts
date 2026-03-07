@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     let matchedProperties: any[] = [];
     if (analysis.extractedData.propertyType || analysis.extractedData.budget) {
       const searchResult = await PropertyService.searchProperties(tenant.id, {
-        type: analysis.extractedData.propertyType,
+        type: analysis.extractedData.propertyType as import("@/types/property").PropertyType | undefined,
         minPrice: analysis.extractedData.budget?.min,
         maxPrice: analysis.extractedData.budget?.max,
         city: analysis.extractedData.city,

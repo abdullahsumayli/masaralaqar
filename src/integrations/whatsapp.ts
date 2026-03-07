@@ -118,7 +118,7 @@ export class WhatsAppService {
           phone,
           text,
           timestamp: new Date().toISOString(),
-          media: data.media ? { type: "image", url: data.media } : null,
+          media: data.media ? { type: "image" as const, url: data.media } : undefined,
         };
       }
 
@@ -149,7 +149,7 @@ export class WhatsAppService {
           phone,
           text,
           timestamp: new Date(parseInt(message.timestamp) * 1000).toISOString(),
-          media: null,
+          media: undefined,
         };
       }
 

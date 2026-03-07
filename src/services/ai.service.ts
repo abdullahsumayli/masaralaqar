@@ -12,7 +12,7 @@ import {
     extractCity,
     extractPropertyType,
 } from "@/lib/parser";
-import { AIResponse, MessageAnalysis, TenantContext } from "@/types/message";
+import { AIResponse, MessageAnalysis, MessageIntent, TenantContext } from "@/types/message";
 import { Property } from "@/types/property";
 
 export class AIService {
@@ -51,7 +51,7 @@ export class AIService {
     const confidence = confidenceFactors / totalFactors;
 
     return {
-      intent,
+      intent: intent as MessageIntent,
       extractedData,
       confidence,
     };
@@ -172,11 +172,11 @@ export class AIService {
 
       shouldCreateLead = true;
       leadData = {
-        location_interest: extractedData.city,
-        budget: extractedData.budget?.max || extractedData.budget?.min,
+        location_interest: extractedData.city || extractedData.location,
+        budget: extractedData.budget?.max ?? extractedData.budget?.min,
         property_type_interest: extractedData.propertyType,
         message: `تم البحث عن: ${JSON.stringify(extractedData)}`,
-      };
+      } as any;
     }
 
     // Contact/Schedule response
@@ -262,7 +262,7 @@ export class AIService {
       maxScore += 0.15;
       if (property.bedrooms === criteria.bedrooms) {
         score += 0.15;
-      } else if (Math.abs(property.bedrooms - criteria.bedrooms) === 1) {
+      } else if (property.bedrooms !== undefined && Math.abs(property.bedrooms - criteria.bedrooms) === 1) {
         score += 0.075; // Partial credit if ±1 bedroom
       }
     } else {

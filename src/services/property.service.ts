@@ -27,6 +27,7 @@ export class PropertyService {
 
       return {
         properties,
+        total: result.total || properties.length,
         count: properties.length,
         query: filters,
         totalMatches: result.total || properties.length,
@@ -35,6 +36,7 @@ export class PropertyService {
       console.error("PropertyService.searchProperties error:", error);
       return {
         properties: [],
+        total: 0,
         count: 0,
         query: filters,
         totalMatches: 0,

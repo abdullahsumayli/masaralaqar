@@ -11,7 +11,7 @@ import {
     extractCity,
     extractPropertyType,
 } from "@/lib/parser";
-import { MessageAnalysis } from "@/types/message";
+import { MessageAnalysis, MessageIntent } from "@/types/message";
 
 export class OpenAIService {
   private static apiKey: string = process.env.OPENAI_API_KEY || "";
@@ -268,7 +268,7 @@ ${
           break;
 
         default:
-          response = `فهمت: "${messageAnalysis.extractedData.intent || message}". كيف يمكنني المساعدة؟`;
+          response = `فهمت: "${messageAnalysis.extractedData.intent || messageAnalysis.intent}". كيف يمكنني المساعدة؟`;
       }
 
       return response;
@@ -308,14 +308,14 @@ ${
       confidence = Math.min(1, confidence);
 
       return {
-        intent,
+        intent: intent as MessageIntent,
         extractedData,
         confidence,
       };
     } catch (error) {
       console.error("OpenAIService.analyzeMessageComprehensive error:", error);
       return {
-        intent: "general",
+        intent: "general" as MessageIntent,
         extractedData: {},
         confidence: 0,
       };
