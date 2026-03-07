@@ -3,8 +3,12 @@
  * High-level property operations
  */
 
-import { PropertyRepository } from '@/repositories/property.repo'
-import { Property, PropertySearchResult, PropertySearchFilters } from '@/types/property'
+import { PropertyRepository } from "@/repositories/property.repo";
+import {
+    Property,
+    PropertySearchFilters,
+    PropertySearchResult,
+} from "@/types/property";
 
 export class PropertyService {
   /**
@@ -12,68 +16,84 @@ export class PropertyService {
    */
   static async searchProperties(
     tenantId: string,
-    filters: PropertySearchFilters
+    filters: PropertySearchFilters,
   ): Promise<PropertySearchResult> {
     try {
-      const properties = await PropertyRepository.searchProperties(tenantId, filters)
+      const result = await PropertyRepository.searchProperties(
+        tenantId,
+        filters,
+      );
+      const properties = result.properties || [];
 
       return {
         properties,
         count: properties.length,
         query: filters,
-        totalMatches: properties.length,
-      }
+        totalMatches: result.total || properties.length,
+      };
     } catch (error) {
-      console.error('PropertyService.searchProperties error:', error)
+      console.error("PropertyService.searchProperties error:", error);
       return {
         properties: [],
         count: 0,
         query: filters,
         totalMatches: 0,
-      }
+      };
     }
   }
 
   /**
    * Get single property details
    */
-  static async getPropertyDetails(tenantId: string, propertyId: string): Promise<Property | null> {
+  static async getPropertyDetails(
+    tenantId: string,
+    propertyId: string,
+  ): Promise<Property | null> {
     try {
-      const property = await PropertyRepository.getPropertyById(tenantId, propertyId)
+      const property = await PropertyRepository.getPropertyById(
+        tenantId,
+        propertyId,
+      );
 
       if (property) {
         // Increment view count
-        await PropertyRepository.incrementViews(tenantId, propertyId)
+        await PropertyRepository.incrementViews(tenantId, propertyId);
       }
 
-      return property
+      return property;
     } catch (error) {
-      console.error('PropertyService.getPropertyDetails error:', error)
-      return null
+      console.error("PropertyService.getPropertyDetails error:", error);
+      return null;
     }
   }
 
   /**
    * Get featured properties
    */
-  static async getFeaturedProperties(tenantId: string, limit: number = 5): Promise<Property[]> {
+  static async getFeaturedProperties(
+    tenantId: string,
+    limit: number = 5,
+  ): Promise<Property[]> {
     try {
-      return await PropertyRepository.getFeaturedProperties(tenantId)
+      return await PropertyRepository.getFeaturedProperties(tenantId);
     } catch (error) {
-      console.error('PropertyService.getFeaturedProperties error:', error)
-      return []
+      console.error("PropertyService.getFeaturedProperties error:", error);
+      return [];
     }
   }
 
   /**
    * Get properties by type
    */
-  static async getPropertiesByType(tenantId: string, type: string): Promise<Property[]> {
+  static async getPropertiesByType(
+    tenantId: string,
+    type: string,
+  ): Promise<Property[]> {
     try {
-      return await PropertyRepository.getPropertiesByType(tenantId, type)
+      return await PropertyRepository.getPropertiesByType(tenantId, type);
     } catch (error) {
-      console.error('PropertyService.getPropertiesByType error:', error)
-      return []
+      console.error("PropertyService.getPropertiesByType error:", error);
+      return [];
     }
   }
 
@@ -93,7 +113,7 @@ export class PropertyService {
 المشاهدات: ${property.viewsCount}
 
 ---
-*هل تريد المزيد من التفاصيل أو تحديد موعد زيارة؟*`
+*هل تريد المزيد من التفاصيل أو تحديد موعد زيارة؟*`;
   }
 
   /**
@@ -101,11 +121,11 @@ export class PropertyService {
    */
   private static getStatusInArabic(status: string): string {
     const statusMap: Record<string, string> = {
-      available: 'متاح',
-      sold: 'مباع',
-      rented: 'مؤجر',
-      archived: 'مؤرشف',
-    }
-    return statusMap[status] || status
+      available: "متاح",
+      sold: "مباع",
+      rented: "مؤجر",
+      archived: "مؤرشف",
+    };
+    return statusMap[status] || status;
   }
 }

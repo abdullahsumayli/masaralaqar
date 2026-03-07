@@ -3,8 +3,8 @@
  * Handles all tenant database operations
  */
 
-import { supabase } from '@/lib/supabase'
-import { Tenant } from '@/types/tenant'
+import { supabaseAdmin } from "@/lib/supabase";
+import { Tenant } from "@/types/tenant";
 
 export class TenantRepository {
   /**
@@ -12,21 +12,21 @@ export class TenantRepository {
    */
   static async getTenantById(tenantId: string): Promise<Tenant | null> {
     try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('id', tenantId)
-        .single()
+      const { data, error } = await supabaseAdmin
+        .from("tenants")
+        .select("*")
+        .eq("id", tenantId)
+        .single();
 
       if (error) {
-        console.error('Tenant fetch error:', error)
-        return null
+        console.error("Tenant fetch error:", error);
+        return null;
       }
 
-      return this.formatTenant(data)
+      return this.formatTenant(data);
     } catch (error) {
-      console.error('TenantRepository.getTenantById error:', error)
-      return null
+      console.error("TenantRepository.getTenantById error:", error);
+      return null;
     }
   }
 
@@ -35,21 +35,21 @@ export class TenantRepository {
    */
   static async getTenantByPhone(phone: string): Promise<Tenant | null> {
     try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('whatsapp_number', phone)
-        .single()
+      const { data, error } = await supabaseAdmin
+        .from("tenants")
+        .select("*")
+        .eq("whatsapp_number", phone)
+        .single();
 
       if (error) {
-        console.error('Tenant fetch by phone error:', error)
-        return null
+        console.error("Tenant fetch by phone error:", error);
+        return null;
       }
 
-      return this.formatTenant(data)
+      return this.formatTenant(data);
     } catch (error) {
-      console.error('TenantRepository.getTenantByPhone error:', error)
-      return null
+      console.error("TenantRepository.getTenantByPhone error:", error);
+      return null;
     }
   }
 
@@ -58,21 +58,21 @@ export class TenantRepository {
    */
   static async getTenantByWebhook(secret: string): Promise<Tenant | null> {
     try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('webhook_secret', secret)
-        .single()
+      const { data, error } = await supabaseAdmin
+        .from("tenants")
+        .select("*")
+        .eq("webhook_secret", secret)
+        .single();
 
       if (error) {
-        console.error('Tenant fetch by webhook error:', error)
-        return null
+        console.error("Tenant fetch by webhook error:", error);
+        return null;
       }
 
-      return this.formatTenant(data)
+      return this.formatTenant(data);
     } catch (error) {
-      console.error('TenantRepository.getTenantByWebhook error:', error)
-      return null
+      console.error("TenantRepository.getTenantByWebhook error:", error);
+      return null;
     }
   }
 
@@ -81,28 +81,28 @@ export class TenantRepository {
    */
   static async updateTenant(
     tenantId: string,
-    updates: Partial<Tenant>
+    updates: Partial<Tenant>,
   ): Promise<Tenant | null> {
     try {
-      const { data, error } = await supabase
-        .from('tenants')
+      const { data, error } = await supabaseAdmin
+        .from("tenants")
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', tenantId)
+        .eq("id", tenantId)
         .select()
-        .single()
+        .single();
 
       if (error) {
-        console.error('Tenant update error:', error)
-        return null
+        console.error("Tenant update error:", error);
+        return null;
       }
 
-      return this.formatTenant(data)
+      return this.formatTenant(data);
     } catch (error) {
-      console.error('TenantRepository.updateTenant error:', error)
-      return null
+      console.error("TenantRepository.updateTenant error:", error);
+      return null;
     }
   }
 
@@ -120,6 +120,6 @@ export class TenantRepository {
       openaiApiKey: data.openai_api_key,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
-    }
+    };
   }
 }

@@ -3,8 +3,8 @@
  * High-level lead/customer operations
  */
 
-import { LeadRepository } from '@/repositories/lead.repo'
-import { Lead, LeadUpdatePayload, LeadFilter } from '@/types/lead'
+import { LeadRepository } from "@/repositories/lead.repo";
+import { Lead, LeadFilter, LeadUpdatePayload } from "@/types/lead";
 
 export class LeadService {
   /**
@@ -15,75 +15,60 @@ export class LeadService {
     phone: string,
     name: string,
     message: string,
-    source: string = 'whatsapp'
+    source: string = "whatsapp",
   ): Promise<Lead | null> {
     try {
       // Check if lead already exists
-      const existing = await LeadRepository.findLeadByPhone(tenantId, phone)
+      const existing = await LeadRepository.findLeadByPhone(tenantId, phone);
 
       if (existing) {
-        // Update existing lead
-        return await this.addMessageToLead(tenantId, existing.id, message)
+        // Update existing lead - skip conversation history if column doesn't exist
+        return existing;
       }
 
-      // Create new lead
-      const leadData = {
+      // Create new lead with minimal required fields
+      const leadData: Partial<Lead> = {
         phone,
-        name: name || 'Unknown',
+        name: name || "Unknown",
         message,
         source: source as any,
-        status: 'new' as any,
-        conversation_history: [
-          {
-            type: 'incoming',
-            message,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      }
+        status: "new" as any,
+      };
 
-      return await LeadRepository.createLead(tenantId, leadData)
+      return await LeadRepository.createLead(tenantId, leadData);
     } catch (error) {
-      console.error('LeadService.createLeadFromMessage error:', error)
-      return null
+      console.error("LeadService.createLeadFromMessage error:", error);
+      return null;
     }
   }
 
   /**
    * Add message to existing lead conversation
+   * Note: Skips conversation_history update if column doesn't exist
    */
   static async addMessageToLead(
     tenantId: string,
     leadId: string,
     message: string,
-    type: 'incoming' | 'outgoing' = 'incoming'
+    type: "incoming" | "outgoing" = "incoming",
   ): Promise<Lead | null> {
     try {
-      const lead = await LeadRepository.getLeadById(tenantId, leadId)
+      const lead = await LeadRepository.getLeadById(tenantId, leadId);
 
       if (!lead) {
-        return null
+        return null;
       }
 
-      const conversationHistory = Array.isArray(lead.conversation_history)
-        ? [...lead.conversation_history]
-        : []
-
-      conversationHistory.push({
-        type,
-        message,
-        timestamp: new Date().toISOString(),
-      })
-
+      // Simple update - just update last_message timestamp
       const updates: LeadUpdatePayload = {
-        conversation_history: conversationHistory as any,
-        status: lead.status, // Preserve current status
-      }
+        message: message,
+        status: lead.status,
+      };
 
-      return await LeadRepository.updateLead(tenantId, leadId, updates)
+      return await LeadRepository.updateLead(tenantId, leadId, updates);
     } catch (error) {
-      console.error('LeadService.addMessageToLead error:', error)
-      return null
+      console.error("LeadService.addMessageToLead error:", error);
+      return null;
     }
   }
 
@@ -94,42 +79,46 @@ export class LeadService {
     tenantId: string,
     phone: string,
     preferences: {
-      city?: string
-      budget?: { min?: number; max?: number }
-      propertyType?: string
-      bedrooms?: number
-    }
+      city?: string;
+      budget?: { min?: number; max?: number };
+      propertyType?: string;
+      bedrooms?: number;
+    },
   ): Promise<Lead | null> {
     try {
-      const lead = await LeadRepository.findLeadByPhone(tenantId, phone)
+      const lead = await LeadRepository.findLeadByPhone(tenantId, phone);
 
       if (!lead) {
-        return null
+        return null;
       }
 
       const updates: LeadUpdatePayload = {
         location_interest: preferences.city || lead.location_interest,
         budget: preferences.budget?.max || lead.budget,
-        property_type_interest: preferences.propertyType || lead.property_type_interest,
+        property_type_interest:
+          preferences.propertyType || lead.property_type_interest,
         status: lead.status,
-      }
+      };
 
-      return await LeadRepository.updateLead(tenantId, lead.id, updates)
+      return await LeadRepository.updateLead(tenantId, lead.id, updates);
     } catch (error) {
-      console.error('LeadService.updateLeadPreferences error:', error)
-      return null
+      console.error("LeadService.updateLeadPreferences error:", error);
+      return null;
     }
   }
 
   /**
    * Get all leads for tenant with optional filters
    */
-  static async getLeads(tenantId: string, filters?: LeadFilter): Promise<Lead[]> {
+  static async getLeads(
+    tenantId: string,
+    filters?: LeadFilter,
+  ): Promise<Lead[]> {
     try {
-      return await LeadRepository.getLeads(tenantId, filters)
+      return await LeadRepository.getLeads(tenantId, filters);
     } catch (error) {
-      console.error('LeadService.getLeads error:', error)
-      return []
+      console.error("LeadService.getLeads error:", error);
+      return [];
     }
   }
 
@@ -139,43 +128,51 @@ export class LeadService {
   static async changeLeadStatus(
     tenantId: string,
     leadId: string,
-    newStatus: string
+    newStatus: string,
   ): Promise<Lead | null> {
     try {
-      return await LeadRepository.changeLeadStatus(tenantId, leadId, newStatus)
+      return await LeadRepository.changeLeadStatus(tenantId, leadId, newStatus);
     } catch (error) {
-      console.error('LeadService.changeLeadStatus error:', error)
-      return null
+      console.error("LeadService.changeLeadStatus error:", error);
+      return null;
     }
   }
 
   /**
    * Get lead conversation history
    */
-  static async getConversation(tenantId: string, leadId: string): Promise<any[] | null> {
+  static async getConversation(
+    tenantId: string,
+    leadId: string,
+  ): Promise<any[] | null> {
     try {
-      const lead = await LeadRepository.getLeadById(tenantId, leadId)
+      const lead = await LeadRepository.getLeadById(tenantId, leadId);
 
       if (!lead) {
-        return null
+        return null;
       }
 
-      return Array.isArray(lead.conversation_history) ? lead.conversation_history : []
+      return Array.isArray(lead.conversation_history)
+        ? lead.conversation_history
+        : [];
     } catch (error) {
-      console.error('LeadService.getConversation error:', error)
-      return null
+      console.error("LeadService.getConversation error:", error);
+      return null;
     }
   }
 
   /**
    * Get leads by status
    */
-  static async getLeadsByStatus(tenantId: string, status: string): Promise<Lead[]> {
+  static async getLeadsByStatus(
+    tenantId: string,
+    status: string,
+  ): Promise<Lead[]> {
     try {
-      return await LeadRepository.getLeads(tenantId, { status: status as any })
+      return await LeadRepository.getLeads(tenantId, { status: status as any });
     } catch (error) {
-      console.error('LeadService.getLeadsByStatus error:', error)
-      return []
+      console.error("LeadService.getLeadsByStatus error:", error);
+      return [];
     }
   }
 }

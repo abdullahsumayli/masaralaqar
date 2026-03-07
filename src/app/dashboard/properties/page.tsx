@@ -1,129 +1,128 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { 
-  Building2, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  Loader,
-  Upload,
-  X,
-  Search,
-  Image as ImageIcon
-} from 'lucide-react'
-import { Property, PropertyType } from '@/types/property'
+import { useAuth } from "@/hooks/useAuth";
+import { Property, PropertyType } from "@/types/property";
+import {
+    Building2,
+    Image as ImageIcon,
+    Loader,
+    Plus,
+    Search,
+    Trash2,
+    Upload,
+    X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface PropertyFormData {
-  title: string
-  description: string
-  price: string
-  city: string
-  location: string
-  type: PropertyType
-  bedrooms: string
-  bathrooms: string
-  area: string
+  title: string;
+  description: string;
+  price: string;
+  city: string;
+  location: string;
+  type: PropertyType;
+  bedrooms: string;
+  bathrooms: string;
+  area: string;
 }
 
 const initialFormData: PropertyFormData = {
-  title: '',
-  description: '',
-  price: '',
-  city: 'الرياض',
-  location: '',
-  type: 'apartment',
-  bedrooms: '',
-  bathrooms: '',
-  area: '',
-}
+  title: "",
+  description: "",
+  price: "",
+  city: "الرياض",
+  location: "",
+  type: "apartment",
+  bedrooms: "",
+  bathrooms: "",
+  area: "",
+};
 
-const cities = ['الرياض', 'جدة', 'الدمام', 'الخبر', 'مكة', 'المدينة']
+const cities = ["الرياض", "جدة", "الدمام", "الخبر", "مكة", "المدينة"];
 const propertyTypes: { value: PropertyType; label: string }[] = [
-  { value: 'apartment', label: 'شقة' },
-  { value: 'villa', label: 'فيلا' },
-  { value: 'land', label: 'أرض' },
-  { value: 'commercial', label: 'تجاري' },
-]
+  { value: "apartment", label: "شقة" },
+  { value: "villa", label: "فيلا" },
+  { value: "land", label: "أرض" },
+  { value: "commercial", label: "تجاري" },
+];
 
 export default function PropertiesPage() {
-  const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
-  const [properties, setProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState<PropertyFormData>(initialFormData)
-  const [submitting, setSubmitting] = useState(false)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [selectedImages, setSelectedImages] = useState<string[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login')
+      router.push("/login");
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router]);
 
   useEffect(() => {
-    fetchProperties()
-  }, [])
+    fetchProperties();
+  }, []);
 
   const fetchProperties = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/properties/list')
-      const data = await response.json()
+      setLoading(true);
+      const response = await fetch("/api/properties/list");
+      const data = await response.json();
       if (data.success) {
-        setProperties(data.properties)
+        setProperties(data.properties);
       }
     } catch (error) {
-      console.error('Failed to fetch properties:', error)
+      console.error("Failed to fetch properties:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setUploadingImage(true)
-    const uploadedUrls: string[] = []
+    setUploadingImage(true);
+    const uploadedUrls: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('tenant_id', 'default')
+      const file = files[i];
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("tenant_id", "default");
 
       try {
-        const response = await fetch('/api/properties/upload-image', {
-          method: 'POST',
+        const response = await fetch("/api/properties/upload-image", {
+          method: "POST",
           body: formData,
-        })
-        const data = await response.json()
+        });
+        const data = await response.json();
         if (data.success && data.url) {
-          uploadedUrls.push(data.url)
+          uploadedUrls.push(data.url);
         }
       } catch (error) {
-        console.error('Failed to upload image:', error)
+        console.error("Failed to upload image:", error);
       }
     }
 
-    setSelectedImages([...selectedImages, ...uploadedUrls])
-    setUploadingImage(false)
-  }
+    setSelectedImages([...selectedImages, ...uploadedUrls]);
+    setUploadingImage(false);
+  };
 
   const removeImage = (index: number) => {
-    setSelectedImages(selectedImages.filter((_, i) => i !== index))
-  }
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       const payload = {
@@ -137,65 +136,65 @@ export default function PropertiesPage() {
         bathrooms: formData.bathrooms ? parseInt(formData.bathrooms, 10) : null,
         area: formData.area ? parseFloat(formData.area) : null,
         images: selectedImages,
-        tenant_id: 'default',
-      }
+        tenant_id: "default",
+      };
 
-      const response = await fetch('/api/properties/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/properties/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setFormData(initialFormData)
-        setSelectedImages([])
-        setShowForm(false)
-        fetchProperties()
+        setFormData(initialFormData);
+        setSelectedImages([]);
+        setShowForm(false);
+        fetchProperties();
       } else {
-        alert('فشل في إضافة العقار: ' + (data.error || 'خطأ غير معروف'))
+        alert("فشل في إضافة العقار: " + (data.error || "خطأ غير معروف"));
       }
     } catch (error) {
-      console.error('Failed to create property:', error)
-      alert('حدث خطأ أثناء إضافة العقار')
+      console.error("Failed to create property:", error);
+      alert("حدث خطأ أثناء إضافة العقار");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا العقار؟')) return
+    if (!confirm("هل أنت متأكد من حذف هذا العقار؟")) return;
 
     try {
       const response = await fetch(`/api/properties/${id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
       if (response.ok) {
-        fetchProperties()
+        fetchProperties();
       }
     } catch (error) {
-      console.error('Failed to delete property:', error)
+      console.error("Failed to delete property:", error);
     }
-  }
+  };
 
   const filteredProperties = properties.filter(
     (p) =>
       p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.location?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      p.location?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const getTypeLabel = (type: string) => {
-    return propertyTypes.find((t) => t.value === type)?.label || type
-  }
+    return propertyTypes.find((t) => t.value === type)?.label || type;
+  };
 
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader className="w-8 h-8 animate-spin text-blue-600" />
       </div>
-    )
+    );
   }
 
   return (
@@ -321,9 +320,9 @@ export default function PropertiesPage() {
               <h2 className="text-xl font-bold">إضافة عقار جديد</h2>
               <button
                 onClick={() => {
-                  setShowForm(false)
-                  setFormData(initialFormData)
-                  setSelectedImages([])
+                  setShowForm(false);
+                  setFormData(initialFormData);
+                  setSelectedImages([]);
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -514,7 +513,7 @@ export default function PropertiesPage() {
                       <Upload className="w-8 h-8 text-gray-400 mb-2" />
                     )}
                     <span className="text-gray-500">
-                      {uploadingImage ? 'جاري الرفع...' : 'اضغط لرفع الصور'}
+                      {uploadingImage ? "جاري الرفع..." : "اضغط لرفع الصور"}
                     </span>
                   </label>
                 </div>
@@ -567,5 +566,5 @@ export default function PropertiesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

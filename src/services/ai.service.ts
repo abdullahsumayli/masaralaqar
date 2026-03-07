@@ -76,7 +76,7 @@ export class AIService {
       return {
         reply,
         suggestions: [],
-        properties: matchedProperties.slice(0, 5).map(p => ({
+        properties: matchedProperties.slice(0, 5).map((p) => ({
           id: p.id,
           title: p.title,
           price: p.price,
@@ -106,10 +106,10 @@ export class AIService {
    */
   private static getPropertyTypeArabic(type: string): string {
     const types: Record<string, string> = {
-      apartment: 'شقة',
-      villa: 'فيلا',
-      land: 'أرض',
-      commercial: 'تجاري',
+      apartment: "شقة",
+      villa: "فيلا",
+      land: "أرض",
+      commercial: "تجاري",
     };
     return types[type] || type;
   }
@@ -163,7 +163,7 @@ export class AIService {
         matchedProperties.slice(0, 5).forEach((prop, idx) => {
           reply += this.formatPropertyMessage(prop);
           if (idx < Math.min(matchedProperties.length - 1, 4)) {
-            reply += '\n---\n';
+            reply += "\n---\n";
           }
         });
         suggestions.push("أرسل صور العقارات");
@@ -196,7 +196,7 @@ export class AIService {
     return {
       reply,
       suggestions,
-      properties: matchedProperties.slice(0, 5).map(p => ({
+      properties: matchedProperties.slice(0, 5).map((p) => ({
         id: p.id,
         title: p.title,
         price: p.price,

@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
       let imagesSent = 0;
       for (const property of response.properties) {
         if (imagesSent >= 3) break; // Limit to 3 images
-        
+
         const imageUrl = property.images?.[0] || property.image_url;
         if (imageUrl) {
           const caption = `🏠 ${property.title}\n📍 ${property.city || property.location}\n💰 ${property.price?.toLocaleString()} ريال`;
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
           );
           imagesSent++;
           // Small delay between image sends
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
     }
