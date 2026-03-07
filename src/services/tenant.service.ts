@@ -3,10 +3,23 @@
  * Tenant configuration and management
  */
 
-import { TenantRepository } from '@/repositories/tenant.repo'
+import { TenantRepository, CreateTenantInput } from '@/repositories/tenant.repo'
 import { Tenant } from '@/types/tenant'
+import crypto from 'crypto'
 
 export class TenantService {
+  /**
+   * Create a new tenant (called during agent onboarding)
+   */
+  static async createTenant(input: CreateTenantInput): Promise<Tenant | null> {
+    try {
+      return await TenantRepository.createTenant(input)
+    } catch (error) {
+      console.error('TenantService.createTenant error:', error)
+      return null
+    }
+  }
+
   /**
    * Get tenant by ID
    */
@@ -87,21 +100,20 @@ export class TenantService {
   }
 
   /**
-   * Verify webhook signature
+   * Verify webhook signature using HMAC-SHA256
    * Used to validate messages from WhatsApp Cloud API
    */
   static verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
     try {
-      // This is a placeholder - real implementation would use HMAC-SHA256
-      // const crypto = require('crypto')
-      // const expectedSignature = crypto
-      //   .createHmac('sha256', secret)
-      //   .update(payload)
-      //   .digest('hex')
-      // return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))
-
-      // For now, just check if signature format is valid
-      return signature && signature.length > 0
+      if (!signature || !secret) return false
+      const expected = crypto
+        .createHmac('sha256', secret)
+        .update(payload)
+        .digest('hex')
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expected),
+      )
     } catch (error) {
       console.error('TenantService.verifyWebhookSignature error:', error)
       return false

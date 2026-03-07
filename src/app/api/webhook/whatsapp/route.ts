@@ -125,47 +125,44 @@ export async function POST(request: NextRequest) {
 
     console.log("Received message:", message);
 
-    // For now, use a default tenant context (single tenant mode)
-    // In multi-tenant mode, lookup tenant by webhook secret
-    let tenant = null;
-    try {
-      tenant = await TenantService.getTenantByWebhook(secret);
-    } catch (error) {
-      console.log("Tenant lookup failed, using default context");
-    }
+    // Lookup tenant by webhook secret for multi-tenant routing
+    const tenant = await TenantService.getTenantByWebhook(secret!);
 
-    const tenantContext: TenantContext = {
-      tenantId: tenant?.id || "default",
-      whatsappNumber: tenant?.whatsappNumber || "",
-      aiPersona: tenant?.aiPersona || {
-        agentName: "مساعد مسار العقار",
-        responseStyle: "friendly",
-        welcomeMessage:
-          "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
-      },
-    };
-
-    // Create or update lead (skip if no tenant)
-    let lead = null;
-    if (tenant?.id) {
-      lead = await LeadService.createLeadFromMessage(
-        tenant.id,
-        message.phone,
-        "",
-        message.text,
+    if (!tenant) {
+      console.warn("No tenant found for this webhook secret");
+      return NextResponse.json(
+        { error: "Tenant not found" },
+        { status: 404 },
       );
     }
+
+    const defaultAiPersona = {
+      agentName: "مساعد مسار العقار",
+      responseStyle: "friendly" as const,
+      welcomeMessage: "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
+    };
+
+    const tenantContext: TenantContext = {
+      tenantId: tenant.id,
+      whatsappNumber: tenant.whatsappNumber,
+      aiPersona: tenant.aiPersona || defaultAiPersona,
+    };
+
+    // Create or update lead
+    const lead = await LeadService.createLeadFromMessage(
+      tenant.id,
+      message.phone,
+      "",
+      message.text,
+    );
 
     // Analyze message
     const analysis = AIService.analyzeMessage(message.text, tenantContext);
     console.log("Message analysis:", analysis);
 
-    // Search for matching properties (if tenant exists)
+    // Search for matching properties
     let matchedProperties: any[] = [];
-    if (
-      tenant?.id &&
-      (analysis.extractedData.propertyType || analysis.extractedData.budget)
-    ) {
+    if (analysis.extractedData.propertyType || analysis.extractedData.budget) {
       const searchResult = await PropertyService.searchProperties(tenant.id, {
         type: analysis.extractedData.propertyType,
         minPrice: analysis.extractedData.budget?.min,
@@ -186,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     // Update lead with preferences if extracted
     if (lead && Object.keys(analysis.extractedData).length > 0) {
-      await LeadService.updateLeadPreferences(tenant!.id, message.phone, {
+      await LeadService.updateLeadPreferences(tenant.id, message.phone, {
         city: analysis.extractedData.city,
         budget: analysis.extractedData.budget,
         propertyType: analysis.extractedData.propertyType,
@@ -197,7 +194,7 @@ export async function POST(request: NextRequest) {
     // Add response to conversation
     if (lead) {
       await LeadService.addMessageToLead(
-        tenant!.id,
+        tenant.id,
         lead.id,
         response.reply,
         "outgoing",
@@ -208,7 +205,7 @@ export async function POST(request: NextRequest) {
     const sent = await WhatsAppService.sendMessage(
       message.phone,
       response.reply,
-      tenant?.id || "default",
+      tenant.id,
     );
 
     if (!sent) {
@@ -228,7 +225,7 @@ export async function POST(request: NextRequest) {
             message.phone,
             imageUrl,
             caption,
-            tenant?.id || "default",
+            tenant.id,
           );
           imagesSent++;
           // Small delay between image sends
@@ -244,7 +241,7 @@ export async function POST(request: NextRequest) {
       await WhatsAppService.sendMessage(
         message.phone,
         suggestionsText,
-        tenant?.id || "default",
+        tenant.id,
       );
     }
 

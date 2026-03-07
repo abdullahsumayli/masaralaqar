@@ -5,6 +5,19 @@
 
 import { supabaseAdmin } from "@/lib/supabase";
 import { Tenant } from "@/types/tenant";
+import crypto from "crypto";
+
+export interface CreateTenantInput {
+  name: string;
+  officeName: string;
+  whatsappNumber: string;
+  aiPersona?: {
+    agentName: string;
+    responseStyle: "formal" | "friendly";
+    welcomeMessage: string;
+  };
+  openaiApiKey?: string;
+}
 
 export class TenantRepository {
   /**
@@ -72,6 +85,46 @@ export class TenantRepository {
       return this.formatTenant(data);
     } catch (error) {
       console.error("TenantRepository.getTenantByWebhook error:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Create a new tenant
+   */
+  static async createTenant(input: CreateTenantInput): Promise<Tenant | null> {
+    try {
+      const webhookSecret = crypto.randomBytes(32).toString("hex");
+
+      const { data, error } = await supabaseAdmin
+        .from("tenants")
+        .insert([
+          {
+            name: input.name,
+            office_name: input.officeName,
+            whatsapp_number: input.whatsappNumber,
+            webhook_secret: webhookSecret,
+            ai_persona: input.aiPersona
+              ? JSON.stringify(input.aiPersona)
+              : JSON.stringify({
+                  agentName: input.name,
+                  responseStyle: "friendly",
+                  welcomeMessage: `السلام عليكم ورحمة الله وبركاته، أهلاً بكم في ${input.officeName} 🏠`,
+                }),
+            openai_api_key: input.openaiApiKey || null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Tenant creation error:", error);
+        return null;
+      }
+
+      return this.formatTenant(data);
+    } catch (error) {
+      console.error("TenantRepository.createTenant error:", error);
       return null;
     }
   }
