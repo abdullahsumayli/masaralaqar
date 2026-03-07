@@ -138,7 +138,7 @@ export class TenantService {
         totalLeads: 0,
         activeLeads: 0,
         convertedLeads: 0,
-        mesagesProcessed: 0,
+        messagesProcessed: 0,
       }
     } catch (error) {
       console.error('TenantService.getTenantStats error:', error)

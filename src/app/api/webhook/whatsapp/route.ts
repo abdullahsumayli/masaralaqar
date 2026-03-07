@@ -11,8 +11,10 @@ import { TenantService } from "@/services/tenant.service";
 import { TenantContext } from "@/types/message";
 import { NextRequest, NextResponse } from "next/server";
 
-// Fixed webhook secret for initial setup
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "masar2024secret";
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+if (!WEBHOOK_SECRET) {
+  console.error("WEBHOOK_SECRET environment variable is not set");
+}
 
 // Simple in-memory cache to prevent duplicate message processing
 const processedMessages = new Set<string>();
@@ -40,7 +42,7 @@ export async function GET(request: NextRequest) {
   const secret = searchParams.get("secret");
 
   // Simple secret verification
-  if (secret === WEBHOOK_SECRET) {
+  if (WEBHOOK_SECRET && secret === WEBHOOK_SECRET) {
     console.log("UltraMsg Webhook verified");
     return NextResponse.json({ status: "ok", message: "Webhook verified" });
   }
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === WEBHOOK_SECRET) {
+  if (WEBHOOK_SECRET && mode === "subscribe" && token === WEBHOOK_SECRET) {
     console.log("Webhook verified");
     return new NextResponse(challenge || "ok");
   }
