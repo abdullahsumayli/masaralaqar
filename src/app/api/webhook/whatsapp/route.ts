@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Verify secret
     if (secret !== WEBHOOK_SECRET) {
-      console.warn("Invalid webhook secret:", secret);
+      console.warn("Invalid webhook secret received");
       return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 

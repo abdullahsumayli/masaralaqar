@@ -6,9 +6,9 @@
 import { WhatsAppMessage } from "@/types/message";
 
 export class WhatsAppService {
-  // UltraMsg API Configuration
-  private static instanceId = process.env.ULTRAMSG_INSTANCE || "instance164031";
-  private static token = process.env.ULTRAMSG_TOKEN || "6eawfm9yjnjw3czn";
+  // UltraMsg API Configuration — loaded from environment variables only
+  private static instanceId = process.env.ULTRAMSG_INSTANCE;
+  private static token = process.env.ULTRAMSG_TOKEN;
   private static apiUrl = `https://api.ultramsg.com/${this.instanceId}`;
 
   /**
