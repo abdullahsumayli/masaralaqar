@@ -6,21 +6,20 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  FileText, 
-  Settings, 
+import {
+  Building2,
+  Users,
+  Settings,
   LogOut,
   TrendingUp,
   Calendar,
   Bell,
   ChevronLeft,
-  Loader,
+  Loader2,
   MessageSquare,
   BarChart3,
-  Clock
+  Clock,
+  ArrowUpRight,
 } from 'lucide-react'
 import { signOut } from '@/lib/auth'
 
@@ -41,17 +40,7 @@ export default function DashboardPage() {
     router.push('/')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
+  if (loading || !user) return null
 
   const stats = [
     { label: 'العملاء النشطين', value: '24', icon: Users, change: '+12%', positive: true },
@@ -111,7 +100,7 @@ export default function DashboardPage() {
                 className="p-2 text-text-secondary hover:text-red-500 transition-colors"
               >
                 {isLoggingOut ? (
-                  <Loader className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <LogOut className="w-5 h-5" />
                 )}
@@ -203,19 +192,49 @@ export default function DashboardPage() {
               </div>
             </motion.div>
 
-            {/* Performance Chart Placeholder */}
+            {/* Performance Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="bg-background rounded-xl p-6 border border-border"
             >
-              <h2 className="text-lg font-bold text-text-primary mb-4">أداء الأسبوع</h2>
-              <div className="h-64 flex items-center justify-center bg-surface rounded-lg">
-                <div className="text-center">
-                  <BarChart3 className="w-12 h-12 text-text-muted mx-auto mb-2" />
-                  <p className="text-text-secondary">رسم بياني للأداء</p>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-text-primary">أداء الأسبوع</h2>
+                <div className="flex items-center gap-1 text-green-500 text-sm font-medium">
+                  <ArrowUpRight className="w-4 h-4" />
+                  <span>+18%</span>
                 </div>
+              </div>
+              {/* Simple bar chart */}
+              <div className="flex items-end gap-2 h-40">
+                {[
+                  { day: 'الأحد', messages: 40, leads: 2 },
+                  { day: 'الإثنين', messages: 72, leads: 5 },
+                  { day: 'الثلاثاء', messages: 55, leads: 3 },
+                  { day: 'الأربعاء', messages: 90, leads: 7 },
+                  { day: 'الخميس', messages: 65, leads: 4 },
+                  { day: 'الجمعة', messages: 30, leads: 1 },
+                  { day: 'السبت', messages: 48, leads: 3 },
+                ].map((d) => (
+                  <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-full flex flex-col items-center gap-0.5">
+                      <div
+                        className="w-full bg-primary/20 rounded-t-md transition-all hover:bg-primary/30"
+                        style={{ height: `${(d.messages / 90) * 100}%` }}
+                        title={`${d.messages} رسالة`}
+                      />
+                    </div>
+                    <span className="text-[10px] text-text-muted">{d.day.slice(0, 2)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-primary/20" />
+                  <span className="text-xs text-text-secondary">الرسائل</span>
+                </div>
+                <p className="text-xs text-text-muted">مجموع هذا الأسبوع: <span className="text-text-primary font-medium">400 رسالة</span></p>
               </div>
             </motion.div>
           </div>
