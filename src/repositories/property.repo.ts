@@ -101,7 +101,7 @@ export class PropertyRepository {
   /**
    * Get featured properties
    */
-  static async getFeaturedProperties(tenantId: string): Promise<Property[]> {
+  static async getFeaturedProperties(tenantId: string, limit: number = 5): Promise<Property[]> {
     try {
       const { data, error } = await supabaseAdmin
         .from("properties")
@@ -109,7 +109,7 @@ export class PropertyRepository {
         .eq("tenant_id", tenantId)
         .eq("featured", true)
         .eq("status", "available")
-        .limit(5);
+        .limit(limit);
 
       if (error) {
         console.error("Featured properties fetch error:", error);

@@ -58,5 +58,8 @@ export interface PropertySearchFilters {
 export interface PropertySearchResult {
   properties: Property[];
   total: number;
+  count?: number;
+  totalMatches?: number;
+  query?: PropertySearchFilters;
   relevanceScore?: number[];
 }
