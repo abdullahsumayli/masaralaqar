@@ -1,217 +1,552 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { motion, useInView } from 'framer-motion'
 import {
-  Building2,
-  Brain,
-  GraduationCap,
-  Phone,
-  Mail,
-  MapPin,
-  ArrowLeft,
-  CheckCircle,
-  MessageSquare,
-  BarChart3,
-  Zap,
-  Users,
-  Rocket,
-  Star,
-  Play,
-  ChevronRight,
-  Target,
-  Award,
-  Shield,
-  TrendingUp,
-  Clock,
-  Sparkles,
-  Menu,
-  X,
+  ArrowLeft, BarChart3, Brain, Building2, CheckCircle2, ChevronLeft,
+  Clock, MessageSquare, Phone, Rocket, Shield, Sparkles, Star,
+  Target, TrendingUp, Users, Zap,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRef } from 'react'
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+/* ─── Animation variants ─────────────────────────── */
+const fadeUp = {
+  hidden:   { opacity: 0, y: 28 },
+  visible:  { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+}
+const stagger = {
+  hidden:  {},
+  visible: { transition: { staggerChildren: 0.1 } },
 }
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.12 } }
-}
-
-const services = [
-  { icon: Brain, title: 'الذكاء الاصطناعي', description: 'أتمتة الردود وروبوتات تسويق ذكية', color: 'from-orange-500 to-orange-600' },
-  { icon: Building2, title: 'الوساطة العقارية', description: 'بيع وشراء وتأجير العقارات', color: 'from-amber-500 to-yellow-500' },
-  { icon: GraduationCap, title: 'التدريب الاحترافي', description: 'دورات وورش عمل للوسطاء', color: 'from-orange-400 to-amber-500' },
-  { icon: BarChart3, title: 'التحليلات', description: 'تقارير وأداء السوق العقاري', color: 'from-yellow-500 to-orange-500' },
+/* ─── Data ───────────────────────────────────────── */
+const stats = [
+  { value: '+500',   label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]' },
+  { value: '+1,000', label: 'صفقة ناجحة',    icon: TrendingUp,  color: 'text-[#E5B84A]' },
+  { value: '+2,500', label: 'متدرب محترف',   icon: Users,       color: 'text-[#34D399]' },
+  { value: '5+',     label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]' },
 ]
 
 const features = [
-  { icon: MessageSquare, text: 'رد آلي 24/7', desc: 'يرد على عملاءك فوراً بدون تأخير' },
-  { icon: Users, text: 'إدارة العملاء', desc: 'نظام CRM متكامل وذكي' },
-  { icon: BarChart3, text: 'تحليلات ذكية', desc: 'تتبع أداء مبيعاتك لحظةً بلحظة' },
-  { icon: Zap, text: 'أتمتة التسويق', desc: 'حملات تلقائية متعددة القنوات' },
-]
-
-const testimonials = [
-  { name: 'أحمد محمد', role: 'مدير مكتب عقاري', avatar: 'أح', text: 'نظام صقر وفّر علي أكثر من 5 ساعات يومياً. الآن الرد على العملاء يكون فورياً وأجدادهم مصنفين تلقائياً.', rating: 5, company: 'مكتب الأهلي للعقار' },
-  { name: 'سارة علي', role: 'وسيط عقاري', avatar: 'س', text: 'أفضل استثمار قدمته لمكتبي. نسبة تحويل العميل زادت 40% في أول شهرين فقط.', rating: 5, company: 'سارة للعقارات' },
-  { name: 'خالد عمر', role: 'مالك شركة', avatar: 'خ', text: 'فريق مسار العقار محترف جداً. الدعم الفني متوفر دائماً والخدمة تفوق التوقعات.', rating: 5, company: 'شركة عمر العقارية' },
-]
-
-const stats = [
-  { value: '+500', label: 'مكتب عقاري', icon: Building2 },
-  { value: '+1,000', label: 'صفقة ناجحة', icon: TrendingUp },
-  { value: '+2,500', label: 'متدرب', icon: Users },
-  { value: '5+', label: 'سنوات خبرة', icon: Award },
+  { icon: MessageSquare, title: 'رد آلي 24/7',     desc: 'يرد على عملاءك على واتساب فوراً دون تأخير حتى وأنت نائم', color: '#4F8EF7' },
+  { icon: Users,         title: 'إدارة العملاء CRM', desc: 'نظام ذكي يصنّف الجادّين تلقائياً ويجدول المتابعة لك',    color: '#E5B84A' },
+  { icon: BarChart3,     title: 'تحليلات متقدمة',  desc: 'لوحة بيانات لحظية تُظهر أداء مبيعاتك وأفضل الفرص',       color: '#34D399' },
+  { icon: Zap,           title: 'أتمتة التسويق',   desc: 'حملات تلقائية موجّهة تُرسَل في الوقت المثالي',             color: '#a78bfa' },
 ]
 
 const whyUs = [
-  { title: 'سرعة الرد', desc: 'رد آلي فوري على مدار الساعة 24/7', icon: Zap },
-  { title: 'تصفية ذكية', desc: 'تصنيف العملاء حسب درجة الجدّية', icon: Target },
-  { title: 'تكامل كامل', desc: 'ربط سلس مع واتساب وجميع المنصات', icon: BarChart3 },
-  { title: 'دعم سعودي', desc: 'فريق دعم محلي متاح على مدار الساعة', icon: Shield },
+  { icon: Zap,     title: 'رد فوري دون انتظار',     desc: 'لا تخسر عميلاً بسبب تأخر الرد — صقر يعمل بدلك على مدار الساعة' },
+  { icon: Target,  title: 'تصفية ذكية للعملاء',     desc: 'يُحدّد الجادّين من المستفسرين تلقائياً لتركّز على من يشتري فعلاً' },
+  { icon: Brain,   title: 'ذكاء اصطناعي محلّي',    desc: 'مدرّب على السوق العقاري السعودي بلهجة وأسلوب مناسب' },
+  { icon: Shield,  title: 'دعم سعودي متكامل',       desc: 'فريق دعم محلي متاح، تدريب مستمر وتحديثات مجانية' },
 ]
 
-const navLinks = [
-  { href: '/products/saqr', label: 'نظام صقر' },
-  { href: '/services', label: 'الخدمات' },
-  { href: '/products/pricing', label: 'الأسعار' },
-  { href: '/blog', label: 'المدونة' },
+const testimonials = [
+  { name: 'أحمد محمد',  role: 'مدير مكتب عقاري', company: 'مكتب الأهلي للعقار', avatar: 'أح', text: 'نظام صقر وفّر علي أكثر من 5 ساعات يومياً. الرد على العملاء بات فورياً وتصنيفهم يتم تلقائياً.', rating: 5 },
+  { name: 'سارة علي',   role: 'وسيط عقاري',       company: 'سارة للعقارات',       avatar: 'سع', text: 'نسبة تحويل العميل زادت 40% في أول شهرين. أفضل استثمار قدمته لمكتبي حتى الآن.', rating: 5 },
+  { name: 'خالد عمر',   role: 'مالك شركة',         company: 'شركة عمر العقارية',   avatar: 'خع', text: 'الفريق محترف جداً والدعم الفني متوفر دائماً. الخدمة تفوق كل توقعاتي.', rating: 5 },
 ]
 
-export default function HomePage() {
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 60)
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+/* ─── Animated Counter ───────────────────────────── */
+function StatCard({ value, label, icon: Icon, color, delay }: {
+  value: string; label: string; icon: React.ElementType; color: string; delay: number;
+}) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <div className="min-h-screen bg-background text-text-primary overflow-x-hidden">
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col items-center text-center py-2"
+    >
+      <div className={`text-4xl md:text-5xl font-black mb-1 counter ${color}`}>{value}</div>
+      <div className="text-[#475569] text-sm font-medium">{label}</div>
+    </motion.div>
+  )
+}
 
-      {/* Floating WhatsApp Button */}
+/* ─── Page ───────────────────────────────────────── */
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-[#070B14] text-[#F0F4FF] overflow-x-hidden">
+
+      {/* ════════════════════════════════════════════
+          Floating WhatsApp
+          ════════════════════════════════════════════ */}
       <motion.a
         href="https://wa.me/966545374069"
         target="_blank"
         rel="noopener noreferrer"
+        aria-label="تواصل عبر واتساب"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
-        aria-label="تواصل عبر واتساب"
+        transition={{ delay: 1.5, type: 'spring', stiffness: 180 }}
+        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-2xl bg-[#25D366] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] border border-white/10"
       >
-        <MessageSquare className="w-7 h-7 text-white" />
+        <MessageSquare className="w-6 h-6 text-white fill-white" />
       </motion.a>
 
-      {/* ── Sticky Header ── */}
-      <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-border py-3' : 'bg-transparent py-4'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-cairo font-bold text-lg text-text-primary hidden sm:block">مسار العقار</span>
-          </Link>
+      {/* ════════════════════════════════════════════
+          HERO
+          ════════════════════════════════════════════ */}
+      <section className="relative min-h-[100svh] flex items-center pt-20 pb-16 px-4 overflow-hidden">
 
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map(link => (
-              <Link key={link.href} href={link.href} className="px-4 py-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/5 transition-all font-medium text-sm">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+        {/* Background layers */}
+        <div className="absolute inset-0 bg-[#070B14]" />
+        {/* Dot pattern */}
+        <div className="absolute inset-0 bg-dot-pattern opacity-100" />
+        {/* Gradient radial from center */}
+        <div className="absolute inset-0 bg-gradient-radial from-[#4F8EF7]/[0.07] via-transparent to-transparent" />
 
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className="text-text-secondary hover:text-primary transition-colors font-medium text-sm">
-              دخول النظام
-            </Link>
-            <Link href="/demo" className="inline-flex items-center gap-2 px-4 py-2 border-2 border-primary text-primary rounded-lg font-semibold text-sm hover:bg-primary hover:text-white transition-all">
-              <Play className="w-3.5 h-3.5" />
-              عرض تجريبي
-            </Link>
-            <Link href="/contact" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-dark transition-colors shadow-md shadow-primary/20">
-              <Phone className="w-4 h-4" />
-              تواصل معنا
-            </Link>
-          </div>
+        {/* Ambient orbs */}
+        <div className="orb w-[700px] h-[700px] -top-40 -right-60 bg-[#4F8EF7]/[0.06]" />
+        <div className="orb w-[500px] h-[500px] -bottom-20 -left-40 bg-[#E5B84A]/[0.05]" />
+        <div className="orb w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#a78bfa]/[0.04]" />
 
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-lg text-text-primary hover:bg-surface transition-colors"
-            aria-label={mobileOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
-          >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
+        <div className="relative max-w-7xl mx-auto w-full">
+          <motion.div initial="hidden" animate="visible" variants={stagger} className="flex flex-col items-center text-center max-w-5xl mx-auto">
 
-        <motion.div
-          initial={false}
-          animate={{ height: mobileOpen ? 'auto' : 0, opacity: mobileOpen ? 1 : 0 }}
-          className="lg:hidden overflow-hidden bg-white border-t border-border"
-        >
-          <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-            {navLinks.map(link => (
-              <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className="block px-4 py-3 rounded-xl text-text-secondary hover:text-primary hover:bg-surface transition-all font-medium">
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-3 grid grid-cols-2 gap-2">
-              <Link href="/demo" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-primary text-primary rounded-xl font-semibold text-sm">
-                عرض تجريبي
-              </Link>
-              <Link href="/contact" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm">
-                تواصل معنا
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-      </header>
-
-      {/* ── Hero ── */}
-      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-secondary/4 pointer-events-none" />
-        <div className="absolute top-24 right-0 w-[500px] h-[500px] bg-primary/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/8 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative">
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="text-center max-w-4xl mx-auto">
-
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-8 border border-primary/20">
-              <Sparkles className="w-4 h-4" />
-              الحل الشامل للمكاتب العقارية في السعودية
+            {/* Badge */}
+            <motion.div variants={fadeUp} className="mb-8">
+              <span className="badge-blue text-xs md:text-sm">
+                <Sparkles className="w-3.5 h-3.5" />
+                الحل الشامل للمكاتب العقارية في السعودية
+              </span>
             </motion.div>
 
-            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6 tracking-tight">
-              لا <span className="text-primary">تخسر عميلاً</span> بسبب
+            {/* Headline */}
+            <motion.h1
+              variants={fadeUp}
+              className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-black leading-[1.1] mb-6 tracking-tight"
+            >
+              لا تخسر{' '}
+              <span className="relative inline-block">
+                <span className="gradient-text-blue">عميلاً واحداً</span>
+                {/* Underline decoration */}
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.9, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute -bottom-2 inset-x-0 h-1 rounded-full bg-gradient-to-r from-[#4F8EF7] to-[#2B6DE8] origin-right"
+                />
+              </span>
               <br className="hidden sm:block" />
-              <span className="text-secondary"> رد متأخر</span>
+              {' '}بسبب رد{' '}
+              <span className="gradient-text-gold">متأخر</span>
             </motion.h1>
 
-            <motion.p variants={fadeInUp} className="text-lg md:text-xl text-text-secondary mb-10 max-w-3xl mx-auto leading-relaxed">
-              نظام <strong className="text-text-primary">صقر</strong> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات — وأنت مرتاح. جربه <strong className="text-primary">مجاناً 14 يوم</strong>.
+            {/* Subline */}
+            <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
+              نظام <span className="text-[#F0F4FF] font-bold">صقر</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
+              <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
+              جربه <span className="text-[#E5B84A] font-bold">مجاناً 14 يوم</span>.
             </motion.p>
 
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <Link href="/products/saqr" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-white text-base font-bold rounded-xl hover:bg-primary-dark transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5">
+            {/* CTA Buttons */}
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 mb-10">
+              <Link href="/products/saqr" className="btn-gold text-base px-8 py-4 group">
                 جرب صقر مجاناً
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
-              <Link href="/demo" className="inline-flex items-center gap-3 px-8 py-4 border-2 border-border text-text-primary text-base font-bold rounded-xl hover:border-primary hover:text-primary transition-all hover:-translate-y-0.5">
-                <Play className="w-5 h-5 text-primary" />
+              <Link href="/demo" className="btn-outline text-base px-8 py-4">
+                <Rocket className="w-4.5 h-4.5 text-[#4F8EF7]" />
                 شاهد كيف يعمل
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeInUp} className="flex flex-wrap items-center justify-center gap-6 text-text-secondary text-sm">
-              {['تجربة مجانية 14 يوم', 'بدون بطاقة ائتمان', 'إلغاء في أي وقت'].map(item => (
-                <div key={item} className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  <span>{item}</span>
+            {/* Trust badges */}
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-5 text-[#475569] text-sm">
+              {[
+                { icon: CheckCircle2, text: 'تجربة مجانية 14 يوم' },
+                { icon: CheckCircle2, text: 'بدون بطاقة ائتمان' },
+                { icon: CheckCircle2, text: 'إلغاء في أي وقت' },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-1.5">
+                  <Icon className="w-4 h-4 text-[#34D399] flex-shrink-0" />
+                  <span>{text}</span>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Dashboard mockup */}
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.7, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mt-20 max-w-4xl mx-auto"
+          >
+            {/* Glow behind mock */}
+            <div className="absolute -inset-8 bg-gradient-radial from-[#4F8EF7]/15 via-transparent to-transparent" />
+            {/* Browser frame */}
+            <div className="relative card-glass rounded-2xl overflow-hidden border border-[#4F8EF7]/15 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+              {/* Browser chrome */}
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
+                <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+                <span className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+                <span className="w-3 h-3 rounded-full bg-[#28C840]" />
+                <div className="flex-1 mx-4 h-7 bg-white/[0.06] rounded-lg flex items-center justify-center px-3 gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#34D399]" />
+                  <span className="text-[#475569] text-xs">dashboard.masaralaqar.com</span>
+                </div>
+              </div>
+
+              {/* Dashboard content */}
+              <div className="bg-[#0A1020] p-6">
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-[#F0F4FF] font-bold text-base">لوحة صقر الذكية</h3>
+                    <p className="text-[#475569] text-xs mt-0.5">الثلاثاء، ٨ مارس ٢٠٢٦</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#34D399]/10 border border-[#34D399]/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" />
+                    <span className="text-[#34D399] text-xs font-medium">متصل ونشط</span>
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-4 gap-3 mb-5">
+                  {[
+                    { label: 'عملاء اليوم', val: '28', delta: '+12%', color: '#4F8EF7', bg: 'rgba(79,142,247,0.08)' },
+                    { label: 'ردود آلية',   val: '156', delta: '+8%',  color: '#34D399', bg: 'rgba(52,211,153,0.08)' },
+                    { label: 'صفقات مفتوحة', val: '14',  delta: '+3%',  color: '#E5B84A', bg: 'rgba(229,184,74,0.08)' },
+                    { label: 'معدل التحويل', val: '32%', delta: '+5%',  color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
+                  ].map((s, i) => (
+                    <div key={i} className="rounded-xl p-3 border border-white/[0.06]" style={{ background: s.bg }}>
+                      <div className="text-xl font-black mb-0.5" style={{ color: s.color }}>{s.val}</div>
+                      <div className="text-[#475569] text-[10px]">{s.label}</div>
+                      <div className="text-[#34D399] text-[10px] font-semibold mt-1">{s.delta}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Activity feed */}
+                <div className="space-y-2">
+                  {[
+                    { text: 'رد تلقائي على أحمد محمد — طلب معاينة شقة في الرياض', time: 'الآن',     dot: '#34D399' },
+                    { text: 'عميل جديد — سارة علي تسأل عن فيلا في جدة',          time: 'منذ 3 د', dot: '#4F8EF7' },
+                    { text: 'تذكير: موعد معاينة مع خالد عمر — غداً الساعة 4م',  time: 'منذ 8 د', dot: '#E5B84A' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.dot, boxShadow: `0 0 8px ${item.dot}` }} />
+                      <span className="text-[#94A3B8] text-xs flex-1">{item.text}</span>
+                      <span className="text-[#475569] text-[10px] flex-shrink-0">{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          STATS BAR
+          ════════════════════════════════════════════ */}
+      <section className="relative py-12 overflow-hidden">
+        <div className="absolute inset-0 border-y border-white/[0.06]" />
+        <div className="absolute inset-0 bg-[#0D1526]/60" />
+        {/* Shimmer */}
+        <div className="absolute inset-0 shimmer" />
+
+        <div className="relative max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4 divide-x-0 md:divide-x md:divide-white/[0.06] md:[&>*:not(:first-child)]:pr-6">
+            {stats.map((s, i) => (
+              <StatCard key={i} {...s} delay={i * 0.1} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          FEATURES
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={stagger} className="text-center mb-16">
+            <motion.div variants={fadeUp} className="mb-4">
+              <span className="badge-gold">المميزات الرئيسية</span>
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
+              كل ما تحتاجه في{' '}
+              <span className="gradient-text-blue">منصة واحدة</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+              صُمّمت كل ميزة لتوفير وقتك وزيادة إيراداتك في السوق العقاري السعودي
+            </motion.p>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={stagger} className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {features.map((f, i) => (
+              <motion.div key={i} variants={fadeUp} className="card p-7 group cursor-default">
+                {/* Icon */}
+                <div
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: `${f.color}15`, border: `1px solid ${f.color}25` }}
+                >
+                  <f.icon className="w-7 h-7" style={{ color: f.color }} />
+                </div>
+
+                {/* Glow dot */}
+                <div className="w-1.5 h-1.5 rounded-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: f.color, boxShadow: `0 0 10px ${f.color}` }} />
+
+                <h3 className="text-[#F0F4FF] font-bold text-lg mb-2">{f.title}</h3>
+                <p className="text-[#475569] text-sm leading-relaxed">{f.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          WHY US
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#0D1526]/50" />
+        <div className="absolute inset-0 bg-grid-pattern opacity-100" />
+        {/* Border lines */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/20 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/20 to-transparent" />
+
+        <div className="relative max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid lg:grid-cols-2 gap-16 items-center">
+
+            {/* Left: text */}
+            <motion.div variants={fadeUp}>
+              <span className="badge-blue mb-6">لماذا مسار العقار؟</span>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-5 leading-tight">
+                مميزات لن تجدها{' '}
+                <span className="gradient-text-gold">في مكان آخر</span>
+              </h2>
+              <p className="text-[#94A3B8] text-lg leading-relaxed mb-8">
+                صُمّم نظام صقر خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
+              </p>
+              <Link href="/products/saqr" className="btn-primary inline-flex">
+                اكتشف نظام صقر
+                <ArrowLeft className="w-4.5 h-4.5" />
+              </Link>
+            </motion.div>
+
+            {/* Right: feature cards */}
+            <motion.div variants={stagger} className="grid sm:grid-cols-2 gap-4">
+              {whyUs.map((item, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  className="card p-6 group cursor-default"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-[#4F8EF7]/10 border border-[#4F8EF7]/15 flex items-center justify-center mb-4 group-hover:border-[#4F8EF7]/30 transition-colors">
+                    <item.icon className="w-5 h-5 text-[#4F8EF7]" />
+                  </div>
+                  <h4 className="font-bold text-[#F0F4FF] mb-2 text-sm">{item.title}</h4>
+                  <p className="text-[#475569] text-xs leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          PRODUCT SHOWCASE
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4 relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0F1E3D] via-[#070B14] to-[#0D1526]" />
+          <div className="absolute inset-0 bg-dot-pattern opacity-60" />
+          {/* Blue radial */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#4F8EF7]/[0.08] rounded-full blur-3xl" />
+        </div>
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/30 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#E5B84A]/20 to-transparent" />
+
+        <div className="relative max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
+            <motion.div variants={fadeUp} className="mb-4">
+              <span className="badge-gold">
+                <Rocket className="w-3.5 h-3.5" />
+                منتجنا الرئيسي
+              </span>
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
+              نظام <span className="gradient-text-blue">صقر</span> لإدارة العمل العقاري
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+              منصة متكاملة مدعومة بالذكاء الاصطناعي تحوّل مكتبك إلى آلة مبيعات ذكية تعمل دون توقف
+            </motion.p>
+          </motion.div>
+
+          {/* Feature grid — 3 cols */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+            {[
+              { icon: MessageSquare, title: 'واتساب ذكي',       desc: 'ربط مباشر مع واتساب — ردود آلية، تصنيف تلقائي، جدولة ذكية',     color: '#25D366' },
+              { icon: BarChart3,     title: 'تقارير لحظية',     desc: 'لوحة بيانات تفاعلية توضح أداءك وأفضل المصادر وأعلى الفرص',      color: '#4F8EF7' },
+              { icon: Users,         title: 'CRM متكامل',       desc: 'إدارة كاملة للعملاء مع تاريخ التواصل وإمكانية المتابعة الذكية', color: '#E5B84A' },
+              { icon: Zap,           title: 'أتمتة الحملات',   desc: 'أرسل رسائل متخصصة للعملاء المناسبين في الوقت المناسب تلقائياً', color: '#a78bfa' },
+              { icon: Brain,         title: 'ذكاء اصطناعي',    desc: 'يفهم طلبات العملاء ويقترح العقارات المناسبة من قائمتك فوراً',    color: '#34D399' },
+              { icon: Shield,        title: 'أمان وموثوقية',   desc: 'تشفير كامل للبيانات، نسخ احتياطي تلقائي، uptime 99.9%',        color: '#FB923C' },
+            ].map((item, i) => (
+              <motion.div key={i} variants={fadeUp} className="card p-6 group cursor-default">
+                <div className="flex items-start gap-4">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{ background: `${item.color}15`, border: `1px solid ${item.color}20` }}
+                  >
+                    <item.icon className="w-5 h-5" style={{ color: item.color }} />
+                  </div>
+                  <div>
+                    <h4 className="text-[#F0F4FF] font-bold mb-1.5">{item.title}</h4>
+                    <p className="text-[#475569] text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA Row */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/products/saqr" className="btn-gold text-base px-8 py-4">
+              ابدأ تجربتك المجانية
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <Link href="/products/saqr#pricing" className="btn-outline text-base px-8 py-4">
+              عرض الأسعار
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          TESTIMONIALS
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
+            <motion.div variants={fadeUp} className="mb-4">
+              <span className="badge-blue">آراء عملائنا</span>
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
+              ماذا يقول{' '}
+              <span className="gradient-text-gold">عملاؤنا؟</span>
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ delay: i * 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="card p-7 flex flex-col"
+              >
+                {/* Stars */}
+                <div className="flex items-center gap-1 mb-5">
+                  {[...Array(t.rating)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 text-[#E5B84A] fill-[#E5B84A]" />
+                  ))}
+                </div>
+
+                <blockquote className="text-[#94A3B8] leading-relaxed mb-6 text-sm flex-1">
+                  "{t.text}"
+                </blockquote>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-5 border-t border-white/[0.06]">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#4F8EF7]/20 to-[#4F8EF7]/5 border border-[#4F8EF7]/15 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#4F8EF7] font-bold text-sm">{t.avatar}</span>
+                  </div>
+                  <div>
+                    <div className="text-[#F0F4FF] font-bold text-sm">{t.name}</div>
+                    <div className="text-[#475569] text-xs">{t.company}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          CTA SECTION
+          ════════════════════════════════════════════ */}
+      <section className="relative py-24 px-4 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0D1B35] to-[#070B14]" />
+        <div className="absolute inset-0 bg-dot-pattern opacity-60" />
+        {/* Glowing orbs */}
+        <div className="orb w-[500px] h-[500px] -top-32 right-1/4 bg-[#4F8EF7]/[0.1]" />
+        <div className="orb w-[400px] h-[400px] -bottom-24 left-1/4 bg-[#E5B84A]/[0.08]" />
+        {/* Border lines */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/40 to-transparent" />
+
+        <div className="relative max-w-4xl mx-auto text-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
+
+            <motion.div variants={fadeUp} className="mb-6">
+              <span className="badge-blue">
+                <Clock className="w-3.5 h-3.5" />
+                العرض محدود
+              </span>
+            </motion.div>
+
+            <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 leading-tight">
+              ابدأ{' '}
+              <span className="gradient-text-blue">تحوّلك الرقمي</span>
+              {' '}اليوم
+            </motion.h2>
+
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-4 max-w-xl mx-auto">
+              انضم لأكثر من{' '}
+              <span className="text-[#E5B84A] font-bold">500 مكتب عقاري</span>{' '}
+              يستخدمون نظام صقر لتنمية أعمالهم
+            </motion.p>
+
+            {/* Social proof avatars */}
+            <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-10">
+              <div className="flex -space-x-2 space-x-reverse">
+                {['أح', 'سع', 'خع', 'مح', 'فس'].map((av, i) => (
+                  <div
+                    key={i}
+                    className="w-8 h-8 rounded-full border-2 border-[#070B14] bg-gradient-to-br from-[#4F8EF7]/30 to-[#2B6DE8]/20 flex items-center justify-center text-[10px] text-[#7AAEFF] font-bold"
+                  >
+                    {av}
+                  </div>
+                ))}
+              </div>
+              <span className="text-[#475569] text-sm">+495 مكتب آخر</span>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href="https://wa.me/966545374069"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-gold text-base px-8 py-4"
+              >
+                <MessageSquare className="w-5 h-5" />
+                تواصل عبر واتساب
+              </a>
+              <Link href="/products/saqr" className="btn-primary text-base px-8 py-4">
+                جرب صقر مجاناً
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            </motion.div>
+
+            {/* Assurance row */}
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-6 mt-8 text-[#475569] text-xs">
+              {['لا حاجة لبطاقة ائتمان', 'إعداد في أقل من 5 دقائق', 'دعم سعودي على مدار الساعة'].map(t => (
+                <div key={t} className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#34D399]" />
+                  {t}
                 </div>
               ))}
             </motion.div>
@@ -219,291 +554,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats Bar ── */}
-      <section className="py-10 bg-surface border-y border-border">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-1">{stat.value}</div>
-                <div className="text-text-secondary text-sm font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Services ── */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center mb-14">
-            <motion.span variants={fadeInUp} className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-semibold mb-4">خدماتنا</motion.span>
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold">ما يميزنا عن غيرنا</motion.h2>
-          </motion.div>
-
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {services.map((service, i) => (
-              <motion.div key={i} variants={fadeInUp} className="group bg-white border border-border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <service.icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">{service.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{service.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Why Us ── */}
-      <section className="py-20 px-4 bg-surface">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center mb-14">
-            <motion.span variants={fadeInUp} className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-4">لماذا مسار العقار؟</motion.span>
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-3">مميزات لن تجدها في مكان آخر</motion.h2>
-            <motion.p variants={fadeInUp} className="text-text-secondary max-w-xl mx-auto">صُمّم نظام صقر خصيصاً للسوق العقاري السعودي بفهم عميق لاحتياجاتك</motion.p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {whyUs.map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-white rounded-2xl p-6 text-center border border-border hover:border-primary/30 hover:shadow-lg transition-all">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                  <item.icon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Saqr Product ── */}
-      <section className="py-24 px-4 bg-gradient-to-br from-primary via-primary to-primary-dark text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-        <div className="max-w-7xl mx-auto relative">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div variants={fadeInUp}>
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/15 text-white rounded-full text-sm font-semibold mb-6 border border-white/20">
-                <Rocket className="w-4 h-4" />
-                منتجنا الرئيسي
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold mb-5 leading-tight">
-                نظام صقر لإدارة<br />العمل العقاري
-              </h2>
-              <p className="text-white/85 text-lg leading-relaxed mb-8">
-                نظام متكامل مدعوم بالذكاء الاصطناعي يساعدك على تحويل مكتبك العقاري إلى آلة مبيعات ذكية تعمل 24/7.
-              </p>
-
-              <div className="grid sm:grid-cols-2 gap-3 mb-10">
-                {features.map((feature, i) => (
-                  <div key={i} className="flex items-start gap-3 p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-colors">
-                    <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm mb-0.5">{feature.text}</div>
-                      <div className="text-white/65 text-xs">{feature.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/products/saqr" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-secondary text-white font-bold rounded-xl hover:bg-secondary-dark transition-colors shadow-lg">
-                  جرب مجاناً 14 يوم
-                  <ArrowLeft className="w-5 h-5" />
-                </Link>
-                <Link href="/demo" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 border-2 border-white/30 text-white font-bold rounded-xl hover:bg-white/10 transition-colors">
-                  <Play className="w-5 h-5" />
-                  شاهد العرض
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Dashboard Preview */}
-            <motion.div variants={fadeInUp} className="relative">
-              <div className="absolute -inset-4 bg-white/5 rounded-3xl blur-xl" />
-              <div className="relative bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/20 shadow-2xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-400/80" />
-                  <div className="flex-1 mx-3 h-7 bg-white/10 rounded-lg flex items-center px-3">
-                    <span className="text-white/40 text-xs">dashboard.masaralaqar.com</span>
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl p-5 shadow-xl">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                      <Rocket className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-text-primary text-sm">لوحة صقر الذكية</div>
-                      <div className="text-xs text-green-500 flex items-center gap-1">
-                        <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full" />
-                        متصل ونشط
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    {[
-                      { label: 'عملاء جدد', val: '+28', color: 'bg-blue-50 text-blue-700' },
-                      { label: 'صفقات', val: '+12', color: 'bg-green-50 text-green-700' },
-                      { label: 'رضا العملاء', val: '98%', color: 'bg-orange-50 text-orange-700' },
-                    ].map((s, i) => (
-                      <div key={i} className={`${s.color} rounded-xl p-2.5 text-center`}>
-                        <div className="font-bold text-sm">{s.val}</div>
-                        <div className="text-xs opacity-80 mt-0.5">{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    {['رد تلقائي — أحمد محمد', 'موعد معاينة — غداً 4م', 'عميل جديد — سارة علي'].map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg">
-                        <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                        <span className="text-xs text-gray-600">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center mb-14">
-            <motion.span variants={fadeInUp} className="inline-block px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-semibold mb-4">آراء عملائنا</motion.span>
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold">ماذا يقول عملاؤنا؟</motion.h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12 }} className="bg-white border border-border rounded-2xl p-7 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="flex items-center gap-1 mb-5">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-text-secondary leading-relaxed mb-6 text-sm">"{t.text}"</p>
-                <div className="flex items-center gap-3 pt-4 border-t border-border">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold text-sm">{t.avatar}</span>
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm">{t.name}</div>
-                    <div className="text-xs text-text-muted">{t.company}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="py-24 px-4 bg-gradient-to-br from-secondary via-secondary to-secondary-dark text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 30% 70%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="max-w-4xl mx-auto text-center relative">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}>
-            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 bg-white/15 rounded-full text-sm font-semibold mb-6 border border-white/20">
-              <Clock className="w-4 h-4" />
-              العرض محدود — جرب مجاناً الآن
-            </motion.div>
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl lg:text-5xl font-bold mb-5 leading-tight">
-              ابدأ تحوّلك الرقمي اليوم
-            </motion.h2>
-            <motion.p variants={fadeInUp} className="text-white/85 text-lg mb-10 max-w-xl mx-auto">
-              انضم لأكثر من <strong className="text-white">500 مكتب عقاري</strong> يستخدمون نظام صقر لتنمية أعمالهم
-            </motion.p>
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="https://wa.me/966545374069" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-white text-secondary text-base font-bold rounded-xl hover:bg-white/90 transition-colors shadow-xl">
-                <MessageSquare className="w-5 h-5" />
-                تواصل عبر واتساب
-              </a>
-              <Link href="/products/saqr" className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/40 text-white text-base font-bold rounded-xl hover:bg-white/10 transition-colors">
-                جرب مجاناً
-                <ChevronRight className="w-5 h-5" />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="py-14 px-4 bg-text-primary text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-10 mb-10">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <span className="font-bold text-lg">مسار العقار</span>
-              </div>
-              <p className="text-white/60 text-sm leading-relaxed">
-                منصتك الشاملة للعقار والتقنية في المملكة العربية السعودية.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4 text-white/90">روابط سريعة</h4>
-              <ul className="space-y-2.5 text-white/60 text-sm">
-                <li><Link href="/products/saqr" className="hover:text-white transition-colors">نظام صقر</Link></li>
-                <li><Link href="/services" className="hover:text-white transition-colors">خدماتنا</Link></li>
-                <li><Link href="/blog" className="hover:text-white transition-colors">المدونة</Link></li>
-                <li><Link href="/library" className="hover:text-white transition-colors">المكتبة</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4 text-white/90">الشركة</h4>
-              <ul className="space-y-2.5 text-white/60 text-sm">
-                <li><Link href="/contact" className="hover:text-white transition-colors">تواصل معنا</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">سياسة الخصوصية</Link></li>
-                <li><Link href="/terms" className="hover:text-white transition-colors">الشروط والأحكام</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4 text-white/90">تواصل معنا</h4>
-              <ul className="space-y-3 text-white/60 text-sm">
-                <li className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 flex-shrink-0" />
-                  <span dir="ltr">+966 54 537 4069</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 flex-shrink-0" />
-                  <a href="mailto:info@masaralaqar.com" className="hover:text-white transition-colors">info@masaralaqar.com</a>
-                </li>
-                <li className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 flex-shrink-0" />
-                  <span>المملكة العربية السعودية</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-3 text-white/40 text-sm">
-            <p>© {new Date().getFullYear()} مسار العقار. جميع الحقوق محفوظة.</p>
-            <div className="flex gap-4">
-              <Link href="/privacy" className="hover:text-white/70 transition-colors">سياسة الخصوصية</Link>
-              <Link href="/terms" className="hover:text-white/70 transition-colors">الشروط والأحكام</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
