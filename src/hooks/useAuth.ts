@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { User } from '@/lib/auth'
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
   const [profile, setProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,9 +37,9 @@ export function useAuth() {
             }
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
-          setError(err.message)
+          setError(err instanceof Error ? err.message : 'حدث خطأ')
         }
       } finally {
         if (isMounted) {
@@ -101,7 +101,7 @@ export function useRequireAdmin() {
       router.push('/login')
     }
     
-    if (!loading && user && (profile as any)?.role !== 'admin') {
+    if (!loading && user && profile?.role !== 'admin') {
       router.push('/dashboard')
     }
   }, [user, profile, loading, router])
