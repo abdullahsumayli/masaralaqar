@@ -145,7 +145,7 @@ export function getOptimizedImageUrl(url: string, options: {
  */
 export async function deleteFromCloudinary(publicId: string): Promise<{ success: boolean; error: string | null }> {
   // This would need to be implemented as an API route for security
-  console.warn('Cloudinary deletion requires server-side implementation')
+
   return { success: false, error: 'يجب تنفيذ الحذف من خلال API Route' }
 }
 

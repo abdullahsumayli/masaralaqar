@@ -27,6 +27,7 @@ export class PropertyService {
 
       return {
         properties,
+        total: result.total || properties.length,
         count: properties.length,
         query: filters,
         totalMatches: result.total || properties.length,
@@ -35,6 +36,7 @@ export class PropertyService {
       console.error("PropertyService.searchProperties error:", error);
       return {
         properties: [],
+        total: 0,
         count: 0,
         query: filters,
         totalMatches: 0,
@@ -75,7 +77,7 @@ export class PropertyService {
     limit: number = 5,
   ): Promise<Property[]> {
     try {
-      return await PropertyRepository.getFeaturedProperties(tenantId);
+      return await PropertyRepository.getFeaturedProperties(tenantId, limit);
     } catch (error) {
       console.error("PropertyService.getFeaturedProperties error:", error);
       return [];
@@ -110,7 +112,7 @@ export class PropertyService {
 🚿 ${property.bathrooms} حمام
 
 الحالة: ${this.getStatusInArabic(property.status)}
-المشاهدات: ${property.viewsCount}
+المشاهدات: ${property.views_count}
 
 ---
 *هل تريد المزيد من التفاصيل أو تحديد موعد زيارة؟*`;

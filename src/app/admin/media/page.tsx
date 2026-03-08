@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { 
-  Upload, 
-  Search, 
-  Filter, 
-  Grid, 
-  List, 
-  Trash2, 
-  Download, 
-  Copy, 
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Upload,
+  Search,
+  Grid,
+  List,
+  Trash2,
+  Download,
+  Copy,
   Check,
   Image as ImageIcon,
   File,
@@ -18,19 +17,20 @@ import {
   Music,
   Archive,
   X,
-  ExternalLink,
-  Eye,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '@/lib/supabase'
 
-interface UploadedFile {
+interface MediaFile {
   id: string
   name: string
   size: number
   type: string
+  storage_path: string
   url: string
-  uploadedAt: string
+  uploaded_at: string
 }
 
 function getFileIcon(type: string) {
@@ -52,149 +52,148 @@ function formatFileSize(bytes: number): string {
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('ar-SA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   })
 }
 
 export default function MediaLibraryPage() {
-  const [files, setFiles] = useState<UploadedFile[]>([])
+  const [files, setFiles] = useState<MediaFile[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null)
+  const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Load files from localStorage
-  useEffect(() => {
-    const savedFiles = localStorage.getItem('uploadedFiles')
-    if (savedFiles) {
-      setFiles(JSON.parse(savedFiles))
-    }
+  const load = useCallback(async () => {
+    setLoading(true)
+    const { data } = await supabase
+      .from('media_files')
+      .select('*')
+      .order('uploaded_at', { ascending: false })
+    if (data) setFiles(data)
+    setLoading(false)
   }, [])
 
-  // Filter files
+  useEffect(() => { load() }, [load])
+
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesType = filterType === 'all' || file.type.startsWith(filterType) || file.type.includes(filterType)
     return matchesSearch && matchesType
   })
 
-  // Handle file upload
   const processFile = async (file: File) => {
     setIsUploading(true)
-    setUploadProgress(0)
-
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval)
-          return prev
-        }
-        return prev + 10
-      })
-    }, 100)
+    setUploadProgress(10)
+    setErrorMsg(null)
 
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      const ext = file.name.split('.').pop()
+      const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
-      clearInterval(progressInterval)
+      setUploadProgress(30)
+
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(storagePath, file, { upsert: false })
+
+      if (uploadError) throw uploadError
+
+      setUploadProgress(70)
+
+      const { data: urlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(storagePath)
+
+      const publicUrl = urlData.publicUrl
+
+      const { data: inserted, error: dbError } = await supabase
+        .from('media_files')
+        .insert({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          storage_path: storagePath,
+          url: publicUrl,
+        })
+        .select()
+        .single()
+
+      if (dbError) throw dbError
+
       setUploadProgress(100)
-
-      const uploadedFile: UploadedFile = {
-        id: Date.now().toString(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: base64,
-        uploadedAt: new Date().toISOString(),
-      }
-
-      const newFiles = [uploadedFile, ...files]
-      setFiles(newFiles)
-      localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
+      setFiles(prev => [inserted, ...prev])
 
       setTimeout(() => {
         setIsUploading(false)
         setUploadProgress(0)
       }, 500)
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'فشل رفع الملف'
+      setErrorMsg(msg)
       setIsUploading(false)
       setUploadProgress(0)
     }
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || [])
-    selectedFiles.forEach(processFile)
+    const selected = Array.from(e.target.files || [])
+    selected.forEach(processFile)
     if (inputRef.current) inputRef.current.value = ''
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false) }
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    const droppedFiles = Array.from(e.dataTransfer.files)
-    droppedFiles.forEach(processFile)
+    Array.from(e.dataTransfer.files).forEach(processFile)
   }
 
-  // Delete file
-  const handleDelete = (id: string) => {
-    const newFiles = files.filter(f => f.id !== id)
-    setFiles(newFiles)
-    localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
+  const handleDelete = async (id: string) => {
+    const file = files.find(f => f.id === id)
+    if (!file) return
+
+    await supabase.storage.from('media').remove([file.storage_path])
+    await supabase.from('media_files').delete().eq('id', id)
+
+    setFiles(prev => prev.filter(f => f.id !== id))
     setShowDeleteConfirm(null)
     setSelectedFile(null)
   }
 
-  // Copy URL
   const handleCopyUrl = (id: string, url: string) => {
     navigator.clipboard.writeText(url)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  // Download file
-  const handleDownload = (file: UploadedFile) => {
+  const handleDownload = (file: MediaFile) => {
     const link = document.createElement('a')
     link.href = file.url
     link.download = file.name
+    link.target = '_blank'
     link.click()
   }
 
-  // Get stats
   const stats = {
     total: files.length,
     images: files.filter(f => f.type.startsWith('image')).length,
     documents: files.filter(f => f.type.includes('pdf') || f.type.includes('doc')).length,
     videos: files.filter(f => f.type.startsWith('video')).length,
-    totalSize: files.reduce((sum, f) => sum + f.size, 0)
+    totalSize: files.reduce((sum, f) => sum + f.size, 0),
   }
 
   return (
-    <div 
+    <div
       className="space-y-6"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -223,21 +222,31 @@ export default function MediaLibraryPage() {
           <h1 className="text-2xl font-bold text-white font-cairo">مدير الملفات</h1>
           <p className="text-gray-400 mt-1">إدارة جميع الملفات المرفوعة</p>
         </div>
-        <button 
-          onClick={() => inputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-all"
-        >
-          <Upload className="w-5 h-5" />
-          رفع ملف
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-        />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#161b22] border border-[#21262d] text-gray-400 rounded-xl hover:text-white transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-all"
+          >
+            <Upload className="w-5 h-5" />
+            رفع ملف
+          </button>
+        </div>
+        <input ref={inputRef} type="file" multiple onChange={handleFileSelect} className="hidden" />
       </div>
+
+      {/* Error */}
+      {errorMsg && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Upload Progress */}
       <AnimatePresence>
@@ -254,7 +263,7 @@ export default function MediaLibraryPage() {
               <span className="text-gray-400 mr-auto">{uploadProgress}%</span>
             </div>
             <div className="w-full bg-[#21262d] rounded-full h-2">
-              <div 
+              <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
@@ -299,7 +308,7 @@ export default function MediaLibraryPage() {
             className="w-full bg-[#161b22] border border-[#21262d] rounded-xl pr-10 pl-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary transition-colors"
           />
         </div>
-        <select 
+        <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
           className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary"
@@ -327,13 +336,21 @@ export default function MediaLibraryPage() {
         </div>
       </div>
 
-      {/* Files Grid/List */}
-      {filteredFiles.length === 0 ? (
+      {/* Loading */}
+      {loading && (
+        <div className="text-center py-16">
+          <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto mb-3" />
+          <p className="text-gray-400">جاري التحميل...</p>
+        </div>
+      )}
+
+      {/* Files */}
+      {!loading && filteredFiles.length === 0 ? (
         <div className="text-center py-16 bg-[#0D1117] border border-[#21262d] rounded-2xl">
           <File className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400 text-lg mb-2">لا توجد ملفات</p>
           <p className="text-gray-500 text-sm mb-6">ابدأ برفع ملفاتك الآن</p>
-          <button 
+          <button
             onClick={() => inputRef.current?.click()}
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-all"
           >
@@ -341,7 +358,7 @@ export default function MediaLibraryPage() {
             رفع ملف
           </button>
         </div>
-      ) : viewMode === 'grid' ? (
+      ) : !loading && viewMode === 'grid' ? (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {filteredFiles.map((file) => {
             const FileIcon = getFileIcon(file.type)
@@ -368,16 +385,15 @@ export default function MediaLibraryPage() {
                   <p className="text-white text-sm truncate">{file.name}</p>
                   <p className="text-gray-500 text-xs">{formatFileSize(file.size)}</p>
                 </div>
-                {/* Quick Actions */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleCopyUrl(file.id, file.url); }}
+                    onClick={(e) => { e.stopPropagation(); handleCopyUrl(file.id, file.url) }}
                     className="w-7 h-7 rounded-lg bg-[#0D1117]/90 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                   >
                     {copiedId === file.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(file.id); }}
+                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(file.id) }}
                     className="w-7 h-7 rounded-lg bg-[#0D1117]/90 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -387,7 +403,7 @@ export default function MediaLibraryPage() {
             )
           })}
         </div>
-      ) : (
+      ) : !loading ? (
         <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl overflow-hidden">
           <table className="w-full">
             <thead>
@@ -402,18 +418,17 @@ export default function MediaLibraryPage() {
             <tbody>
               {filteredFiles.map((file) => {
                 const FileIcon = getFileIcon(file.type)
-
                 return (
-                  <tr 
-                    key={file.id} 
+                  <tr
+                    key={file.id}
                     onClick={() => setSelectedFile(file)}
                     className="border-b border-[#21262d]/50 hover:bg-[#161b22] cursor-pointer transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center overflow-hidden">
                           {file.type.startsWith('image') ? (
-                            <img src={file.url} alt="" className="w-full h-full rounded-lg object-cover" />
+                            <img src={file.url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <FileIcon className="w-5 h-5 text-gray-400" />
                           )}
@@ -427,23 +442,23 @@ export default function MediaLibraryPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-400 text-sm">{formatFileSize(file.size)}</td>
-                    <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(file.uploadedAt)}</td>
+                    <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(file.uploaded_at)}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDownload(file); }}
+                          onClick={(e) => { e.stopPropagation(); handleDownload(file) }}
                           className="w-8 h-8 rounded-lg hover:bg-[#21262d] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleCopyUrl(file.id, file.url); }}
+                          onClick={(e) => { e.stopPropagation(); handleCopyUrl(file.id, file.url) }}
                           className="w-8 h-8 rounded-lg hover:bg-[#21262d] flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                         >
                           {copiedId === file.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(file.id); }}
+                          onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(file.id) }}
                           className="w-8 h-8 rounded-lg hover:bg-[#21262d] flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -456,7 +471,7 @@ export default function MediaLibraryPage() {
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
 
       {/* File Preview Modal */}
       <AnimatePresence>
@@ -477,38 +492,31 @@ export default function MediaLibraryPage() {
             >
               <div className="border-b border-[#21262d] p-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white truncate">{selectedFile.name}</h2>
-                <button 
+                <button
                   onClick={() => setSelectedFile(null)}
                   className="w-8 h-8 rounded-lg hover:bg-[#21262d] flex items-center justify-center text-gray-400"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
               <div className="p-6">
-                {/* Preview */}
                 {selectedFile.type.startsWith('image') ? (
-                  <img 
-                    src={selectedFile.url} 
-                    alt={selectedFile.name} 
+                  <img
+                    src={selectedFile.url}
+                    alt={selectedFile.name}
                     className="w-full max-h-[400px] object-contain rounded-xl bg-[#161b22] mb-4"
                   />
                 ) : selectedFile.type.startsWith('video') ? (
-                  <video 
-                    src={selectedFile.url} 
-                    controls 
+                  <video
+                    src={selectedFile.url}
+                    controls
                     className="w-full max-h-[400px] rounded-xl bg-[#161b22] mb-4"
                   />
                 ) : (
                   <div className="w-full h-48 bg-[#161b22] rounded-xl flex items-center justify-center mb-4">
-                    {(() => {
-                      const FileIcon = getFileIcon(selectedFile.type)
-                      return <FileIcon className="w-20 h-20 text-gray-500" />
-                    })()}
+                    {(() => { const Icon = getFileIcon(selectedFile.type); return <Icon className="w-20 h-20 text-gray-500" /> })()}
                   </div>
                 )}
-
-                {/* File Info */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-[#161b22] rounded-xl p-3">
                     <p className="text-gray-400 text-xs mb-1">النوع</p>
@@ -520,11 +528,9 @@ export default function MediaLibraryPage() {
                   </div>
                   <div className="bg-[#161b22] rounded-xl p-3 col-span-2">
                     <p className="text-gray-400 text-xs mb-1">تاريخ الرفع</p>
-                    <p className="text-white text-sm">{formatDate(selectedFile.uploadedAt)}</p>
+                    <p className="text-white text-sm">{formatDate(selectedFile.uploaded_at)}</p>
                   </div>
                 </div>
-
-                {/* Actions */}
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleDownload(selectedFile)}
@@ -538,15 +544,9 @@ export default function MediaLibraryPage() {
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#161b22] hover:bg-[#21262d] text-white rounded-xl transition-colors"
                   >
                     {copiedId === selectedFile.id ? (
-                      <>
-                        <Check className="w-5 h-5 text-green-500" />
-                        تم النسخ
-                      </>
+                      <><Check className="w-5 h-5 text-green-500" /> تم النسخ</>
                     ) : (
-                      <>
-                        <Copy className="w-5 h-5" />
-                        نسخ الرابط
-                      </>
+                      <><Copy className="w-5 h-5" /> نسخ الرابط</>
                     )}
                   </button>
                   <button
@@ -584,13 +584,13 @@ export default function MediaLibraryPage() {
                 <h3 className="text-xl font-bold text-white mb-2">حذف الملف</h3>
                 <p className="text-gray-400 mb-6">هل أنت متأكد من حذف هذا الملف؟ لا يمكن التراجع عن هذا الإجراء.</p>
                 <div className="flex items-center justify-center gap-3">
-                  <button 
+                  <button
                     onClick={() => setShowDeleteConfirm(null)}
                     className="px-6 py-2.5 bg-[#161b22] border border-[#21262d] text-gray-400 rounded-xl hover:text-white transition-colors"
                   >
                     إلغاء
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(showDeleteConfirm)}
                     className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all"
                   >

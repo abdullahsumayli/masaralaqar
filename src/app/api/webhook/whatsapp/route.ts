@@ -5,14 +5,17 @@
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { AIService } from "@/services/ai.service";
+import { ConversationService } from "@/services/conversation.service";
 import { LeadService } from "@/services/lead.service";
 import { PropertyService } from "@/services/property.service";
 import { TenantService } from "@/services/tenant.service";
 import { TenantContext } from "@/types/message";
 import { NextRequest, NextResponse } from "next/server";
 
-// Fixed webhook secret for initial setup
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "masar2024secret";
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+if (!WEBHOOK_SECRET) {
+  console.error("WEBHOOK_SECRET environment variable is not set");
+}
 
 // Simple in-memory cache to prevent duplicate message processing
 const processedMessages = new Set<string>();
@@ -40,8 +43,7 @@ export async function GET(request: NextRequest) {
   const secret = searchParams.get("secret");
 
   // Simple secret verification
-  if (secret === WEBHOOK_SECRET) {
-    console.log("UltraMsg Webhook verified");
+  if (WEBHOOK_SECRET && secret === WEBHOOK_SECRET) {
     return NextResponse.json({ status: "ok", message: "Webhook verified" });
   }
 
@@ -50,8 +52,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === WEBHOOK_SECRET) {
-    console.log("Webhook verified");
+  if (WEBHOOK_SECRET && mode === "subscribe" && token === WEBHOOK_SECRET) {
     return new NextResponse(challenge || "ok");
   }
 
@@ -69,13 +70,11 @@ export async function POST(request: NextRequest) {
 
     // Verify secret
     if (secret !== WEBHOOK_SECRET) {
-      console.warn("Invalid webhook secret:", secret);
       return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 
     // Parse request body
     const bodyText = await request.text();
-    console.log("Webhook received:", bodyText);
 
     let payload: any;
     try {
@@ -96,7 +95,6 @@ export async function POST(request: NextRequest) {
 
     // Skip outgoing messages early (before parsing)
     if (payload?.data?.fromMe === true || payload?.data?.fromMe === "true") {
-      console.log("Skipping outgoing message (fromMe=true)");
       return NextResponse.json({
         success: true,
         message: "Outgoing message ignored",
@@ -107,7 +105,6 @@ export async function POST(request: NextRequest) {
     const message = WhatsAppService.parseIncomingMessage(payload);
 
     if (!message) {
-      console.log("No valid message in payload");
       return NextResponse.json({
         success: true,
         message: "No message to process",
@@ -116,58 +113,60 @@ export async function POST(request: NextRequest) {
 
     // Check if message was already processed (prevent duplicates)
     if (processedMessages.has(message.id)) {
-      console.log("Duplicate message skipped:", message.id);
       return NextResponse.json({ success: true, message: "Duplicate ignored" });
     }
 
     // Add to processed cache
     addToProcessedCache(message.id);
 
-    console.log("Received message:", message);
+    // Lookup tenant by webhook secret for multi-tenant routing
+    const tenant = await TenantService.getTenantByWebhook(secret!);
 
-    // For now, use a default tenant context (single tenant mode)
-    // In multi-tenant mode, lookup tenant by webhook secret
-    let tenant = null;
-    try {
-      tenant = await TenantService.getTenantByWebhook(secret);
-    } catch (error) {
-      console.log("Tenant lookup failed, using default context");
-    }
-
-    const tenantContext: TenantContext = {
-      tenantId: tenant?.id || "default",
-      whatsappNumber: tenant?.whatsappNumber || "",
-      aiPersona: tenant?.aiPersona || {
-        agentName: "مساعد مسار العقار",
-        responseStyle: "friendly",
-        welcomeMessage:
-          "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
-      },
-    };
-
-    // Create or update lead (skip if no tenant)
-    let lead = null;
-    if (tenant?.id) {
-      lead = await LeadService.createLeadFromMessage(
-        tenant.id,
-        message.phone,
-        "",
-        message.text,
+    if (!tenant) {
+      return NextResponse.json(
+        { error: "Tenant not found" },
+        { status: 404 },
       );
     }
 
+    const defaultAiPersona = {
+      agentName: "مساعد مسار العقار",
+      responseStyle: "friendly" as const,
+      welcomeMessage: "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
+    };
+
+    const tenantContext: TenantContext = {
+      tenantId: tenant.id,
+      whatsappNumber: tenant.whatsappNumber,
+      aiPersona: tenant.aiPersona || defaultAiPersona,
+    };
+
+    // Create or update lead
+    const lead = await LeadService.createLeadFromMessage(
+      tenant.id,
+      message.phone,
+      "",
+      message.text,
+    );
+
+    // ── MEMORY: save incoming user message ────────────────────────────────
+    if (lead) {
+      await ConversationService.saveUserMessage(tenant.id, lead.id, message.text);
+    }
+
+    // ── MEMORY: fetch last 12 messages for GPT context ────────────────────
+    const conversationHistory = lead
+      ? await ConversationService.getConversationHistory(lead.id, 12)
+      : [];
+
     // Analyze message
     const analysis = AIService.analyzeMessage(message.text, tenantContext);
-    console.log("Message analysis:", analysis);
 
-    // Search for matching properties (if tenant exists)
+    // Search for matching properties
     let matchedProperties: any[] = [];
-    if (
-      tenant?.id &&
-      (analysis.extractedData.propertyType || analysis.extractedData.budget)
-    ) {
+    if (analysis.extractedData.propertyType || analysis.extractedData.budget) {
       const searchResult = await PropertyService.searchProperties(tenant.id, {
-        type: analysis.extractedData.propertyType,
+        type: analysis.extractedData.propertyType as import("@/types/property").PropertyType | undefined,
         minPrice: analysis.extractedData.budget?.min,
         maxPrice: analysis.extractedData.budget?.max,
         city: analysis.extractedData.city,
@@ -176,17 +175,22 @@ export async function POST(request: NextRequest) {
       matchedProperties = searchResult.properties || [];
     }
 
-    // Generate smart reply using GPT-4o-mini
+    // Generate smart reply using GPT-4o-mini — with full conversation history
     const response = await AIService.generateSmartReply(
       message.text,
       matchedProperties,
       tenantContext,
+      conversationHistory,
     );
-    console.log("Generated response:", response.reply);
+
+    // ── MEMORY: save assistant reply ──────────────────────────────────────
+    if (lead) {
+      await ConversationService.saveAssistantMessage(tenant.id, lead.id, response.reply);
+    }
 
     // Update lead with preferences if extracted
     if (lead && Object.keys(analysis.extractedData).length > 0) {
-      await LeadService.updateLeadPreferences(tenant!.id, message.phone, {
+      await LeadService.updateLeadPreferences(tenant.id, message.phone, {
         city: analysis.extractedData.city,
         budget: analysis.extractedData.budget,
         propertyType: analysis.extractedData.propertyType,
@@ -194,10 +198,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Add response to conversation
+    // Add response to legacy conversation_history JSONB (backward compat)
     if (lead) {
       await LeadService.addMessageToLead(
-        tenant!.id,
+        tenant.id,
         lead.id,
         response.reply,
         "outgoing",
@@ -208,7 +212,7 @@ export async function POST(request: NextRequest) {
     const sent = await WhatsAppService.sendMessage(
       message.phone,
       response.reply,
-      tenant?.id || "default",
+      tenant.id,
     );
 
     if (!sent) {
@@ -228,7 +232,7 @@ export async function POST(request: NextRequest) {
             message.phone,
             imageUrl,
             caption,
-            tenant?.id || "default",
+            tenant.id,
           );
           imagesSent++;
           // Small delay between image sends
@@ -244,7 +248,7 @@ export async function POST(request: NextRequest) {
       await WhatsAppService.sendMessage(
         message.phone,
         suggestionsText,
-        tenant?.id || "default",
+        tenant.id,
       );
     }
 

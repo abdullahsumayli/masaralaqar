@@ -125,11 +125,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log successful activation
-    console.log(
-      `Bot subscription activated: userId=${userId}, phone=${formattedPhone}, plan=${planType}`
-    );
-
     return NextResponse.json(
       {
         success: true,

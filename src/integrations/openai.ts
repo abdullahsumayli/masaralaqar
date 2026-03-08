@@ -11,7 +11,7 @@ import {
     extractCity,
     extractPropertyType,
 } from "@/lib/parser";
-import { MessageAnalysis } from "@/types/message";
+import { MessageAnalysis, MessageIntent } from "@/types/message";
 
 export class OpenAIService {
   private static apiKey: string = process.env.OPENAI_API_KEY || "";
@@ -26,7 +26,6 @@ export class OpenAIService {
   ): Promise<string | null> {
     try {
       if (!this.apiKey) {
-        console.warn("OpenAI API key not configured");
         return null;
       }
 
@@ -65,7 +64,7 @@ export class OpenAIService {
     context: {
       agentName?: string;
       availableProperties?: any[];
-      conversationHistory?: Array<{ role: string; content: string }>;
+      conversationHistory?: Array<{ role: "user" | "assistant"; content: string }>;
     } = {},
   ): Promise<string> {
     const systemPrompt = `أنت مساعد ذكي متخصص في العقارات في السعودية. اسمك "${context.agentName || "مساعد مسار العقار"}".
@@ -73,9 +72,10 @@ export class OpenAIService {
 مهامك:
 1. الرد على استفسارات العملاء بشكل ودود ومهني
 2. فهم احتياجات العميل (نوع العقار، المدينة، الميزانية، عدد الغرف)
-3. عرض العقارات المتاحة إن وجدت
-4. جدولة الزيارات والمواعيد
-5. الرد باللغة العربية دائماً
+3. تذكّر ما ذكره العميل في الرسائل السابقة ولا تسأل عن معلومات أعطاها من قبل
+4. عرض العقارات المتاحة إن وجدت
+5. جدولة الزيارات والمواعيد
+6. الرد باللغة العربية دائماً
 
 ${
   context.availableProperties && context.availableProperties.length > 0
@@ -94,14 +94,14 @@ ${
       { role: "system", content: systemPrompt },
     ];
 
-    // Add conversation history if available
-    if (context.conversationHistory) {
-      messages.push(...context.conversationHistory.slice(-5)); // Last 5 messages
+    // Inject full conversation history so GPT remembers previous turns (already limited to 12)
+    if (context.conversationHistory && context.conversationHistory.length > 0) {
+      messages.push(...context.conversationHistory);
     }
 
     messages.push({ role: "user", content: userMessage });
 
-    const reply = await this.callOpenAI(messages, 300);
+    const reply = await this.callOpenAI(messages, 400);
 
     if (reply) {
       return reply;
@@ -268,7 +268,7 @@ ${
           break;
 
         default:
-          response = `فهمت: "${messageAnalysis.extractedData.intent || message}". كيف يمكنني المساعدة؟`;
+          response = `فهمت: "${messageAnalysis.extractedData.intent || messageAnalysis.intent}". كيف يمكنني المساعدة؟`;
       }
 
       return response;
@@ -308,14 +308,14 @@ ${
       confidence = Math.min(1, confidence);
 
       return {
-        intent,
+        intent: intent as MessageIntent,
         extractedData,
         confidence,
       };
     } catch (error) {
       console.error("OpenAIService.analyzeMessageComprehensive error:", error);
       return {
-        intent: "general",
+        intent: "general" as MessageIntent,
         extractedData: {},
         confidence: 0,
       };

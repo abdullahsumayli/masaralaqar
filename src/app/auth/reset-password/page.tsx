@@ -24,7 +24,7 @@ export default function ResetPasswordPage() {
         supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'PASSWORD_RECOVERY') {
             // User came from password reset link
-            console.log('Password recovery mode')
+
           }
         })
       }

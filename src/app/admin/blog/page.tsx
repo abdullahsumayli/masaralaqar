@@ -79,7 +79,7 @@ export default function AdminBlogPage() {
             return
           }
         } catch (e) {
-          console.log('Supabase not available, using localStorage')
+
         }
       }
       
@@ -216,7 +216,7 @@ export default function AdminBlogPage() {
       if (!success) throw new Error('Delete failed')
     } catch {
       // Fallback to localStorage
-      console.log('Supabase delete failed, using localStorage')
+
     }
     
     // Update local state
@@ -240,7 +240,7 @@ export default function AdminBlogPage() {
       if (!result) throw new Error('Update failed')
     } catch {
       // Fallback to localStorage
-      console.log('Supabase update failed, using localStorage')
+
     }
     
     // Update local state
