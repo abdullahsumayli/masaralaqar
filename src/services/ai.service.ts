@@ -64,12 +64,14 @@ export class AIService {
     userMessage: string,
     matchedProperties: Property[],
     tenantContext: TenantContext,
+    conversationHistory: Array<{ role: "user" | "assistant"; content: string }> = [],
   ): Promise<AIResponse> {
     try {
-      // Use OpenAI for smart reply
+      // Use OpenAI for smart reply — pass full conversation history
       const reply = await OpenAIService.generateSmartReply(userMessage, {
         agentName: tenantContext.aiPersona?.agentName || "مساعد مسار العقار",
         availableProperties: matchedProperties,
+        conversationHistory,
       });
 
       // Return properties for image sending
