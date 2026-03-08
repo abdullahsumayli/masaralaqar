@@ -21,7 +21,6 @@ export class WhatsAppService {
   ): Promise<boolean> {
     try {
       if (!this.token || !this.instanceId) {
-        console.warn("UltraMsg credentials not configured");
         return false;
       }
 
@@ -42,19 +41,16 @@ export class WhatsAppService {
       });
 
       if (!response.ok) {
-        console.error("UltraMsg send error:", await response.text());
         return false;
       }
 
       const data = await response.json();
-      console.log("WhatsApp message sent via UltraMsg:", data);
 
       // Check UltraMsg response for success
       if (data.sent === "true" || data.sent === true) {
         return true;
       }
 
-      console.error("UltraMsg response indicates failure:", data);
       return false;
     } catch (error) {
       console.error("WhatsAppService.sendMessage error:", error);
@@ -95,13 +91,11 @@ export class WhatsAppService {
         // IMPORTANT: Skip outgoing messages (fromMe = true)
         // This prevents the bot from responding to its own messages
         if (data.fromMe === true || data.fromMe === "true") {
-          console.log("Skipping outgoing message (fromMe=true)");
           return null;
         }
 
         // Skip if message type is not 'chat' (could be notification, etc.)
         if (data.type && data.type !== "chat") {
-          console.log("Skipping non-chat message type:", data.type);
           return null;
         }
 
@@ -190,7 +184,6 @@ export class WhatsAppService {
   ): Promise<boolean> {
     try {
       if (!this.token || !this.instanceId) {
-        console.warn("UltraMsg credentials not configured");
         return false;
       }
 
@@ -236,7 +229,6 @@ export class WhatsAppService {
   ): Promise<boolean> {
     try {
       if (!this.token || !this.instanceId) {
-        console.warn("UltraMsg credentials not configured");
         return false;
       }
 

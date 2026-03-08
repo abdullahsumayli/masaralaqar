@@ -107,7 +107,7 @@ export function FileUpload({
         const { data, error: uploadError } = await uploadFn(file)
         
         if (uploadError || !data) {
-          console.warn('Cloudinary upload failed, falling back to base64:', uploadError)
+
           // Fallback to base64
           if (isImage) {
             fileUrl = await compressImage(file, 800, 0.7)

@@ -91,7 +91,7 @@ export default function AdminLibraryPage() {
           return
         }
       } catch (e) {
-        console.log('Supabase not available, falling back to localStorage')
+
       }
       
       // Fallback to localStorage
@@ -121,7 +121,7 @@ export default function AdminLibraryPage() {
       try {
         localStorage.setItem('libraryResources', JSON.stringify(lightResources))
       } catch {
-        console.warn('Could not save to localStorage')
+
       }
     }
   }
@@ -188,7 +188,7 @@ export default function AdminLibraryPage() {
         }
       }
     } catch (e) {
-      console.log('Supabase save failed, using localStorage fallback', e)
+
     }
     
     // Update local state
@@ -212,7 +212,7 @@ export default function AdminLibraryPage() {
       const success = await deleteLibraryResource(id)
       if (!success) throw new Error('Delete failed')
     } catch {
-      console.log('Supabase delete failed, using localStorage')
+
     }
     
     const newResources = resources.filter(r => r.id !== id)
@@ -234,7 +234,7 @@ export default function AdminLibraryPage() {
       })
       if (!result) throw new Error('Update failed')
     } catch {
-      console.log('Supabase update failed, using localStorage')
+
     }
     
     const newResources = resources.map(r => 

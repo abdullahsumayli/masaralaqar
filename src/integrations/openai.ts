@@ -26,7 +26,6 @@ export class OpenAIService {
   ): Promise<string | null> {
     try {
       if (!this.apiKey) {
-        console.warn("OpenAI API key not configured");
         return null;
       }
 

@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
 
   // Simple secret verification
   if (WEBHOOK_SECRET && secret === WEBHOOK_SECRET) {
-    console.log("UltraMsg Webhook verified");
     return NextResponse.json({ status: "ok", message: "Webhook verified" });
   }
 
@@ -54,7 +53,6 @@ export async function GET(request: NextRequest) {
   const challenge = searchParams.get("hub.challenge");
 
   if (WEBHOOK_SECRET && mode === "subscribe" && token === WEBHOOK_SECRET) {
-    console.log("Webhook verified");
     return new NextResponse(challenge || "ok");
   }
 
@@ -72,13 +70,11 @@ export async function POST(request: NextRequest) {
 
     // Verify secret
     if (secret !== WEBHOOK_SECRET) {
-      console.warn("Invalid webhook secret received");
       return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 
     // Parse request body
     const bodyText = await request.text();
-    console.log("Webhook received:", bodyText);
 
     let payload: any;
     try {
@@ -99,7 +95,6 @@ export async function POST(request: NextRequest) {
 
     // Skip outgoing messages early (before parsing)
     if (payload?.data?.fromMe === true || payload?.data?.fromMe === "true") {
-      console.log("Skipping outgoing message (fromMe=true)");
       return NextResponse.json({
         success: true,
         message: "Outgoing message ignored",
@@ -110,7 +105,6 @@ export async function POST(request: NextRequest) {
     const message = WhatsAppService.parseIncomingMessage(payload);
 
     if (!message) {
-      console.log("No valid message in payload");
       return NextResponse.json({
         success: true,
         message: "No message to process",
@@ -119,20 +113,16 @@ export async function POST(request: NextRequest) {
 
     // Check if message was already processed (prevent duplicates)
     if (processedMessages.has(message.id)) {
-      console.log("Duplicate message skipped:", message.id);
       return NextResponse.json({ success: true, message: "Duplicate ignored" });
     }
 
     // Add to processed cache
     addToProcessedCache(message.id);
 
-    console.log("Received message:", message);
-
     // Lookup tenant by webhook secret for multi-tenant routing
     const tenant = await TenantService.getTenantByWebhook(secret!);
 
     if (!tenant) {
-      console.warn("No tenant found for this webhook secret");
       return NextResponse.json(
         { error: "Tenant not found" },
         { status: 404 },
@@ -171,7 +161,6 @@ export async function POST(request: NextRequest) {
 
     // Analyze message
     const analysis = AIService.analyzeMessage(message.text, tenantContext);
-    console.log("Message analysis:", analysis);
 
     // Search for matching properties
     let matchedProperties: any[] = [];
@@ -193,7 +182,6 @@ export async function POST(request: NextRequest) {
       tenantContext,
       conversationHistory,
     );
-    console.log("Generated response:", response.reply);
 
     // ── MEMORY: save assistant reply ──────────────────────────────────────
     if (lead) {
