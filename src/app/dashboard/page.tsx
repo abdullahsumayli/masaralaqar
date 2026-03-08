@@ -20,6 +20,7 @@ import {
   BarChart3,
   Clock,
   ArrowUpRight,
+  Home,
 } from 'lucide-react'
 import { signOut } from '@/lib/auth'
 
@@ -45,7 +46,7 @@ export default function DashboardPage() {
   const stats = [
     { label: 'العملاء النشطين', value: '24', icon: Users, change: '+12%', positive: true },
     { label: 'الرسائل اليوم', value: '156', icon: MessageSquare, change: '+8%', positive: true },
-    { label: 'المعاينات المجدولة', value: '8', icon: Calendar, change: '+3', positive: true },
+    { label: 'عقاراتي', value: '—', icon: Building2, change: '', positive: true },
     { label: 'معدل التحويل', value: '32%', icon: TrendingUp, change: '+5%', positive: true },
   ]
 
@@ -160,9 +161,16 @@ export default function DashboardPage() {
               className="bg-background rounded-xl p-6 border border-border"
             >
               <h2 className="text-lg font-bold text-text-primary mb-4">إجراءات سريعة</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Link
-                  href="/dashboard/leads"
+                  href="/dashboard/properties"
+                  className="flex flex-col items-center gap-2 p-4 rounded-lg bg-surface hover:bg-primary/5 transition-colors text-center"
+                >
+                  <Home className="w-6 h-6 text-primary" />
+                  <span className="text-sm text-text-secondary">العقارات</span>
+                </Link>
+                <Link
+                  href="/dashboard/clients"
                   className="flex flex-col items-center gap-2 p-4 rounded-lg bg-surface hover:bg-primary/5 transition-colors text-center"
                 >
                   <Users className="w-6 h-6 text-primary" />

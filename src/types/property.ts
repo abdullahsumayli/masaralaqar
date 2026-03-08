@@ -14,6 +14,7 @@ export interface Property {
   price: number; // في الريال
   location: string;
   city?: string;
+  district?: string;
   area: number; // بالمتر المربع
   type: PropertyType;
   bedrooms?: number;
@@ -22,6 +23,7 @@ export interface Property {
   images?: string[]; // Array of image URLs
   featured: boolean;
   status: PropertyStatus;
+  license_number?: string;
   views_count: number;
   created_at: string;
   updated_at: string;
@@ -32,12 +34,31 @@ export interface PropertyCreateInput {
   description?: string;
   price: number;
   city: string;
+  district?: string;
   location: string;
   type: PropertyType;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
   images?: string[];
+  license_number?: string;
+  status?: PropertyStatus;
+}
+
+export interface PropertyUpdateInput {
+  title?: string;
+  description?: string;
+  price?: number;
+  city?: string;
+  district?: string;
+  location?: string;
+  type?: PropertyType;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  images?: string[];
+  license_number?: string;
+  status?: PropertyStatus;
 }
 
 export interface PropertySearchFilters {
