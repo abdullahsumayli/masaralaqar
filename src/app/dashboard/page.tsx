@@ -285,7 +285,7 @@ export default function DashboardPage() {
               </p>
               <Link
                 href="/products/saqr"
-                className="inline-flex items-center gap-2 bg-white text-primary px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition-colors"
+                className="inline-flex items-center gap-2 bg-[#F0F4FF] text-[#070B14] px-4 py-2 rounded-lg font-medium hover:bg-white transition-colors"
               >
                 عرض الباقات
                 <ChevronLeft className="w-4 h-4" />

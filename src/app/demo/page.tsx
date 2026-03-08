@@ -307,7 +307,7 @@ export default function DemoPage() {
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         showFullDemo && currentStep >= index * 2
                           ? 'bg-primary text-white'
-                          : 'bg-white border border-border text-text-muted'
+                          : 'bg-[#111E35] border border-[rgba(79,142,247,0.12)] text-text-muted'
                       }`}>
                         <step.icon className="w-5 h-5" />
                       </div>
@@ -427,7 +427,7 @@ export default function DemoPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="/auth/signup"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-secondary rounded-xl font-bold hover:bg-white/90 transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F0F4FF] text-[#070B14] rounded-xl font-bold hover:bg-white transition-colors"
               >
                 ابدأ التجربة المجانية
                 <ArrowLeft className="w-5 h-5" />

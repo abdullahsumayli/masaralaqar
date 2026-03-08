@@ -257,7 +257,7 @@ export default function ServicesPage() {
                 <motion.div
                   key={i}
                   variants={fadeInUp}
-                  className="bg-white border border-border rounded-2xl p-6 hover:shadow-lg transition-all"
+                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl p-6 hover:shadow-lg hover:bg-[#162444] transition-all"
                 >
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4`}>
                     <feature.icon className="w-6 h-6 text-white" />
@@ -367,7 +367,7 @@ export default function ServicesPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-secondary rounded-xl font-bold hover:bg-white/90 transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-[#F0F4FF] text-[#070B14] rounded-xl font-bold hover:bg-white transition-colors"
               >
                 <Phone className="w-5 h-5" />
                 تواصل معنا الآن

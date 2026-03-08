@@ -160,7 +160,7 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#070B14]/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
@@ -214,7 +214,7 @@ export default function LibraryPage() {
       </section>
 
       {/* Search and Filters */}
-      <section className="py-8 px-4 border-b border-border sticky top-20 bg-white/95 backdrop-blur-sm z-40">
+      <section className="py-8 px-4 border-b border-border sticky top-20 bg-[#070B14]/95 backdrop-blur-sm z-40">
         <div className="max-w-6xl mx-auto">
           {/* Search */}
           <div className="relative max-w-xl mx-auto mb-8">
@@ -280,7 +280,7 @@ export default function LibraryPage() {
                 <motion.div
                   key={index}
                   variants={fadeInUp}
-                  className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-all group"
+                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden hover:shadow-xl hover:bg-[#162444] transition-all group"
                 >
                   {/* Preview */}
                   <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">

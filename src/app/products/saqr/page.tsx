@@ -285,7 +285,7 @@ export default function SaqrPage() {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="relative text-center p-8 bg-white rounded-2xl border border-border"
+                className="relative text-center p-8 bg-[#111E35] rounded-2xl border border-[rgba(79,142,247,0.12)]"
               >
                 <div className="text-6xl font-bold text-primary/10 mb-4">{step.number}</div>
                 <h3 className="font-bold text-xl mb-3">{step.title}</h3>
@@ -320,7 +320,7 @@ export default function SaqrPage() {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="p-6 bg-white border border-border rounded-2xl hover:shadow-lg transition-all"
+                className="p-6 bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl hover:shadow-lg hover:bg-[#162444] transition-all"
               >
                 <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-7 h-7 text-primary" />
@@ -352,7 +352,7 @@ export default function SaqrPage() {
               <motion.div
                 key={index}
                 variants={fadeInUp}
-                className="bg-white border border-border rounded-2xl p-8"
+                className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl p-8"
               >
                 <div className="flex items-center gap-1 mb-4">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
@@ -397,7 +397,7 @@ export default function SaqrPage() {
                 className={`rounded-2xl p-8 ${
                   plan.highlighted
                     ? 'bg-primary text-white ring-4 ring-primary/30 scale-105'
-                    : 'bg-white border border-border'
+                    : 'bg-[#111E35] border border-[rgba(79,142,247,0.12)]'
                 }`}
               >
                 {plan.highlighted && (
@@ -429,7 +429,7 @@ export default function SaqrPage() {
                   href="/auth/signup"
                   className={`w-full block text-center py-3 rounded-xl font-bold transition-colors ${
                     plan.highlighted
-                      ? 'bg-white text-primary hover:bg-white/90'
+                      ? 'bg-[#F0F4FF] text-[#070B14] hover:bg-white'
                       : 'bg-primary text-white hover:bg-primary-dark'
                   }`}
                 >
@@ -459,7 +459,7 @@ export default function SaqrPage() {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-white border border-border rounded-xl p-6"
+                className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl p-6"
               >
                 <div className="flex items-start gap-3">
                   <HelpCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
