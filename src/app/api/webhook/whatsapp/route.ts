@@ -5,6 +5,7 @@
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { AIService } from "@/services/ai.service";
+import { ConversationService } from "@/services/conversation.service";
 import { LeadService } from "@/services/lead.service";
 import { PropertyService } from "@/services/property.service";
 import { TenantService } from "@/services/tenant.service";
@@ -158,6 +159,16 @@ export async function POST(request: NextRequest) {
       message.text,
     );
 
+    // ── MEMORY: save incoming user message ────────────────────────────────
+    if (lead) {
+      await ConversationService.saveUserMessage(tenant.id, lead.id, message.text);
+    }
+
+    // ── MEMORY: fetch last 12 messages for GPT context ────────────────────
+    const conversationHistory = lead
+      ? await ConversationService.getConversationHistory(lead.id, 12)
+      : [];
+
     // Analyze message
     const analysis = AIService.analyzeMessage(message.text, tenantContext);
     console.log("Message analysis:", analysis);
@@ -175,13 +186,19 @@ export async function POST(request: NextRequest) {
       matchedProperties = searchResult.properties || [];
     }
 
-    // Generate smart reply using GPT-4o-mini
+    // Generate smart reply using GPT-4o-mini — with full conversation history
     const response = await AIService.generateSmartReply(
       message.text,
       matchedProperties,
       tenantContext,
+      conversationHistory,
     );
     console.log("Generated response:", response.reply);
+
+    // ── MEMORY: save assistant reply ──────────────────────────────────────
+    if (lead) {
+      await ConversationService.saveAssistantMessage(tenant.id, lead.id, response.reply);
+    }
 
     // Update lead with preferences if extracted
     if (lead && Object.keys(analysis.extractedData).length > 0) {
@@ -193,7 +210,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Add response to conversation
+    // Add response to legacy conversation_history JSONB (backward compat)
     if (lead) {
       await LeadService.addMessageToLead(
         tenant.id,
