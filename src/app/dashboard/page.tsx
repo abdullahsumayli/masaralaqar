@@ -15,6 +15,7 @@ import {
     LogOut,
     MessageSquare,
     Settings,
+    Sparkles,
     TrendingUp,
     Users
 } from "lucide-react";
@@ -242,6 +243,13 @@ export default function DashboardPage() {
                 >
                   <Settings className="w-6 h-6 text-primary" />
                   <span className="text-sm text-text-secondary">الإعدادات</span>
+                </Link>
+                <Link
+                  href="/dashboard/recommendations"
+                  className="flex flex-col items-center gap-2 p-4 rounded-lg bg-surface hover:bg-primary/5 transition-colors text-center"
+                >
+                  <Sparkles className="w-6 h-6 text-amber-400" />
+                  <span className="text-sm text-text-secondary">التوصيات</span>
                 </Link>
               </div>
             </motion.div>
