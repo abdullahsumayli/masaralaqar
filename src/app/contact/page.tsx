@@ -1,120 +1,124 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { useState } from 'react'
+import { createLead } from "@/lib/leads";
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Phone,
-  Mail,
-  MapPin,
-  Send,
-  MessageCircle,
-  Clock,
-  CheckCircle,
-} from 'lucide-react'
-import { createLead } from '@/lib/leads'
+    Building2,
+    CheckCircle,
+    Clock,
+    Mail,
+    MapPin,
+    MessageCircle,
+    Phone,
+    Send,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 const contactInfo = [
   {
     icon: Phone,
-    label: 'الهاتف/واتساب',
-    value: '+966 54 537 4069',
-    href: 'https://wa.me/966545374069',
+    label: "الهاتف/واتساب",
+    value: "+966 54 537 4069",
+    href: "https://wa.me/966545374069",
   },
   {
     icon: Mail,
-    label: 'البريد الإلكتروني',
-    value: 'info@masaralaqar.com',
-    href: 'mailto:info@masaralaqar.com',
+    label: "البريد الإلكتروني",
+    value: "info@masaralaqar.com",
+    href: "mailto:info@masaralaqar.com",
   },
   {
     icon: MapPin,
-    label: 'الموقع',
-    value: 'الرياض، المملكة العربية السعودية',
-    href: '#',
+    label: "الموقع",
+    value: "الرياض، المملكة العربية السعودية",
+    href: "#",
   },
   {
     icon: Clock,
-    label: 'ساعات العمل',
-    value: 'الأحد - الخميس: 9ص - 6م',
-    href: '#',
+    label: "ساعات العمل",
+    value: "الأحد - الخميس: 9ص - 6م",
+    href: "#",
   },
-]
+];
 
 const socialLinks = [
   {
-    name: 'X (تويتر)',
-    href: 'https://twitter.com/masaralaqar',
+    name: "X (تويتر)",
+    href: "https://twitter.com/masaralaqar",
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
       </svg>
     ),
   },
   {
-    name: 'لينكدإن',
-    href: 'https://linkedin.com/company/masaralaqar',
+    name: "لينكدإن",
+    href: "https://linkedin.com/company/masaralaqar",
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
       </svg>
     ),
   },
   {
-    name: 'واتساب',
-    href: 'https://wa.me/966545374069',
+    name: "واتساب",
+    href: "https://wa.me/966545374069",
     icon: <MessageCircle className="w-5 h-5" />,
   },
-]
+];
 
 const faqItems = [
   {
-    question: 'ما هي خدمات مسار العقار؟',
-    answer: 'نقدم ثلاث خدمات رئيسية: حلول الذكاء الاصطناعي والأتمتة (نظام صقر)، خدمات الوساطة العقارية، والتدريب والاستشارات عبر أكاديمية مسار العقار.',
+    question: "ما هي خدمات مسار العقار؟",
+    answer:
+      "نقدم ثلاث خدمات رئيسية: حلول الذكاء الاصطناعي والأتمتة (نظام صقر)، خدمات الوساطة العقارية، والتدريب والاستشارات عبر أكاديمية مسار العقار.",
   },
   {
-    question: 'كم يكلف نظام صقر؟',
-    answer: 'نقدم باقات متنوعة تبدأ من 299 ر.س شهرياً. يمكنك تجربة النظام مجاناً لمدة 14 يوماً قبل الاشتراك.',
+    question: "كم يكلف نظام صقر؟",
+    answer:
+      "نقدم باقات متنوعة تبدأ من 299 ر.س شهرياً. يمكنك تجربة النظام مجاناً لمدة 14 يوماً قبل الاشتراك.",
   },
   {
-    question: 'هل يمكنني حجز استشارة مجانية؟',
-    answer: 'نعم، نقدم استشارات مجانية لمدة 30 دقيقة لمناقشة احتياجاتك واختيار الحل المناسب لك.',
+    question: "هل يمكنني حجز استشارة مجانية؟",
+    answer:
+      "نعم، نقدم استشارات مجانية لمدة 30 دقيقة لمناقشة احتياجاتك واختيار الحل المناسب لك.",
   },
   {
-    question: 'كيف يمكنني الانضمام للأكاديمية؟',
-    answer: 'يمكنك زيارة صفحة الأكاديمية واختيار المسار التعليمي المناسب لمستواك، ثم التسجيل في الدورات المتاحة.',
+    question: "كيف يمكنني الانضمام للأكاديمية؟",
+    answer:
+      "يمكنك زيارة صفحة الأكاديمية واختيار المسار التعليمي المناسب لمستواك، ثم التسجيل في الدورات المتاحة.",
   },
-]
+];
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
+    e.preventDefault();
+    setIsSubmitting(true);
+
     const subjectMap: Record<string, string> = {
-      saqr: 'استفسار عن نظام صقر',
-      brokerage: 'خدمات الوساطة العقارية',
-      academy: 'الأكاديمية والتدريب',
-      partnership: 'شراكات وتعاون',
-      support: 'دعم فني',
-      other: 'أخرى',
-    }
+      saqr: "استفسار عن نظام صقر",
+      brokerage: "خدمات الوساطة العقارية",
+      academy: "الأكاديمية والتدريب",
+      partnership: "شراكات وتعاون",
+      support: "دعم فني",
+      other: "أخرى",
+    };
 
     const { error } = await createLead({
       name: formData.name,
@@ -122,23 +126,27 @@ export default function ContactPage() {
       email: formData.email,
       subject: subjectMap[formData.subject] || formData.subject,
       message: formData.message,
-      source: 'contact_form',
-    })
-    
-    if (error) {
-      alert('حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.')
-    }
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
-  }
+      source: "contact_form",
+    });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
+    if (error) {
+      alert("حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.");
+    }
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
@@ -150,18 +158,42 @@ export default function ContactPage() {
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
+              <span className="text-primary font-bold text-xl block leading-tight">
+                مسار العقار
+              </span>
               <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
+            <Link
+              href="/"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/blog"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المدونة
+            </Link>
+            <Link
+              href="/library"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المكتبة
+            </Link>
 
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-primary font-medium">تواصل معنا</Link>
+            <Link
+              href="/services"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الخدمات
+            </Link>
+            <Link href="/contact" className="text-primary font-medium">
+              تواصل معنا
+            </Link>
           </nav>
 
           <Link
@@ -177,11 +209,7 @@ export default function ContactPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 px-4 bg-gradient-to-b from-surface to-background">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               📞 تواصل معنا
             </span>
@@ -189,7 +217,8 @@ export default function ContactPage() {
               نحن هنا لمساعدتك
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-              راسلنا أو اتصل بنا — فريقنا جاهز للرد على استفساراتك ومساعدتك في رحلتك العقارية
+              راسلنا أو اتصل بنا — فريقنا جاهز للرد على استفساراتك ومساعدتك في
+              رحلتك العقارية
             </p>
           </motion.div>
         </div>
@@ -218,8 +247,14 @@ export default function ContactPage() {
                   </p>
                   <button
                     onClick={() => {
-                      setIsSubmitted(false)
-                      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+                      setIsSubmitted(false);
+                      setFormData({
+                        name: "",
+                        email: "",
+                        phone: "",
+                        subject: "",
+                        message: "",
+                      });
                     }}
                     className="text-primary font-medium hover:underline"
                   >
@@ -232,7 +267,9 @@ export default function ContactPage() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium mb-2">الاسم الكامل</label>
+                        <label className="block text-sm font-medium mb-2">
+                          الاسم الكامل
+                        </label>
                         <input
                           type="text"
                           name="name"
@@ -244,7 +281,9 @@ export default function ContactPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">رقم الجوال</label>
+                        <label className="block text-sm font-medium mb-2">
+                          رقم الجوال
+                        </label>
                         <input
                           type="tel"
                           name="phone"
@@ -258,7 +297,9 @@ export default function ContactPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">البريد الإلكتروني</label>
+                      <label className="block text-sm font-medium mb-2">
+                        البريد الإلكتروني
+                      </label>
                       <input
                         type="email"
                         name="email"
@@ -271,7 +312,9 @@ export default function ContactPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">الموضوع</label>
+                      <label className="block text-sm font-medium mb-2">
+                        الموضوع
+                      </label>
                       <select
                         name="subject"
                         value={formData.subject}
@@ -281,7 +324,9 @@ export default function ContactPage() {
                       >
                         <option value="">اختر الموضوع</option>
                         <option value="saqr">استفسار عن نظام صقر</option>
-                        <option value="brokerage">خدمات الوساطة العقارية</option>
+                        <option value="brokerage">
+                          خدمات الوساطة العقارية
+                        </option>
                         <option value="academy">الأكاديمية والتدريب</option>
                         <option value="partnership">شراكات وتعاون</option>
                         <option value="support">دعم فني</option>
@@ -289,7 +334,9 @@ export default function ContactPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">الرسالة</label>
+                      <label className="block text-sm font-medium mb-2">
+                        الرسالة
+                      </label>
                       <textarea
                         name="message"
                         value={formData.message}
@@ -342,7 +389,9 @@ export default function ContactPage() {
                         <info.icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <div className="text-sm text-text-muted mb-1">{info.label}</div>
+                        <div className="text-sm text-text-muted mb-1">
+                          {info.label}
+                        </div>
                         <div className="font-medium">{info.value}</div>
                       </div>
                     </a>
@@ -382,7 +431,9 @@ export default function ContactPage() {
                 variants={fadeInUp}
                 className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-8 text-white"
               >
-                <h3 className="text-xl font-bold mb-3">تفضل التواصل المباشر؟</h3>
+                <h3 className="text-xl font-bold mb-3">
+                  تفضل التواصل المباشر؟
+                </h3>
                 <p className="text-white/80 mb-6">
                   تحدث مع فريقنا مباشرة عبر واتساب للحصول على رد سريع
                 </p>
@@ -446,5 +497,5 @@ export default function ContactPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

@@ -1,98 +1,101 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import Link from 'next/link'
+import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
+import { getAllBlogPosts } from "@/lib/supabase";
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Search,
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Loader2,
-} from 'lucide-react'
-import { getAllBlogPosts } from '@/lib/supabase'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
+    ArrowLeft,
+    Building2,
+    Calendar,
+    Clock,
+    Loader2,
+    Search,
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-}
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
 
 const categories = [
-  { id: 'all', name: 'الكل' },
-  { id: 'استراتيجية', name: 'استراتيجية' },
-  { id: 'أتمتة', name: 'أتمتة' },
-  { id: 'ذكاء اصطناعي', name: 'ذكاء اصطناعي' },
-  { id: 'تقنية عقارية', name: 'تقنية عقارية' },
-  { id: 'تسويق', name: 'تسويق' },
-  { id: 'مبيعات', name: 'مبيعات' },
-]
+  { id: "all", name: "الكل" },
+  { id: "استراتيجية", name: "استراتيجية" },
+  { id: "أتمتة", name: "أتمتة" },
+  { id: "ذكاء اصطناعي", name: "ذكاء اصطناعي" },
+  { id: "تقنية عقارية", name: "تقنية عقارية" },
+  { id: "تسويق", name: "تسويق" },
+  { id: "مبيعات", name: "مبيعات" },
+];
 
 interface Article {
-  id: string
-  title: string
-  excerpt: string
-  category: string
-  date: string
-  reading_time?: number
-  readingTime?: number
-  slug: string
-  image?: string
-  published: boolean
+  id: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: string;
+  reading_time?: number;
+  readingTime?: number;
+  slug: string;
+  image?: string;
+  published: boolean;
 }
 
 export default function BlogPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadArticles() {
-      setLoading(true)
+      setLoading(true);
       try {
         // Try Supabase first
-        const supabasePosts = await getAllBlogPosts(true)
+        const supabasePosts = await getAllBlogPosts(true);
         if (supabasePosts && supabasePosts.length > 0) {
-          setArticles(supabasePosts)
+          setArticles(supabasePosts);
         } else {
           // Fallback to localStorage
-          const savedPosts = localStorage.getItem('blogPosts')
+          const savedPosts = localStorage.getItem("blogPosts");
           if (savedPosts) {
-            const posts = JSON.parse(savedPosts)
-            const publishedPosts = posts.filter((p: any) => p.published)
-            setArticles(publishedPosts)
+            const posts = JSON.parse(savedPosts);
+            const publishedPosts = posts.filter((p: any) => p.published);
+            setArticles(publishedPosts);
           }
         }
       } catch (error) {
-        console.error('Error loading articles:', error)
+        console.error("Error loading articles:", error);
         // Try localStorage as fallback
-        const savedPosts = localStorage.getItem('blogPosts')
+        const savedPosts = localStorage.getItem("blogPosts");
         if (savedPosts) {
-          const posts = JSON.parse(savedPosts)
-          const publishedPosts = posts.filter((p: any) => p.published)
-          setArticles(publishedPosts)
+          const posts = JSON.parse(savedPosts);
+          const publishedPosts = posts.filter((p: any) => p.published);
+          setArticles(publishedPosts);
         }
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadArticles()
-  }, [])
+    loadArticles();
+  }, []);
 
-  const filteredArticles = articles.filter(article => {
-    const matchesSearch = article.title.includes(searchQuery) || article.excerpt.includes(searchQuery)
-    const matchesCategory = activeCategory === 'all' || article.category === activeCategory
-    return matchesSearch && matchesCategory
-  })
+  const filteredArticles = articles.filter((article) => {
+    const matchesSearch =
+      article.title.includes(searchQuery) ||
+      article.excerpt.includes(searchQuery);
+    const matchesCategory =
+      activeCategory === "all" || article.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen bg-background text-text-primary" dir="rtl">
@@ -106,15 +109,24 @@ export default function BlogPage() {
             animate="visible"
             variants={staggerContainer}
           >
-            <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-4">
+            <motion.h1
+              variants={fadeInUp}
+              className="text-4xl md:text-5xl font-bold mb-4"
+            >
               مدونة <span className="text-primary">مسار العقار</span>
             </motion.h1>
-            <motion.p variants={fadeInUp} className="text-text-secondary text-lg mb-8">
+            <motion.p
+              variants={fadeInUp}
+              className="text-text-secondary text-lg mb-8"
+            >
               مقالات متخصصة في العقار والتقنية والتسويق العقاري
             </motion.p>
 
             {/* Search */}
-            <motion.div variants={fadeInUp} className="relative max-w-xl mx-auto">
+            <motion.div
+              variants={fadeInUp}
+              className="relative max-w-xl mx-auto"
+            >
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
               <input
                 type="text"
@@ -138,8 +150,8 @@ export default function BlogPage() {
                 onClick={() => setActiveCategory(category.id)}
                 className={`px-5 py-2 rounded-full font-medium transition-colors ${
                   activeCategory === category.id
-                    ? 'bg-primary text-white'
-                    : 'bg-surface text-text-secondary hover:bg-primary/10 hover:text-primary'
+                    ? "bg-primary text-white"
+                    : "bg-surface text-text-secondary hover:bg-primary/10 hover:text-primary"
                 }`}
               >
                 {category.name}
@@ -159,8 +171,13 @@ export default function BlogPage() {
           ) : filteredArticles.length === 0 ? (
             <div className="text-center py-16">
               <Building2 className="w-16 h-16 text-text-muted mx-auto mb-4" />
-              <p className="text-text-secondary text-lg">لا توجد مقالات تطابق بحثك</p>
-              <Link href="/admin/blog" className="text-primary hover:underline mt-2 inline-block">
+              <p className="text-text-secondary text-lg">
+                لا توجد مقالات تطابق بحثك
+              </p>
+              <Link
+                href="/admin/blog"
+                className="text-primary hover:underline mt-2 inline-block"
+              >
                 أضف مقالاً جديداً
               </Link>
             </div>
@@ -193,7 +210,7 @@ export default function BlogPage() {
                       </div>
                     )}
                   </Link>
-                  
+
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                       <span className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full">
@@ -215,7 +232,10 @@ export default function BlogPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>{article.reading_time || article.readingTime || 5} دقائق</span>
+                        <span>
+                          {article.reading_time || article.readingTime || 5}{" "}
+                          دقائق
+                        </span>
                       </div>
                     </div>
                     <Link
@@ -235,5 +255,5 @@ export default function BlogPage() {
 
       <Footer />
     </div>
-  )
+  );
 }

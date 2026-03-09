@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
     BarChart3,
     BookOpen,
+    Brain,
     ClipboardList,
     CreditCard,
     FileText,
@@ -13,6 +14,7 @@ import {
     LogOut,
     MessageCircle,
     Settings,
+    Smartphone,
     UserPlus,
     Users,
     Zap,
@@ -22,68 +24,27 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const menuItems = [
+  // ── إدارة المنصة ──
+  { title: "الرئيسية", href: "/admin", icon: LayoutDashboard },
+  { title: "المشتركين", href: "/admin/subscribers", icon: Users },
+  { title: "الباقات", href: "/admin/plans", icon: CreditCard },
+  { title: "استهلاك الذكاء الاصطناعي", href: "/admin/ai-usage", icon: Brain },
   {
-    title: "الرئيسية",
-    href: "/admin",
-    icon: LayoutDashboard,
+    title: "جلسات الواتساب",
+    href: "/admin/whatsapp-sessions",
+    icon: Smartphone,
   },
-  {
-    title: "المشتركين",
-    href: "/admin/subscribers",
-    icon: Users,
-  },
-  {
-    title: "طلبات التجربة",
-    href: "/admin/trials",
-    icon: ClipboardList,
-  },
-  {
-    title: "الدعم الفني",
-    href: "/admin/support",
-    icon: HeadphonesIcon,
-  },
-  {
-    title: "المدونة",
-    href: "/admin/blog",
-    icon: FileText,
-  },
-  {
-    title: "المكتبة",
-    href: "/admin/library",
-    icon: BookOpen,
-  },
-
-  {
-    title: "مدير الملفات",
-    href: "/admin/media",
-    icon: FolderOpen,
-  },
-  {
-    title: "العملاء المحتملون",
-    href: "/admin/leads",
-    icon: UserPlus,
-  },
-  {
-    title: "بوت واتساب",
-    href: "/admin/whatsapp-bot",
-    icon: MessageCircle,
-  },
-  {
-    title: "الباقات والأسعار",
-    href: "/products/saqr#pricing",
-    icon: CreditCard,
-    external: true,
-  },
-  {
-    title: "التحليلات",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "الإعدادات",
-    href: "/admin/settings",
-    icon: Settings,
-  },
+  { title: "تحليلات النظام", href: "/admin/system-analytics", icon: BarChart3 },
+  // ── المحتوى ──
+  { title: "المدونة", href: "/admin/blog", icon: FileText },
+  { title: "المكتبة", href: "/admin/library", icon: BookOpen },
+  { title: "مدير الملفات", href: "/admin/media", icon: FolderOpen },
+  // ── العمليات ──
+  { title: "العملاء المحتملون", href: "/admin/leads", icon: UserPlus },
+  { title: "طلبات التجربة", href: "/admin/trials", icon: ClipboardList },
+  { title: "الدعم الفني", href: "/admin/support", icon: HeadphonesIcon },
+  { title: "بوت واتساب", href: "/admin/whatsapp-bot", icon: MessageCircle },
+  { title: "الإعدادات", href: "/admin/settings", icon: Settings },
 ];
 
 export function AdminSidebar() {

@@ -1,131 +1,134 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { useState } from 'react'
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Phone,
-  Play,
-  ArrowLeft,
-  ArrowRight,
-  MessageCircle,
-  Bot,
-  Calendar,
-  CheckCircle,
-  Users,
-  Clock,
-  BarChart3,
-  Sparkles,
-  Send,
-} from 'lucide-react'
+    ArrowLeft,
+    ArrowRight,
+    BarChart3,
+    Bot,
+    Building2,
+    Calendar,
+    CheckCircle,
+    Clock,
+    MessageCircle,
+    Phone,
+    Play,
+    Send,
+    Sparkles,
+    Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 // Demo conversation simulation
 const demoConversation = [
   {
-    type: 'client',
-    message: 'السلام عليكم، أبي شقة للإيجار في الرياض حي النرجس',
-    time: '10:30 ص',
+    type: "client",
+    message: "السلام عليكم، أبي شقة للإيجار في الرياض حي النرجس",
+    time: "10:30 ص",
   },
   {
-    type: 'bot',
-    message: 'وعليكم السلام! 👋\n\nأهلاً بك، أنا المساعد الذكي لمكتب الصقر العقاري.\n\nممتاز، حي النرجس من الأحياء المميزة! عشان أساعدك بشكل أفضل:\n\n📐 كم عدد الغرف اللي تحتاجها؟',
-    time: '10:30 ص',
+    type: "bot",
+    message:
+      "وعليكم السلام! 👋\n\nأهلاً بك، أنا المساعد الذكي لمكتب الصقر العقاري.\n\nممتاز، حي النرجس من الأحياء المميزة! عشان أساعدك بشكل أفضل:\n\n📐 كم عدد الغرف اللي تحتاجها؟",
+    time: "10:30 ص",
   },
   {
-    type: 'client',
-    message: '3 غرف',
-    time: '10:31 ص',
+    type: "client",
+    message: "3 غرف",
+    time: "10:31 ص",
   },
   {
-    type: 'bot',
-    message: 'تمام! 3 غرف 👍\n\n💰 كم ميزانيتك السنوية للإيجار؟',
-    time: '10:31 ص',
+    type: "bot",
+    message: "تمام! 3 غرف 👍\n\n💰 كم ميزانيتك السنوية للإيجار؟",
+    time: "10:31 ص",
   },
   {
-    type: 'client',
-    message: '35 ألف',
-    time: '10:32 ص',
+    type: "client",
+    message: "35 ألف",
+    time: "10:32 ص",
   },
   {
-    type: 'bot',
-    message: 'ممتاز! عندنا خيارات مناسبة لميزانيتك 🏠\n\n📅 متى تقدر تحضر للمعاينة؟\n\n1️⃣ اليوم بعد العصر\n2️⃣ غداً الصباح\n3️⃣ غداً المساء',
-    time: '10:32 ص',
+    type: "bot",
+    message:
+      "ممتاز! عندنا خيارات مناسبة لميزانيتك 🏠\n\n📅 متى تقدر تحضر للمعاينة؟\n\n1️⃣ اليوم بعد العصر\n2️⃣ غداً الصباح\n3️⃣ غداً المساء",
+    time: "10:32 ص",
   },
   {
-    type: 'client',
-    message: 'غداً الصباح',
-    time: '10:33 ص',
+    type: "client",
+    message: "غداً الصباح",
+    time: "10:33 ص",
   },
   {
-    type: 'bot',
-    message: 'تم حجز موعدك! ✅\n\n📍 المعاينة: غداً الساعة 10 صباحاً\n📌 الموقع: حي النرجس، الرياض\n👤 المندوب: أ. محمد\n📱 للتواصل: 0501234567\n\nسيتواصل معك المندوب قبل الموعد للتأكيد.\n\nشكراً لثقتك بمكتب الصقر العقاري! 🏢',
-    time: '10:33 ص',
+    type: "bot",
+    message:
+      "تم حجز موعدك! ✅\n\n📍 المعاينة: غداً الساعة 10 صباحاً\n📌 الموقع: حي النرجس، الرياض\n👤 المندوب: أ. محمد\n📱 للتواصل: 0501234567\n\nسيتواصل معك المندوب قبل الموعد للتأكيد.\n\nشكراً لثقتك بمكتب الصقر العقاري! 🏢",
+    time: "10:33 ص",
   },
-]
+];
 
 const demoSteps = [
   {
     icon: MessageCircle,
-    title: 'استقبال الاستفسار',
-    description: 'العميل يرسل رسالة واتساب عادية',
+    title: "استقبال الاستفسار",
+    description: "العميل يرسل رسالة واتساب عادية",
   },
   {
     icon: Bot,
-    title: 'فهم الطلب بالذكاء الاصطناعي',
-    description: 'صقر يفهم احتياجات العميل ويسأل أسئلة ذكية',
+    title: "فهم الطلب بالذكاء الاصطناعي",
+    description: "صقر يفهم احتياجات العميل ويسأل أسئلة ذكية",
   },
   {
     icon: Users,
-    title: 'تصنيف العميل',
-    description: 'تحديد جدية العميل وأولويته',
+    title: "تصنيف العميل",
+    description: "تحديد جدية العميل وأولويته",
   },
   {
     icon: Calendar,
-    title: 'جدولة تلقائية',
-    description: 'حجز موعد المعاينة في التقويم',
+    title: "جدولة تلقائية",
+    description: "حجز موعد المعاينة في التقويم",
   },
   {
     icon: CheckCircle,
-    title: 'إشعار فوري',
-    description: 'تنبيه المندوب بالموعد الجديد',
+    title: "إشعار فوري",
+    description: "تنبيه المندوب بالموعد الجديد",
   },
-]
+];
 
 const stats = [
-  { value: '< 3 ثواني', label: 'وقت الرد' },
-  { value: '24/7', label: 'متاح دائماً' },
-  { value: '+85%', label: 'معدل التحويل' },
-  { value: '0', label: 'عملاء ضائعين' },
-]
+  { value: "< 3 ثواني", label: "وقت الرد" },
+  { value: "24/7", label: "متاح دائماً" },
+  { value: "+85%", label: "معدل التحويل" },
+  { value: "0", label: "عملاء ضائعين" },
+];
 
 export default function DemoPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [showFullDemo, setShowFullDemo] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showFullDemo, setShowFullDemo] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const startDemo = () => {
-    setIsPlaying(true)
-    setCurrentStep(0)
-    setShowFullDemo(true)
-    
+    setIsPlaying(true);
+    setCurrentStep(0);
+    setShowFullDemo(true);
+
     // Auto-advance through messages
-    let step = 0
+    let step = 0;
     const interval = setInterval(() => {
-      step++
+      step++;
       if (step < demoConversation.length) {
-        setCurrentStep(step)
+        setCurrentStep(step);
       } else {
-        clearInterval(interval)
-        setIsPlaying(false)
+        clearInterval(interval);
+        setIsPlaying(false);
       }
-    }, 2000)
-  }
+    }, 2000);
+  };
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
@@ -137,15 +140,32 @@ export default function DemoPage() {
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
+              <span className="text-primary font-bold text-xl block leading-tight">
+                مسار العقار
+              </span>
               <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/products/saqr" className="text-text-secondary hover:text-primary transition-colors">نظام صقر</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
+            <Link
+              href="/"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/products/saqr"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              نظام صقر
+            </Link>
+            <Link
+              href="/contact"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              تواصل معنا
+            </Link>
           </nav>
 
           <Link
@@ -160,11 +180,7 @@ export default function DemoPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 px-4 bg-gradient-to-b from-primary/5 to-background">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               <Play className="w-4 h-4" />
               العرض التوضيحي
@@ -174,7 +190,8 @@ export default function DemoPage() {
               <span className="text-primary"> نظام صقر</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10">
-              محادثة حقيقية توضح كيف يرد صقر على عملائك ويجدول المعاينات تلقائياً
+              محادثة حقيقية توضح كيف يرد صقر على عملائك ويجدول المعاينات
+              تلقائياً
             </p>
           </motion.div>
         </div>
@@ -219,51 +236,66 @@ export default function DemoPage() {
                           <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center animate-pulse">
                             <Play className="w-10 h-10 text-white mr-[-4px]" />
                           </div>
-                          <span className="text-text-secondary font-medium">اضغط لبدء العرض</span>
+                          <span className="text-text-secondary font-medium">
+                            اضغط لبدء العرض
+                          </span>
                         </button>
                       </div>
                     ) : (
                       <>
-                        {demoConversation.slice(0, currentStep + 1).map((msg, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className={`flex ${msg.type === 'client' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
-                              className={`max-w-[85%] rounded-lg p-3 ${
-                                msg.type === 'client'
-                                  ? 'bg-[#DCF8C6] rounded-tr-none'
-                                  : 'bg-white rounded-tl-none'
-                              }`}
+                        {demoConversation
+                          .slice(0, currentStep + 1)
+                          .map((msg, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className={`flex ${msg.type === "client" ? "justify-end" : "justify-start"}`}
                             >
-                              {msg.type === 'bot' && (
-                                <div className="flex items-center gap-1 mb-1">
-                                  <Sparkles className="w-3 h-3 text-primary" />
-                                  <span className="text-xs text-primary font-medium">صقر AI</span>
+                              <div
+                                className={`max-w-[85%] rounded-lg p-3 ${
+                                  msg.type === "client"
+                                    ? "bg-[#DCF8C6] rounded-tr-none"
+                                    : "bg-white rounded-tl-none"
+                                }`}
+                              >
+                                {msg.type === "bot" && (
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <Sparkles className="w-3 h-3 text-primary" />
+                                    <span className="text-xs text-primary font-medium">
+                                      صقر AI
+                                    </span>
+                                  </div>
+                                )}
+                                <p className="text-sm whitespace-pre-line">
+                                  {msg.message}
+                                </p>
+                                <div className="text-[10px] text-gray-500 text-left mt-1">
+                                  {msg.time}
                                 </div>
-                              )}
-                              <p className="text-sm whitespace-pre-line">{msg.message}</p>
-                              <div className="text-[10px] text-gray-500 text-left mt-1">
-                                {msg.time}
+                              </div>
+                            </motion.div>
+                          ))}
+
+                        {isPlaying &&
+                          currentStep < demoConversation.length - 1 && (
+                            <div className="flex justify-start">
+                              <div className="bg-white rounded-lg p-3 rounded-tl-none">
+                                <div className="flex gap-1">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                  <div
+                                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: "0.1s" }}
+                                  ></div>
+                                  <div
+                                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: "0.2s" }}
+                                  ></div>
+                                </div>
                               </div>
                             </div>
-                          </motion.div>
-                        ))}
-                        
-                        {isPlaying && currentStep < demoConversation.length - 1 && (
-                          <div className="flex justify-start">
-                            <div className="bg-white rounded-lg p-3 rounded-tl-none">
-                              <div className="flex gap-1">
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                          )}
                       </>
                     )}
                   </div>
@@ -293,27 +325,33 @@ export default function DemoPage() {
                 viewport={{ once: true }}
                 variants={fadeInUp}
               >
-                <h2 className="text-2xl font-bold mb-4">ماذا حدث في هذه المحادثة؟</h2>
+                <h2 className="text-2xl font-bold mb-4">
+                  ماذا حدث في هذه المحادثة؟
+                </h2>
                 <div className="space-y-4">
                   {demoSteps.map((step, index) => (
                     <div
                       key={index}
                       className={`flex items-start gap-4 p-4 rounded-xl transition-all ${
                         showFullDemo && currentStep >= index * 2
-                          ? 'bg-primary/10 border border-primary/20'
-                          : 'bg-surface'
+                          ? "bg-primary/10 border border-primary/20"
+                          : "bg-surface"
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        showFullDemo && currentStep >= index * 2
-                          ? 'bg-primary text-white'
-                          : 'bg-[#111E35] border border-[rgba(79,142,247,0.12)] text-text-muted'
-                      }`}>
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          showFullDemo && currentStep >= index * 2
+                            ? "bg-primary text-white"
+                            : "bg-[#111E35] border border-[rgba(79,142,247,0.12)] text-text-muted"
+                        }`}
+                      >
                         <step.icon className="w-5 h-5" />
                       </div>
                       <div>
                         <h3 className="font-bold mb-1">{step.title}</h3>
-                        <p className="text-text-secondary text-sm">{step.description}</p>
+                        <p className="text-text-secondary text-sm">
+                          {step.description}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -328,7 +366,7 @@ export default function DemoPage() {
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
                 >
                   <Play className="w-5 h-5" />
-                  {showFullDemo ? 'إعادة العرض' : 'بدء العرض'}
+                  {showFullDemo ? "إعادة العرض" : "بدء العرض"}
                 </button>
                 <Link
                   href="/products/saqr"
@@ -356,7 +394,9 @@ export default function DemoPage() {
                 variants={fadeInUp}
                 className="text-center"
               >
-                <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">{stat.value}</div>
+                <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">
+                  {stat.value}
+                </div>
                 <div className="text-white/70">{stat.label}</div>
               </motion.div>
             ))}
@@ -369,25 +409,29 @@ export default function DemoPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">لماذا صقر مختلف؟</h2>
-            <p className="text-text-secondary text-lg">ليس مجرد بوت — بل مساعد ذكي يفهم السوق السعودي</p>
+            <p className="text-text-secondary text-lg">
+              ليس مجرد بوت — بل مساعد ذكي يفهم السوق السعودي
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: Bot,
-                title: 'يفهم اللهجة السعودية',
-                description: 'صقر يفهم "أبي"، "ودي"، "يعني" وكل العبارات المحلية',
+                title: "يفهم اللهجة السعودية",
+                description:
+                  'صقر يفهم "أبي"، "ودي"، "يعني" وكل العبارات المحلية',
               },
               {
                 icon: Clock,
-                title: 'يرد فوراً',
-                description: 'لا يترك العميل ينتظر — الرد خلال ثواني وليس ساعات',
+                title: "يرد فوراً",
+                description:
+                  "لا يترك العميل ينتظر — الرد خلال ثواني وليس ساعات",
               },
               {
                 icon: BarChart3,
-                title: 'يتعلم ويتحسن',
-                description: 'كلما استخدمته أكثر، أصبح أذكى وأدق في الردود',
+                title: "يتعلم ويتحسن",
+                description: "كلما استخدمته أكثر، أصبح أذكى وأدق في الردود",
               },
             ].map((feature, index) => (
               <motion.div
@@ -459,5 +503,5 @@ export default function DemoPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

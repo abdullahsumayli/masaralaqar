@@ -1,9 +1,12 @@
 /**
  * WhatsApp Webhook Handler
  * Receives messages from UltraMsg API
+ * Integrated with AI Engine for multi-tenant office routing
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
+import { SubscriptionRepository } from "@/repositories/subscription.repo";
+import { AIEngine } from "@/services/ai-engine.service";
 import { AIService } from "@/services/ai.service";
 import { ConversationService } from "@/services/conversation.service";
 import { LeadService } from "@/services/lead.service";
@@ -123,16 +126,14 @@ export async function POST(request: NextRequest) {
     const tenant = await TenantService.getTenantByWebhook(secret!);
 
     if (!tenant) {
-      return NextResponse.json(
-        { error: "Tenant not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
     const defaultAiPersona = {
       agentName: "مساعد مسار العقار",
       responseStyle: "friendly" as const,
-      welcomeMessage: "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
+      welcomeMessage:
+        "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
     };
 
     const tenantContext: TenantContext = {
@@ -151,7 +152,11 @@ export async function POST(request: NextRequest) {
 
     // ── MEMORY: save incoming user message ────────────────────────────────
     if (lead) {
-      await ConversationService.saveUserMessage(tenant.id, lead.id, message.text);
+      await ConversationService.saveUserMessage(
+        tenant.id,
+        lead.id,
+        message.text,
+      );
     }
 
     // ── MEMORY: fetch last 12 messages for GPT context ────────────────────
@@ -159,36 +164,60 @@ export async function POST(request: NextRequest) {
       ? await ConversationService.getConversationHistory(lead.id, 12)
       : [];
 
-    // Analyze message
-    const analysis = AIService.analyzeMessage(message.text, tenantContext);
-
-    // Search for matching properties
-    let matchedProperties: any[] = [];
-    if (analysis.extractedData.propertyType || analysis.extractedData.budget) {
-      const searchResult = await PropertyService.searchProperties(tenant.id, {
-        type: analysis.extractedData.propertyType as import("@/types/property").PropertyType | undefined,
-        minPrice: analysis.extractedData.budget?.min,
-        maxPrice: analysis.extractedData.budget?.max,
-        city: analysis.extractedData.city,
-        bedrooms: analysis.extractedData.bedrooms,
-      });
-      matchedProperties = searchResult.properties || [];
-    }
-
-    // Generate smart reply using GPT-4o-mini — with full conversation history
-    const response = await AIService.generateSmartReply(
-      message.text,
-      matchedProperties,
-      tenantContext,
+    // ── AI ENGINE: Process via central AI Engine (office-aware) ─────────
+    const engineResult = await AIEngine.processMessageLegacy(
+      tenant.id,
+      { phone: message.phone, text: message.text, messageId: message.id },
       conversationHistory,
     );
 
+    // Fallback to direct AIService if engine fails
+    let response: { reply: string; properties?: any[]; suggestions?: string[] };
+    if (engineResult) {
+      response = engineResult;
+      // Track WhatsApp message usage
+      await SubscriptionRepository.incrementUsage(
+        tenant.id,
+        "whatsapp_message",
+      ).catch(() => {});
+    } else {
+      // Legacy fallback
+      const analysis = AIService.analyzeMessage(message.text, tenantContext);
+      let matchedProperties: any[] = [];
+      if (
+        analysis.extractedData.propertyType ||
+        analysis.extractedData.budget
+      ) {
+        const searchResult = await PropertyService.searchProperties(tenant.id, {
+          type: analysis.extractedData.propertyType as
+            | import("@/types/property").PropertyType
+            | undefined,
+          minPrice: analysis.extractedData.budget?.min,
+          maxPrice: analysis.extractedData.budget?.max,
+          city: analysis.extractedData.city,
+          bedrooms: analysis.extractedData.bedrooms,
+        });
+        matchedProperties = searchResult.properties || [];
+      }
+      response = await AIService.generateSmartReply(
+        message.text,
+        matchedProperties,
+        tenantContext,
+        conversationHistory,
+      );
+    }
+
     // ── MEMORY: save assistant reply ──────────────────────────────────────
     if (lead) {
-      await ConversationService.saveAssistantMessage(tenant.id, lead.id, response.reply);
+      await ConversationService.saveAssistantMessage(
+        tenant.id,
+        lead.id,
+        response.reply,
+      );
     }
 
     // Update lead with preferences if extracted
+    const analysis = AIService.analyzeMessage(message.text, tenantContext);
     if (lead && Object.keys(analysis.extractedData).length > 0) {
       await LeadService.updateLeadPreferences(tenant.id, message.phone, {
         city: analysis.extractedData.city,

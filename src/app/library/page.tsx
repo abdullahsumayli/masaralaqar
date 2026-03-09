@@ -1,161 +1,162 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { useState } from 'react'
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Phone,
-  ArrowRight,
-  Search,
-  Download,
-  BookOpen,
-  FileText,
-  PenTool,
-  BarChart3,
-  Lock,
-  Check,
-  Mail,
-} from 'lucide-react'
+    BarChart3,
+    BookOpen,
+    Building2,
+    Check,
+    Download,
+    FileText,
+    Lock,
+    Mail,
+    PenTool,
+    Phone,
+    Search
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-}
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
 const typeFilters = [
-  { id: 'all', label: 'الكل', icon: null },
-  { id: 'ebook', label: 'كتب إلكترونية', icon: BookOpen },
-  { id: 'guide', label: 'أدلة إرشادية', icon: FileText },
-  { id: 'template', label: 'نماذج وقوالب', icon: PenTool },
-  { id: 'infographic', label: 'إنفوجرافيك', icon: BarChart3 },
-]
+  { id: "all", label: "الكل", icon: null },
+  { id: "ebook", label: "كتب إلكترونية", icon: BookOpen },
+  { id: "guide", label: "أدلة إرشادية", icon: FileText },
+  { id: "template", label: "نماذج وقوالب", icon: PenTool },
+  { id: "infographic", label: "إنفوجرافيك", icon: BarChart3 },
+];
 
 const priceFilters = [
-  { id: 'all', label: 'الكل' },
-  { id: 'free', label: 'مجاني' },
-  { id: 'premium', label: 'مدفوع' },
-]
+  { id: "all", label: "الكل" },
+  { id: "free", label: "مجاني" },
+  { id: "premium", label: "مدفوع" },
+];
 
 const resources = [
   {
-    title: 'دليل الوسيط العقاري الشامل 2026',
-    description: 'كل ما تحتاج معرفته للنجاح في الوساطة العقارية',
-    type: 'ebook',
-    price: 'premium',
+    title: "دليل الوسيط العقاري الشامل 2026",
+    description: "كل ما تحتاج معرفته للنجاح في الوساطة العقارية",
+    type: "ebook",
+    price: "premium",
     priceValue: 199,
     pages: 85,
     downloads: 1200,
   },
   {
-    title: 'قائمة تدقيق إغلاق الصفقات',
-    description: 'قائمة شاملة لضمان عدم نسيان أي خطوة',
-    type: 'template',
-    price: 'free',
+    title: "قائمة تدقيق إغلاق الصفقات",
+    description: "قائمة شاملة لضمان عدم نسيان أي خطوة",
+    type: "template",
+    price: "free",
     priceValue: 0,
     pages: 5,
     downloads: 3500,
   },
   {
-    title: 'كيف تكتب إعلاناً عقارياً جذاباً',
-    description: 'دليل خطوة بخطوة لكتابة إعلانات عقارية فعّالة',
-    type: 'guide',
-    price: 'free',
+    title: "كيف تكتب إعلاناً عقارياً جذاباً",
+    description: "دليل خطوة بخطوة لكتابة إعلانات عقارية فعّالة",
+    type: "guide",
+    price: "free",
     priceValue: 0,
     pages: 12,
     downloads: 2800,
   },
   {
-    title: 'إنفوجرافيك: رحلة العميل العقاري',
-    description: 'تصور بصري لمراحل تعامل العميل مع الوسيط',
-    type: 'infographic',
-    price: 'free',
+    title: "إنفوجرافيك: رحلة العميل العقاري",
+    description: "تصور بصري لمراحل تعامل العميل مع الوسيط",
+    type: "infographic",
+    price: "free",
     priceValue: 0,
     pages: 1,
     downloads: 4200,
   },
   {
-    title: 'نموذج عقد وساطة عقارية',
-    description: 'نموذج عقد وساطة قابل للتعديل ومتوافق مع النظام',
-    type: 'template',
-    price: 'premium',
+    title: "نموذج عقد وساطة عقارية",
+    description: "نموذج عقد وساطة قابل للتعديل ومتوافق مع النظام",
+    type: "template",
+    price: "premium",
     priceValue: 49,
     pages: 8,
     downloads: 980,
   },
   {
-    title: 'دليل التسويق الرقمي للعقارات',
-    description: 'استراتيجيات التسويق العقاري على المنصات الرقمية',
-    type: 'guide',
-    price: 'premium',
+    title: "دليل التسويق الرقمي للعقارات",
+    description: "استراتيجيات التسويق العقاري على المنصات الرقمية",
+    type: "guide",
+    price: "premium",
     priceValue: 149,
     pages: 45,
     downloads: 650,
   },
   {
-    title: 'كتاب أساسيات التثمين العقاري',
-    description: 'مبادئ وأسس تقييم العقارات للمبتدئين',
-    type: 'ebook',
-    price: 'premium',
+    title: "كتاب أساسيات التثمين العقاري",
+    description: "مبادئ وأسس تقييم العقارات للمبتدئين",
+    type: "ebook",
+    price: "premium",
     priceValue: 249,
     pages: 120,
     downloads: 450,
   },
   {
-    title: 'إنفوجرافيك: أنواع العقارات في السعودية',
-    description: 'تصنيف شامل لأنواع العقارات المختلفة',
-    type: 'infographic',
-    price: 'free',
+    title: "إنفوجرافيك: أنواع العقارات في السعودية",
+    description: "تصنيف شامل لأنواع العقارات المختلفة",
+    type: "infographic",
+    price: "free",
     priceValue: 0,
     pages: 1,
     downloads: 5600,
   },
   {
-    title: 'نموذج خطة تسويقية لعقار',
-    description: 'خطة جاهزة للتعديل لتسويق أي عقار',
-    type: 'template',
-    price: 'free',
+    title: "نموذج خطة تسويقية لعقار",
+    description: "خطة جاهزة للتعديل لتسويق أي عقار",
+    type: "template",
+    price: "free",
     priceValue: 0,
     pages: 10,
     downloads: 2100,
   },
-]
+];
 
 const typeIcons: Record<string, any> = {
   ebook: BookOpen,
   guide: FileText,
   template: PenTool,
   infographic: BarChart3,
-}
+};
 
 const typeLabels: Record<string, string> = {
-  ebook: 'كتاب إلكتروني',
-  guide: 'دليل إرشادي',
-  template: 'نموذج',
-  infographic: 'إنفوجرافيك',
-}
+  ebook: "كتاب إلكتروني",
+  guide: "دليل إرشادي",
+  template: "نموذج",
+  infographic: "إنفوجرافيك",
+};
 
 export default function LibraryPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeType, setActiveType] = useState('all')
-  const [activePrice, setActivePrice] = useState('all')
-  const [email, setEmail] = useState('')
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeType, setActiveType] = useState("all");
+  const [activePrice, setActivePrice] = useState("all");
+  const [email, setEmail] = useState("");
 
-  const filteredResources = resources.filter(resource => {
-    const matchesSearch = resource.title.includes(searchQuery) || 
-                         resource.description.includes(searchQuery)
-    const matchesType = activeType === 'all' || resource.type === activeType
-    const matchesPrice = activePrice === 'all' || resource.price === activePrice
-    return matchesSearch && matchesType && matchesPrice
-  })
+  const filteredResources = resources.filter((resource) => {
+    const matchesSearch =
+      resource.title.includes(searchQuery) ||
+      resource.description.includes(searchQuery);
+    const matchesType = activeType === "all" || resource.type === activeType;
+    const matchesPrice =
+      activePrice === "all" || resource.price === activePrice;
+    return matchesSearch && matchesType && matchesPrice;
+  });
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
@@ -167,18 +168,42 @@ export default function LibraryPage() {
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
+              <span className="text-primary font-bold text-xl block leading-tight">
+                مسار العقار
+              </span>
               <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
-            <Link href="/library" className="text-primary font-medium">المكتبة</Link>
+            <Link
+              href="/"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/blog"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المدونة
+            </Link>
+            <Link href="/library" className="text-primary font-medium">
+              المكتبة
+            </Link>
 
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
+            <Link
+              href="/services"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الخدمات
+            </Link>
+            <Link
+              href="/contact"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              تواصل معنا
+            </Link>
           </nav>
 
           <Link
@@ -194,11 +219,7 @@ export default function LibraryPage() {
       {/* Hero Section */}
       <section className="pt-32 pb-16 px-4 bg-gradient-to-b from-surface to-background">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               📂 المكتبة العقارية
             </span>
@@ -207,7 +228,8 @@ export default function LibraryPage() {
               <span className="text-primary"> النجاح في العقار</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10">
-              كتب إلكترونية، أدلة، نماذج، وإنفوجرافيك — كلها مصممة خصيصاً للوسيط العقاري السعودي
+              كتب إلكترونية، أدلة، نماذج، وإنفوجرافيك — كلها مصممة خصيصاً للوسيط
+              العقاري السعودي
             </p>
           </motion.div>
         </div>
@@ -230,14 +252,14 @@ export default function LibraryPage() {
 
           {/* Type Filters */}
           <div className="flex flex-wrap justify-center gap-3 mb-4">
-            {typeFilters.map(filter => (
+            {typeFilters.map((filter) => (
               <button
                 key={filter.id}
                 onClick={() => setActiveType(filter.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                   activeType === filter.id
-                    ? 'bg-primary text-white'
-                    : 'bg-surface text-text-secondary hover:bg-primary/10'
+                    ? "bg-primary text-white"
+                    : "bg-surface text-text-secondary hover:bg-primary/10"
                 }`}
               >
                 {filter.icon && <filter.icon className="w-4 h-4" />}
@@ -248,14 +270,14 @@ export default function LibraryPage() {
 
           {/* Price Filters */}
           <div className="flex flex-wrap justify-center gap-3">
-            {priceFilters.map(filter => (
+            {priceFilters.map((filter) => (
               <button
                 key={filter.id}
                 onClick={() => setActivePrice(filter.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activePrice === filter.id
-                    ? 'bg-secondary text-white'
-                    : 'bg-surface text-text-secondary hover:bg-secondary/10'
+                    ? "bg-secondary text-white"
+                    : "bg-surface text-text-secondary hover:bg-secondary/10"
                 }`}
               >
                 {filter.label}
@@ -275,7 +297,7 @@ export default function LibraryPage() {
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredResources.map((resource, index) => {
-              const TypeIcon = typeIcons[resource.type]
+              const TypeIcon = typeIcons[resource.type];
               return (
                 <motion.div
                   key={index}
@@ -285,13 +307,13 @@ export default function LibraryPage() {
                   {/* Preview */}
                   <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
                     <TypeIcon className="w-16 h-16 text-primary/30" />
-                    {resource.price === 'premium' && (
+                    {resource.price === "premium" && (
                       <div className="absolute top-3 left-3 bg-secondary text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                         <Lock className="w-3 h-3" />
                         مدفوع
                       </div>
                     )}
-                    {resource.price === 'free' && (
+                    {resource.price === "free" && (
                       <div className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
                         مجاني
                       </div>
@@ -302,7 +324,9 @@ export default function LibraryPage() {
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <TypeIcon className="w-4 h-4 text-primary" />
-                      <span className="text-sm text-primary">{typeLabels[resource.type]}</span>
+                      <span className="text-sm text-primary">
+                        {typeLabels[resource.type]}
+                      </span>
                     </div>
                     <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                       {resource.title}
@@ -312,10 +336,12 @@ export default function LibraryPage() {
                     </p>
                     <div className="flex items-center justify-between text-sm text-text-muted mb-4">
                       <span>{resource.pages} صفحة</span>
-                      <span>{resource.downloads.toLocaleString('ar-SA')} تحميل</span>
+                      <span>
+                        {resource.downloads.toLocaleString("ar-SA")} تحميل
+                      </span>
                     </div>
-                    
-                    {resource.price === 'free' ? (
+
+                    {resource.price === "free" ? (
                       <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors">
                         <Download className="w-4 h-4" />
                         تحميل مجاني
@@ -327,13 +353,15 @@ export default function LibraryPage() {
                     )}
                   </div>
                 </motion.div>
-              )
+              );
             })}
           </motion.div>
 
           {filteredResources.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-text-muted text-lg">لا توجد موارد مطابقة للفلتر</p>
+              <p className="text-text-muted text-lg">
+                لا توجد موارد مطابقة للفلتر
+              </p>
             </div>
           )}
         </div>
@@ -381,7 +409,9 @@ export default function LibraryPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">لماذا مكتبة مسار العقار؟</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              لماذا مكتبة مسار العقار؟
+            </h2>
             <p className="text-text-secondary text-lg">
               موارد مصممة خصيصاً للسوق السعودي
             </p>
@@ -390,16 +420,19 @@ export default function LibraryPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: 'محتوى محلي',
-                description: 'جميع الموارد مكتوبة بواسطة خبراء سعوديين يفهمون السوق المحلي',
+                title: "محتوى محلي",
+                description:
+                  "جميع الموارد مكتوبة بواسطة خبراء سعوديين يفهمون السوق المحلي",
               },
               {
-                title: 'تحديث مستمر',
-                description: 'نحدث مواردنا باستمرار لتواكب تطورات السوق والأنظمة',
+                title: "تحديث مستمر",
+                description:
+                  "نحدث مواردنا باستمرار لتواكب تطورات السوق والأنظمة",
               },
               {
-                title: 'تطبيق عملي',
-                description: 'كل مورد يحتوي على خطوات عملية قابلة للتطبيق فوراً',
+                title: "تطبيق عملي",
+                description:
+                  "كل مورد يحتوي على خطوات عملية قابلة للتطبيق فوراً",
               },
             ].map((benefit, index) => (
               <motion.div
@@ -436,5 +469,5 @@ export default function LibraryPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

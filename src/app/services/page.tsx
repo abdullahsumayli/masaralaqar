@@ -1,168 +1,167 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
+import { motion } from "framer-motion";
 import {
-  Building2,
-  Phone,
-  Bot,
-  MessageSquare,
-  BarChart3,
-  Home,
-  Users,
-  FileText,
-  GraduationCap,
-  Presentation,
-  Headphones,
-  CheckCircle,
-  ArrowLeft,
-  Zap,
-  Target,
-  Clock,
-  Shield,
-} from 'lucide-react'
+    ArrowLeft,
+    BarChart3,
+    Bot,
+    Building2,
+    Clock,
+    FileText,
+    GraduationCap,
+    Headphones,
+    Home,
+    MessageSquare,
+    Phone,
+    Presentation,
+    Shield,
+    Target,
+    Users,
+    Zap
+} from "lucide-react";
+import Link from "next/link";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-}
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
 const services = [
   {
-    id: 'tech',
-    title: 'حلول الذكاء الاصطناعي والأتمتة',
-    subtitle: 'وفّر وقتك وركز على الصفقات',
-    description: 'نظام صقر وحلول أتمتة متكاملة للوسطاء العقاريين',
-    color: 'from-primary to-primary-dark',
+    id: "tech",
+    title: "حلول الذكاء الاصطناعي والأتمتة",
+    subtitle: "وفّر وقتك وركز على الصفقات",
+    description: "نظام صقر وحلول أتمتة متكاملة للوسطاء العقاريين",
+    color: "from-primary to-primary-dark",
     icon: Bot,
     features: [
       {
         icon: MessageSquare,
-        title: 'رد آلي ذكي',
-        description: 'ردود تلقائية على رسائل واتساب تفهم احتياجات العميل',
+        title: "رد آلي ذكي",
+        description: "ردود تلقائية على رسائل واتساب تفهم احتياجات العميل",
       },
       {
         icon: Target,
-        title: 'تصفية العملاء',
-        description: 'فلترة العملاء المحتملين وتصنيفهم حسب الجدية',
+        title: "تصفية العملاء",
+        description: "فلترة العملاء المحتملين وتصنيفهم حسب الجدية",
       },
       {
         icon: Clock,
-        title: 'جدولة المعاينات',
-        description: 'حجز مواعيد المعاينات تلقائياً دون تدخل منك',
+        title: "جدولة المعاينات",
+        description: "حجز مواعيد المعاينات تلقائياً دون تدخل منك",
       },
       {
         icon: BarChart3,
-        title: 'تقارير أداء',
-        description: 'لوحة تحكم شاملة لمتابعة أدائك وتحليل النتائج',
+        title: "تقارير أداء",
+        description: "لوحة تحكم شاملة لمتابعة أدائك وتحليل النتائج",
       },
     ],
-    cta: 'جرب نظام صقر مجاناً',
-    ctaLink: '/products/saqr',
+    cta: "جرب نظام صقر مجاناً",
+    ctaLink: "/products/saqr",
   },
   {
-    id: 'brokerage',
-    title: 'الوساطة العقارية',
-    subtitle: 'شراكة عقارية موثوقة',
-    description: 'خدمات وساطة عقارية احترافية للأفراد والشركات',
-    color: 'from-secondary to-secondary-dark',
+    id: "brokerage",
+    title: "الوساطة العقارية",
+    subtitle: "شراكة عقارية موثوقة",
+    description: "خدمات وساطة عقارية احترافية للأفراد والشركات",
+    color: "from-secondary to-secondary-dark",
     icon: Home,
     features: [
       {
         icon: Home,
-        title: 'تسويق العقارات',
-        description: 'تسويق عقارك على أوسع نطاق باستخدام التقنيات الحديثة',
+        title: "تسويق العقارات",
+        description: "تسويق عقارك على أوسع نطاق باستخدام التقنيات الحديثة",
       },
       {
         icon: Users,
-        title: 'البحث عن عقارات',
-        description: 'نجد لك العقار المناسب حسب احتياجاتك وميزانيتك',
+        title: "البحث عن عقارات",
+        description: "نجد لك العقار المناسب حسب احتياجاتك وميزانيتك",
       },
       {
         icon: FileText,
-        title: 'إدارة العقود',
-        description: 'إعداد ومراجعة العقود العقارية بشكل احترافي',
+        title: "إدارة العقود",
+        description: "إعداد ومراجعة العقود العقارية بشكل احترافي",
       },
       {
         icon: Shield,
-        title: 'استشارات عقارية',
-        description: 'نصائح واستشارات من خبراء السوق العقاري',
+        title: "استشارات عقارية",
+        description: "نصائح واستشارات من خبراء السوق العقاري",
       },
     ],
-    cta: 'احجز استشارة مجانية',
-    ctaLink: '/contact',
+    cta: "احجز استشارة مجانية",
+    ctaLink: "/contact",
   },
   {
-    id: 'training',
-    title: 'التدريب والاستشارات',
-    subtitle: 'طوّر مهاراتك واحترف',
-    description: 'برامج تدريبية متخصصة للوسطاء العقاريين والشركات',
-    color: 'from-green-500 to-green-600',
+    id: "training",
+    title: "التدريب والاستشارات",
+    subtitle: "طوّر مهاراتك واحترف",
+    description: "برامج تدريبية متخصصة للوسطاء العقاريين والشركات",
+    color: "from-green-500 to-green-600",
     icon: GraduationCap,
     features: [
       {
         icon: GraduationCap,
-        title: 'دورات تدريبية',
-        description: 'برامج شاملة من المبتدئ إلى المحترف في الوساطة العقارية',
+        title: "دورات تدريبية",
+        description: "برامج شاملة من المبتدئ إلى المحترف في الوساطة العقارية",
       },
       {
         icon: Presentation,
-        title: 'ورش عمل',
-        description: 'ورش عمل تفاعلية لتطوير مهارات البيع والتفاوض',
+        title: "ورش عمل",
+        description: "ورش عمل تفاعلية لتطوير مهارات البيع والتفاوض",
       },
       {
         icon: Headphones,
-        title: 'استشارات فردية',
-        description: 'جلسات استشارية خاصة لتطوير عملك العقاري',
+        title: "استشارات فردية",
+        description: "جلسات استشارية خاصة لتطوير عملك العقاري",
       },
       {
         icon: Users,
-        title: 'تدريب الفرق',
-        description: 'برامج تدريب مخصصة للشركات والمكاتب العقارية',
+        title: "تدريب الفرق",
+        description: "برامج تدريب مخصصة للشركات والمكاتب العقارية",
       },
     ],
-    cta: 'تواصل معنا',
-    ctaLink: '/contact',
+    cta: "تواصل معنا",
+    ctaLink: "/contact",
   },
-]
+];
 
 const stats = [
-  { value: '+500', label: 'عميل', description: 'خدمناهم بنجاح' },
-  { value: '+2,500', label: 'متدرب', description: 'في أكاديميتنا' },
-  { value: '+1,000', label: 'صفقة', description: 'أُغلقت بمساعدتنا' },
-  { value: '5', label: 'سنوات', description: 'خبرة في السوق' },
-]
+  { value: "+500", label: "عميل", description: "خدمناهم بنجاح" },
+  { value: "+2,500", label: "متدرب", description: "في أكاديميتنا" },
+  { value: "+1,000", label: "صفقة", description: "أُغلقت بمساعدتنا" },
+  { value: "5", label: "سنوات", description: "خبرة في السوق" },
+];
 
 const whyUs = [
   {
     icon: Zap,
-    title: 'سرعة التنفيذ',
-    description: 'نلتزم بالمواعيد ونقدم خدماتنا بأسرع وقت ممكن',
+    title: "سرعة التنفيذ",
+    description: "نلتزم بالمواعيد ونقدم خدماتنا بأسرع وقت ممكن",
   },
   {
     icon: Target,
-    title: 'تركيز على النتائج',
-    description: 'هدفنا الوحيد هو تحقيق نتائج ملموسة لعملائنا',
+    title: "تركيز على النتائج",
+    description: "هدفنا الوحيد هو تحقيق نتائج ملموسة لعملائنا",
   },
   {
     icon: Shield,
-    title: 'موثوقية عالية',
-    description: 'نعمل بشفافية تامة ونحافظ على ثقة عملائنا',
+    title: "موثوقية عالية",
+    description: "نعمل بشفافية تامة ونحافظ على ثقة عملائنا",
   },
   {
     icon: Users,
-    title: 'فريق متخصص',
-    description: 'خبراء في العقار والتقنية يعملون معاً لخدمتك',
+    title: "فريق متخصص",
+    description: "خبراء في العقار والتقنية يعملون معاً لخدمتك",
   },
-]
+];
 
 export default function ServicesPage() {
   return (
@@ -175,18 +174,42 @@ export default function ServicesPage() {
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
+              <span className="text-primary font-bold text-xl block leading-tight">
+                مسار العقار
+              </span>
               <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
+            <Link
+              href="/"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/blog"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المدونة
+            </Link>
+            <Link
+              href="/library"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المكتبة
+            </Link>
 
-            <Link href="/services" className="text-primary font-medium">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
+            <Link href="/services" className="text-primary font-medium">
+              الخدمات
+            </Link>
+            <Link
+              href="/contact"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              تواصل معنا
+            </Link>
           </nav>
 
           <Link
@@ -202,11 +225,7 @@ export default function ServicesPage() {
       {/* Hero */}
       <section className="pt-32 pb-20 px-4 bg-gradient-to-b from-surface to-background">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-          >
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
             <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
               🛠️ خدماتنا
             </span>
@@ -215,7 +234,8 @@ export default function ServicesPage() {
               <span className="text-primary"> السوق العقاري</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-              من الأتمتة الذكية إلى التدريب الاحترافي — كل ما تحتاجه تحت سقف واحد
+              من الأتمتة الذكية إلى التدريب الاحترافي — كل ما تحتاجه تحت سقف
+              واحد
             </p>
           </motion.div>
         </div>
@@ -226,7 +246,7 @@ export default function ServicesPage() {
         <section
           key={service.id}
           id={service.id}
-          className={`py-20 px-4 ${index % 2 === 1 ? 'bg-surface' : ''}`}
+          className={`py-20 px-4 ${index % 2 === 1 ? "bg-surface" : ""}`}
         >
           <div className="max-w-6xl mx-auto">
             <motion.div
@@ -236,11 +256,15 @@ export default function ServicesPage() {
               variants={fadeInUp}
               className="mb-12"
             >
-              <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-l ${service.color} text-white mb-4`}>
+              <div
+                className={`inline-flex items-center gap-3 px-4 py-2 rounded-full bg-gradient-to-l ${service.color} text-white mb-4`}
+              >
                 <service.icon className="w-5 h-5" />
                 <span className="font-medium">{service.title}</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">{service.subtitle}</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {service.subtitle}
+              </h2>
               <p className="text-text-secondary text-lg max-w-2xl">
                 {service.description}
               </p>
@@ -259,11 +283,15 @@ export default function ServicesPage() {
                   variants={fadeInUp}
                   className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl p-6 hover:shadow-lg hover:bg-[#162444] transition-all"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4`}>
+                  <div
+                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4`}
+                  >
                     <feature.icon className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-text-secondary text-sm">{feature.description}</p>
+                  <p className="text-text-secondary text-sm">
+                    {feature.description}
+                  </p>
                 </motion.div>
               ))}
             </motion.div>
@@ -285,7 +313,9 @@ export default function ServicesPage() {
       <section className="py-20 px-4 bg-primary text-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">أرقام تتحدث عنا</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              أرقام تتحدث عنا
+            </h2>
             <p className="text-white/70 text-lg">
               نتائج حقيقية حققناها مع عملائنا
             </p>
@@ -319,10 +349,10 @@ export default function ServicesPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">لماذا مسار العقار؟</h2>
-            <p className="text-text-secondary text-lg">
-              ما يميزنا عن غيرنا
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              لماذا مسار العقار؟
+            </h2>
+            <p className="text-text-secondary text-lg">ما يميزنا عن غيرنا</p>
           </div>
 
           <motion.div
@@ -342,7 +372,9 @@ export default function ServicesPage() {
                   <item.icon className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                <p className="text-text-secondary text-sm">{item.description}</p>
+                <p className="text-text-secondary text-sm">
+                  {item.description}
+                </p>
               </motion.div>
             ))}
           </motion.div>
@@ -362,7 +394,8 @@ export default function ServicesPage() {
               جاهز للانطلاق؟
             </h2>
             <p className="text-white/80 text-lg mb-10">
-              تواصل معنا اليوم واحصل على استشارة مجانية لاختيار الخدمة المناسبة لك
+              تواصل معنا اليوم واحصل على استشارة مجانية لاختيار الخدمة المناسبة
+              لك
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -399,5 +432,5 @@ export default function ServicesPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

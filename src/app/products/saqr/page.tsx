@@ -1,177 +1,182 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { 
-  ArrowLeft, 
-  MessageCircle, 
-  Clock, 
-  Users, 
-  Calendar, 
-  BarChart3, 
-  Shield,
-  Zap,
-  CheckCircle,
-  HelpCircle,
-  Building2,
-  Phone,
-  Play,
-  Star,
-  Bot,
-} from 'lucide-react'
+import { motion } from "framer-motion";
+import {
+    ArrowLeft,
+    BarChart3,
+    Bot,
+    Building2,
+    Calendar,
+    CheckCircle,
+    HelpCircle,
+    MessageCircle,
+    Phone,
+    Play,
+    Shield,
+    Star,
+    Users,
+    Zap
+} from "lucide-react";
+import Link from "next/link";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-}
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-}
+    transition: { staggerChildren: 0.1 },
+  },
+};
 
 const features = [
   {
     icon: MessageCircle,
-    title: 'رد فوري 24/7',
-    description: 'يرد على عملائك في أي وقت، حتى في الليل وعطلة نهاية الأسبوع',
+    title: "رد فوري 24/7",
+    description: "يرد على عملائك في أي وقت، حتى في الليل وعطلة نهاية الأسبوع",
   },
   {
     icon: Users,
-    title: 'تصفية ذكية',
-    description: 'يفرز العملاء الجادين من المتصفحين بالذكاء الاصطناعي',
+    title: "تصفية ذكية",
+    description: "يفرز العملاء الجادين من المتصفحين بالذكاء الاصطناعي",
   },
   {
     icon: Calendar,
-    title: 'جدولة تلقائية',
-    description: 'يحجز مواعيد المعاينات تلقائياً في تقويمك',
+    title: "جدولة تلقائية",
+    description: "يحجز مواعيد المعاينات تلقائياً في تقويمك",
   },
   {
     icon: BarChart3,
-    title: 'تقارير مفصلة',
-    description: 'إحصائيات وتحليلات عن أداء الردود والتحويلات',
+    title: "تقارير مفصلة",
+    description: "إحصائيات وتحليلات عن أداء الردود والتحويلات",
   },
   {
     icon: Shield,
-    title: 'أمان تام',
-    description: 'بياناتك ومحادثاتك مشفرة ومحمية بالكامل',
+    title: "أمان تام",
+    description: "بياناتك ومحادثاتك مشفرة ومحمية بالكامل",
   },
   {
     icon: Zap,
-    title: 'تكامل سلس',
-    description: 'يتكامل مع أنظمتك الحالية وواتساب بسهولة',
+    title: "تكامل سلس",
+    description: "يتكامل مع أنظمتك الحالية وواتساب بسهولة",
   },
-]
+];
 
 const steps = [
   {
-    number: '01',
-    title: 'استقبال الرسالة',
-    description: 'العميل يرسل استفساره على واتساب',
+    number: "01",
+    title: "استقبال الرسالة",
+    description: "العميل يرسل استفساره على واتساب",
   },
   {
-    number: '02',
-    title: 'تحليل وتصفية',
-    description: 'النظام يفهم الطلب ويحدد مدى جدية العميل',
+    number: "02",
+    title: "تحليل وتصفية",
+    description: "النظام يفهم الطلب ويحدد مدى جدية العميل",
   },
   {
-    number: '03',
-    title: 'رد ذكي وجدولة',
-    description: 'رد مخصص + حجز موعد المعاينة تلقائياً',
+    number: "03",
+    title: "رد ذكي وجدولة",
+    description: "رد مخصص + حجز موعد المعاينة تلقائياً",
   },
-]
+];
 
 const plans = [
   {
-    name: 'أساسي',
-    price: '500',
-    period: 'شهرياً',
-    description: 'للمكاتب الصغيرة',
-    planKey: 'basic',
+    name: "أساسي",
+    price: "500",
+    period: "شهرياً",
+    description: "للمكاتب الصغيرة",
+    planKey: "basic",
     features: [
-      'رد آلي على واتساب',
-      'حتى 500 محادثة/شهر',
-      'تقارير أساسية',
-      'دعم عبر الإيميل',
+      "رد آلي على واتساب",
+      "حتى 500 محادثة/شهر",
+      "تقارير أساسية",
+      "دعم عبر الإيميل",
     ],
     highlighted: false,
   },
   {
-    name: 'متقدم',
-    price: '1,000',
-    period: 'شهرياً',
-    description: 'للمكاتب المتوسطة',
-    planKey: 'advanced',
+    name: "متقدم",
+    price: "1,000",
+    period: "شهرياً",
+    description: "للمكاتب المتوسطة",
+    planKey: "advanced",
     features: [
-      'كل مميزات الأساسي',
-      'حتى 2,000 محادثة/شهر',
-      'تصفية ذكية بـ AI',
-      'جدولة المعاينات',
-      'تقارير متقدمة',
-      'دعم أولوية',
+      "كل مميزات الأساسي",
+      "حتى 2,000 محادثة/شهر",
+      "تصفية ذكية بـ AI",
+      "جدولة المعاينات",
+      "تقارير متقدمة",
+      "دعم أولوية",
     ],
     highlighted: true,
   },
   {
-    name: 'VIP',
-    price: '2,500',
-    period: 'شهرياً',
-    description: 'للشركات الكبيرة',
-    planKey: 'vip',
+    name: "VIP",
+    price: "2,500",
+    period: "شهرياً",
+    description: "للشركات الكبيرة",
+    planKey: "vip",
     features: [
-      'كل مميزات المتقدم',
-      'محادثات غير محدودة',
-      'تخصيص كامل',
-      'API مفتوح',
-      'مدير حساب مخصص',
-      'دعم 24/7',
+      "كل مميزات المتقدم",
+      "محادثات غير محدودة",
+      "تخصيص كامل",
+      "API مفتوح",
+      "مدير حساب مخصص",
+      "دعم 24/7",
     ],
     highlighted: false,
   },
-]
+];
 
 const faqs = [
   {
-    question: 'ما هو نظام صقر؟',
-    answer: 'نظام صقر هو مساعد ذكي للوسطاء العقاريين يعمل بالذكاء الاصطناعي. يرد على استفسارات العملاء تلقائياً عبر واتساب، يصفيهم حسب جديتهم، ويجدول المعاينات دون تدخل منك.',
+    question: "ما هو نظام صقر؟",
+    answer:
+      "نظام صقر هو مساعد ذكي للوسطاء العقاريين يعمل بالذكاء الاصطناعي. يرد على استفسارات العملاء تلقائياً عبر واتساب، يصفيهم حسب جديتهم، ويجدول المعاينات دون تدخل منك.",
   },
   {
-    question: 'كم يستغرق تفعيل النظام؟',
-    answer: 'يمكنك البدء في استخدام النظام خلال 24 ساعة من التسجيل. فريقنا سيساعدك في الإعداد والتخصيص.',
+    question: "كم يستغرق تفعيل النظام؟",
+    answer:
+      "يمكنك البدء في استخدام النظام خلال 24 ساعة من التسجيل. فريقنا سيساعدك في الإعداد والتخصيص.",
   },
   {
-    question: 'هل يمكنني تجربته قبل الاشتراك؟',
-    answer: 'نعم، نقدم تجربة مجانية لمدة 14 يوماً بدون بطاقة ائتمانية.',
+    question: "هل يمكنني تجربته قبل الاشتراك؟",
+    answer: "نعم، نقدم تجربة مجانية لمدة 14 يوماً بدون بطاقة ائتمانية.",
   },
   {
-    question: 'هل بياناتي آمنة؟',
-    answer: 'بالتأكيد. جميع البيانات مشفرة ومخزنة بشكل آمن. نلتزم بأعلى معايير الأمان وحماية الخصوصية.',
+    question: "هل بياناتي آمنة؟",
+    answer:
+      "بالتأكيد. جميع البيانات مشفرة ومخزنة بشكل آمن. نلتزم بأعلى معايير الأمان وحماية الخصوصية.",
   },
-]
+];
 
 const testimonials = [
   {
-    name: 'عبدالرحمن الغامدي',
-    role: 'وسيط عقاري - الرياض',
-    content: 'صقر وفّر علي ساعات يومياً كنت أضيعها في الرد على استفسارات. الآن أركز فقط على العملاء الجادين.',
+    name: "عبدالرحمن الغامدي",
+    role: "وسيط عقاري - الرياض",
+    content:
+      "صقر وفّر علي ساعات يومياً كنت أضيعها في الرد على استفسارات. الآن أركز فقط على العملاء الجادين.",
     rating: 5,
   },
   {
-    name: 'نورة العتيبي',
-    role: 'مديرة مكتب عقاري - جدة',
-    content: 'زادت صفقاتنا 40% بعد استخدام صقر. العملاء يحصلون على رد فوري والمعاينات تُجدول تلقائياً.',
+    name: "نورة العتيبي",
+    role: "مديرة مكتب عقاري - جدة",
+    content:
+      "زادت صفقاتنا 40% بعد استخدام صقر. العملاء يحصلون على رد فوري والمعاينات تُجدول تلقائياً.",
     rating: 5,
   },
   {
-    name: 'محمد الشهري',
-    role: 'مستثمر عقاري - الدمام',
-    content: 'أفضل استثمار عملته لعملي العقاري. الرد السريع يخلي العملاء يثقون فينا أكثر.',
+    name: "محمد الشهري",
+    role: "مستثمر عقاري - الدمام",
+    content:
+      "أفضل استثمار عملته لعملي العقاري. الرد السريع يخلي العملاء يثقون فينا أكثر.",
     rating: 5,
   },
-]
+];
 
 export default function SaqrPage() {
   return (
@@ -184,18 +189,45 @@ export default function SaqrPage() {
               <Building2 className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">مسار العقار</span>
+              <span className="text-primary font-bold text-xl block leading-tight">
+                مسار العقار
+              </span>
               <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-text-secondary hover:text-primary transition-colors">الرئيسية</Link>
-            <Link href="/blog" className="text-text-secondary hover:text-primary transition-colors">المدونة</Link>
-            <Link href="/library" className="text-text-secondary hover:text-primary transition-colors">المكتبة</Link>
+            <Link
+              href="/"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الرئيسية
+            </Link>
+            <Link
+              href="/blog"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المدونة
+            </Link>
+            <Link
+              href="/library"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              المكتبة
+            </Link>
 
-            <Link href="/services" className="text-text-secondary hover:text-primary transition-colors">الخدمات</Link>
-            <Link href="/contact" className="text-text-secondary hover:text-primary transition-colors">تواصل معنا</Link>
+            <Link
+              href="/services"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              الخدمات
+            </Link>
+            <Link
+              href="/contact"
+              className="text-text-secondary hover:text-primary transition-colors"
+            >
+              تواصل معنا
+            </Link>
           </nav>
 
           <Link
@@ -228,7 +260,7 @@ export default function SaqrPage() {
               <span className="text-primary">يرد ويصفي ويجدول</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10">
-              لا تخسر عملاء بسبب تأخر الرد. صقر يرد على استفسارات عملائك 24/7، 
+              لا تخسر عملاء بسبب تأخر الرد. صقر يرد على استفسارات عملائك 24/7،
               يصفي الجادين منهم، ويجدول المعاينات تلقائياً.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -251,13 +283,15 @@ export default function SaqrPage() {
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-12 mt-16">
               {[
-                { value: '+500', label: 'وسيط يستخدم صقر' },
-                { value: '+50,000', label: 'محادثة شهرياً' },
-                { value: '< 3 ثواني', label: 'متوسط وقت الرد' },
-                { value: '+40%', label: 'زيادة في الصفقات' },
+                { value: "+500", label: "وسيط يستخدم صقر" },
+                { value: "+50,000", label: "محادثة شهرياً" },
+                { value: "< 3 ثواني", label: "متوسط وقت الرد" },
+                { value: "+40%", label: "زيادة في الصفقات" },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-3xl font-bold text-primary">{stat.value}</div>
+                  <div className="text-3xl font-bold text-primary">
+                    {stat.value}
+                  </div>
                   <div className="text-text-muted">{stat.label}</div>
                 </div>
               ))}
@@ -270,8 +304,12 @@ export default function SaqrPage() {
       <section className="py-20 px-4 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">كيف يعمل صقر؟</h2>
-            <p className="text-text-secondary text-lg">ثلاث خطوات بسيطة لتحويل استفساراتك إلى صفقات</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              كيف يعمل صقر؟
+            </h2>
+            <p className="text-text-secondary text-lg">
+              ثلاث خطوات بسيطة لتحويل استفساراتك إلى صفقات
+            </p>
           </div>
 
           <motion.div
@@ -287,7 +325,9 @@ export default function SaqrPage() {
                 variants={fadeInUp}
                 className="relative text-center p-8 bg-[#111E35] rounded-2xl border border-[rgba(79,142,247,0.12)]"
               >
-                <div className="text-6xl font-bold text-primary/10 mb-4">{step.number}</div>
+                <div className="text-6xl font-bold text-primary/10 mb-4">
+                  {step.number}
+                </div>
                 <h3 className="font-bold text-xl mb-3">{step.title}</h3>
                 <p className="text-text-secondary">{step.description}</p>
                 {index < steps.length - 1 && (
@@ -305,8 +345,12 @@ export default function SaqrPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">مميزات نظام صقر</h2>
-            <p className="text-text-secondary text-lg">كل ما تحتاجه لإدارة عملائك بكفاءة</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              مميزات نظام صقر
+            </h2>
+            <p className="text-text-secondary text-lg">
+              كل ما تحتاجه لإدارة عملائك بكفاءة
+            </p>
           </div>
 
           <motion.div
@@ -337,8 +381,12 @@ export default function SaqrPage() {
       <section className="py-20 px-4 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">ماذا يقول عملاؤنا؟</h2>
-            <p className="text-text-secondary text-lg">قصص نجاح حقيقية من وسطاء يستخدمون صقر</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              ماذا يقول عملاؤنا؟
+            </h2>
+            <p className="text-text-secondary text-lg">
+              قصص نجاح حقيقية من وسطاء يستخدمون صقر
+            </p>
           </div>
 
           <motion.div
@@ -356,17 +404,24 @@ export default function SaqrPage() {
               >
                 <div className="flex items-center gap-1 mb-4">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 text-yellow-500 fill-yellow-500"
+                    />
                   ))}
                 </div>
-                <p className="text-text-secondary mb-6">"{testimonial.content}"</p>
+                <p className="text-text-secondary mb-6">
+                  "{testimonial.content}"
+                </p>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
                     {testimonial.name[0]}
                   </div>
                   <div>
                     <div className="font-bold">{testimonial.name}</div>
-                    <div className="text-text-muted text-sm">{testimonial.role}</div>
+                    <div className="text-text-muted text-sm">
+                      {testimonial.role}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -379,8 +434,12 @@ export default function SaqrPage() {
       <section id="pricing" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">باقات الاشتراك</h2>
-            <p className="text-text-secondary text-lg">اختر الباقة المناسبة لحجم عملك</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              باقات الاشتراك
+            </h2>
+            <p className="text-text-secondary text-lg">
+              اختر الباقة المناسبة لحجم عملك
+            </p>
           </div>
 
           <motion.div
@@ -396,8 +455,8 @@ export default function SaqrPage() {
                 variants={fadeInUp}
                 className={`rounded-2xl p-8 ${
                   plan.highlighted
-                    ? 'bg-primary text-white ring-4 ring-primary/30 scale-105'
-                    : 'bg-[#111E35] border border-[rgba(79,142,247,0.12)]'
+                    ? "bg-primary text-white ring-4 ring-primary/30 scale-105"
+                    : "bg-[#111E35] border border-[rgba(79,142,247,0.12)]"
                 }`}
               >
                 {plan.highlighted && (
@@ -408,19 +467,25 @@ export default function SaqrPage() {
                   </div>
                 )}
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className={`text-sm mb-4 ${plan.highlighted ? 'text-white/70' : 'text-text-muted'}`}>
+                <p
+                  className={`text-sm mb-4 ${plan.highlighted ? "text-white/70" : "text-text-muted"}`}
+                >
                   {plan.description}
                 </p>
                 <div className="mb-6">
                   <span className="text-4xl font-bold">ر.س {plan.price}</span>
-                  <span className={`text-sm ${plan.highlighted ? 'text-white/70' : 'text-text-muted'}`}>
+                  <span
+                    className={`text-sm ${plan.highlighted ? "text-white/70" : "text-text-muted"}`}
+                  >
                     /{plan.period}
                   </span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, i) => (
                     <li key={i} className="flex items-center gap-2">
-                      <CheckCircle className={`w-5 h-5 ${plan.highlighted ? 'text-secondary' : 'text-green-500'}`} />
+                      <CheckCircle
+                        className={`w-5 h-5 ${plan.highlighted ? "text-secondary" : "text-green-500"}`}
+                      />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -429,8 +494,8 @@ export default function SaqrPage() {
                   href="/auth/signup"
                   className={`w-full block text-center py-3 rounded-xl font-bold transition-colors ${
                     plan.highlighted
-                      ? 'bg-[#F0F4FF] text-[#070B14] hover:bg-white'
-                      : 'bg-primary text-white hover:bg-primary-dark'
+                      ? "bg-[#F0F4FF] text-[#070B14] hover:bg-white"
+                      : "bg-primary text-white hover:bg-primary-dark"
                   }`}
                 >
                   ابدأ التجربة المجانية
@@ -445,8 +510,12 @@ export default function SaqrPage() {
       <section className="py-20 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">الأسئلة الشائعة</h2>
-            <p className="text-text-secondary text-lg">إجابات على الأسئلة الأكثر تكراراً</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              الأسئلة الشائعة
+            </h2>
+            <p className="text-text-secondary text-lg">
+              إجابات على الأسئلة الأكثر تكراراً
+            </p>
           </div>
 
           <motion.div
@@ -523,5 +592,5 @@ export default function SaqrPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
