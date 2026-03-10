@@ -88,3 +88,6 @@ NOTIFY pgrst, 'reload schema';
 }
 
 fixLeadsTable();
+
+EVOLUTION_URL=http://localhost:8080
+EVOLUTION_API_KEY=TROCA_PELA_SUA_CHAVE_AQUI

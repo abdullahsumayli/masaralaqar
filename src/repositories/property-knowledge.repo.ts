@@ -4,8 +4,8 @@
 
 import { supabaseAdmin } from "@/lib/supabase";
 import type {
-  PropertyKnowledge,
-  PropertyKnowledgeInput,
+    PropertyKnowledge,
+    PropertyKnowledgeInput,
 } from "@/types/property-knowledge";
 
 export class PropertyKnowledgeRepository {

@@ -4,7 +4,9 @@
  * PATCH  /api/properties/[id] - Update a property
  */
 
+import { invalidatePropertiesCache } from "@/lib/properties-cache";
 import { supabase } from "@/lib/supabase";
+import { OfficeService } from "@/services/office.service";
 import { PropertyUpdateInput } from "@/types/property";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,7 +18,7 @@ async function getAuthUser() {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser();
@@ -24,7 +26,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const { error } = await supabase
       .from("properties")
@@ -40,6 +42,9 @@ export async function DELETE(
       );
     }
 
+    const office = await OfficeService.getOfficeByUserId(user.id);
+    if (office?.id) invalidatePropertiesCache(office.id);
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Property delete API error:", error);
@@ -52,7 +57,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser();
@@ -60,7 +65,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json() as PropertyUpdateInput;
 
     const updateData: Record<string, unknown> = {};
@@ -94,6 +99,9 @@ export async function PATCH(
         { status: 500 }
       );
     }
+
+    const office = await OfficeService.getOfficeByUserId(user.id);
+    if (office?.id) invalidatePropertiesCache(office.id);
 
     return NextResponse.json({ success: true, property: data });
   } catch (error: any) {

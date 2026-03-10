@@ -11,17 +11,20 @@
  */
 
 import {
-  ClientActionRepository,
-  ClientContextRepository,
-} from "@/repositories/client-context.repo";
-import { PropertyKnowledgeRepository } from "@/repositories/property-knowledge.repo";
+    extractBedrooms,
+    extractBudget,
+    extractCity,
+    extractPropertyType,
+} from "@/lib/parser";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
-  extractBedrooms,
-  extractBudget,
-  extractCity,
-  extractPropertyType,
-} from "@/lib/parser";
+  getCachedProperties,
+  setCachedProperties,
+} from "@/lib/properties-cache";
+import {
+    ClientActionRepository,
+    ClientContextRepository,
+} from "@/repositories/client-context.repo";
 import type { ClientContext } from "@/types/client-context";
 import type { PropertyKnowledge } from "@/types/property-knowledge";
 import { PropertyKnowledgeService } from "./property-knowledge.service";
@@ -93,7 +96,9 @@ export class RecommendationEngine {
     const candidates = await this.searchCandidates(req.officeId, merged);
 
     // ── Step 5: Load knowledge for candidates ──
-    const propertyIds = candidates.map((c) => c.id);
+    const propertyIds = candidates
+      .map((c) => String((c as Record<string, unknown>).id ?? ""))
+      .filter(Boolean);
     const knowledgeMap =
       await PropertyKnowledgeService.getKnowledgeBatch(propertyIds);
 
@@ -106,21 +111,22 @@ export class RecommendationEngine {
     const rejectedIds = new Set(
       actions
         .filter((a) => a.actionType === "reject")
-        .map((a) => a.propertyId)
+        .map((a) => String(a.propertyId || ""))
         .filter(Boolean),
     );
     const interestedIds = new Set(
       actions
         .filter((a) => a.actionType === "interest")
-        .map((a) => a.propertyId)
+        .map((a) => String(a.propertyId || ""))
         .filter(Boolean),
     );
 
     // ── Step 7: Score and rank ──
     const scored = candidates
-      .filter((c) => !rejectedIds.has(c.id)) // Exclude rejected properties
+      .filter((c) => !rejectedIds.has(String((c as any).id || ""))) // Exclude rejected properties
       .map((property) => {
-        const knowledge = knowledgeMap.get(property.id) || null;
+        const pid = String((property as any).id || "");
+        const knowledge = knowledgeMap.get(pid) || null;
         const { score, reasons } = this.scoreProperty(
           property,
           merged,
@@ -128,16 +134,18 @@ export class RecommendationEngine {
           interestedIds,
         );
         return {
-          id: property.id,
-          title: property.title,
-          description: property.description || "",
-          price: Number(property.price),
-          city: property.city || property.location || "",
-          location: property.location || "",
-          type: property.type || "",
-          bedrooms: property.bedrooms || 0,
-          area: Number(property.area) || 0,
-          images: property.images || [],
+          id: pid,
+          title: String((property as any).title || ""),
+          description: String((property as any).description || ""),
+          price: Number((property as any).price) || 0,
+          city: String((property as any).city || (property as any).location || ""),
+          location: String((property as any).location || ""),
+          type: String((property as any).type || ""),
+          bedrooms: Number((property as any).bedrooms) || 0,
+          area: Number((property as any).area) || 0,
+          images: (Array.isArray((property as any).images)
+            ? (property as any).images
+            : []) as string[],
           score,
           knowledge,
           matchReasons: reasons,
@@ -221,45 +229,62 @@ export class RecommendationEngine {
     officeId: string,
     criteria: MergedCriteria,
   ): Promise<Record<string, unknown>[]> {
-    let query = supabaseAdmin
-      .from("properties")
-      .select("*")
-      .eq("status", "available")
-      .or(`office_id.eq.${officeId},tenant_id.eq.${officeId}`);
+    // 1) حاول من الكاش
+    let all = getCachedProperties(officeId) as Array<Record<string, unknown>> | null;
 
-    if (criteria.city) {
-      query = query.or(
-        `city.ilike.%${criteria.city}%,location.ilike.%${criteria.city}%`,
-      );
-    }
-    if (criteria.propertyType) {
-      query = query.eq("type", criteria.propertyType);
-    }
-    if (criteria.budgetMax) {
-      query = query.lte("price", criteria.budgetMax * 1.2);
-    }
-    if (criteria.budgetMin) {
-      query = query.gte("price", criteria.budgetMin * 0.8);
-    }
-    if (criteria.bedrooms) {
-      query = query.gte("bedrooms", criteria.bedrooms);
-    }
-
-    const { data } = await query.limit(30);
-
-    if (!data || data.length === 0) {
-      // Fallback: any available properties for this office
-      const { data: fallback } = await supabaseAdmin
+    // 2) إذا ما فيه كاش → جيب من Supabase وخزّن
+    if (!all) {
+      const { data } = await supabaseAdmin
         .from("properties")
         .select("*")
         .eq("status", "available")
         .or(`office_id.eq.${officeId},tenant_id.eq.${officeId}`)
-        .order("views_count", { ascending: false })
-        .limit(10);
-      return (fallback as Record<string, unknown>[]) || [];
+        .limit(5000);
+
+      all = (data as Array<Record<string, unknown>>) || [];
+      setCachedProperties(officeId, all);
     }
 
-    return data as Record<string, unknown>[];
+    const city = criteria.city?.toLowerCase();
+
+    const filtered = all.filter((p) => {
+      // status available already in base cache, keep safe:
+      if ((p.status as string | undefined) && p.status !== "available") return false;
+
+      if (city) {
+        const c = String(p.city || "").toLowerCase();
+        const loc = String(p.location || "").toLowerCase();
+        if (!c.includes(city) && !loc.includes(city)) return false;
+      }
+
+      if (criteria.propertyType) {
+        if (String(p.type || "") !== String(criteria.propertyType)) return false;
+      }
+
+      const price = Number(p.price);
+      if (criteria.budgetMax && Number.isFinite(price)) {
+        if (price > criteria.budgetMax * 1.2) return false;
+      }
+      if (criteria.budgetMin && Number.isFinite(price)) {
+        if (price < criteria.budgetMin * 0.8) return false;
+      }
+
+      if (criteria.bedrooms) {
+        const beds = Number(p.bedrooms) || 0;
+        if (beds < criteria.bedrooms) return false;
+      }
+
+      return true;
+    });
+
+    const top = filtered.slice(0, 30);
+    if (top.length > 0) return top;
+
+    // Fallback: أي عقارات متاحة (الأكثر مشاهدة)
+    const sorted = [...all].sort(
+      (a, b) => (Number(b.views_count) || 0) - (Number(a.views_count) || 0),
+    );
+    return sorted.slice(0, 10);
   }
 
   // ── Score a single property against merged criteria + knowledge ──
@@ -358,7 +383,9 @@ export class RecommendationEngine {
         land: "أرض",
         commercial: "تجاري",
       };
-      parts.push(`النوع: ${typeMap[criteria.propertyType] || criteria.propertyType}`);
+      parts.push(
+        `النوع: ${typeMap[criteria.propertyType] || criteria.propertyType}`,
+      );
     }
     if (criteria.budgetMax)
       parts.push(`الميزانية: حتى ${criteria.budgetMax.toLocaleString()} ريال`);
@@ -428,7 +455,8 @@ export class RecommendationEngine {
       body += "\n";
     });
 
-    const closing = "هل تفضل حجز معاينة لأحد هذه الخيارات؟ أو يمكنني البحث بمعايير مختلفة.";
+    const closing =
+      "هل تفضل حجز معاينة لأحد هذه الخيارات؟ أو يمكنني البحث بمعايير مختلفة.";
 
     return intro + body + closing;
   }

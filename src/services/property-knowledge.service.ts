@@ -7,8 +7,8 @@
 
 import { PropertyKnowledgeRepository } from "@/repositories/property-knowledge.repo";
 import type {
-  PropertyKnowledge,
-  PropertyKnowledgeInput,
+    PropertyKnowledge,
+    PropertyKnowledgeInput,
 } from "@/types/property-knowledge";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -207,10 +207,7 @@ export class PropertyKnowledgeService {
 
     return {
       familyScore: Math.min(100, Math.max(0, parsed.familyScore || 0)),
-      investmentScore: Math.min(
-        100,
-        Math.max(0, parsed.investmentScore || 0),
-      ),
+      investmentScore: Math.min(100, Math.max(0, parsed.investmentScore || 0)),
       luxuryScore: Math.min(100, Math.max(0, parsed.luxuryScore || 0)),
       locationSummary: parsed.locationSummary || "",
       advantages: Array.isArray(parsed.advantages) ? parsed.advantages : [],
@@ -235,7 +232,11 @@ export class PropertyKnowledgeService {
     if (property.bedrooms && property.bedrooms >= 3) familyScore += 20;
     if (property.bedrooms && property.bedrooms >= 4) familyScore += 10;
     if (property.type === "villa") familyScore += 15;
-    if (property.type === "apartment" && property.bedrooms && property.bedrooms >= 3)
+    if (
+      property.type === "apartment" &&
+      property.bedrooms &&
+      property.bedrooms >= 3
+    )
       familyScore += 10;
 
     // Investment scoring

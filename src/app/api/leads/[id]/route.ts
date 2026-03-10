@@ -18,7 +18,7 @@ async function getTenantId(userId: string): Promise<string | null> {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -26,6 +26,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const tenantId = await getTenantId(user.id)
     if (!tenantId) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
@@ -34,7 +35,7 @@ export async function GET(
     const { data, error } = await supabaseAdmin
       .from('leads')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('tenant_id', tenantId)
       .single()
 
@@ -53,7 +54,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -61,6 +62,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const tenantId = await getTenantId(user.id)
     if (!tenantId) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
@@ -77,7 +79,7 @@ export async function PATCH(
     const { data, error } = await supabaseAdmin
       .from('leads')
       .update({ status })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('tenant_id', tenantId)
       .select()
       .single()

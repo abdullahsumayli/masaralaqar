@@ -4,10 +4,10 @@
 
 import { supabaseAdmin } from "@/lib/supabase";
 import type {
-  ClientAction,
-  ClientActionType,
-  ClientContext,
-  ClientContextUpdate,
+    ClientAction,
+    ClientActionType,
+    ClientContext,
+    ClientContextUpdate,
 } from "@/types/client-context";
 
 export class ClientContextRepository {
@@ -242,9 +242,7 @@ export class ClientActionRepository {
     const shown = data.filter(
       (r) => r.action_type === "recommendation_shown",
     ).length;
-    const interested = data.filter(
-      (r) => r.action_type === "interest",
-    ).length;
+    const interested = data.filter((r) => r.action_type === "interest").length;
     return { shown, interested };
   }
 }

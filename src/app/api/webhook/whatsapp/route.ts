@@ -1,11 +1,12 @@
 /**
  * WhatsApp Webhook Handler
- * Receives messages from UltraMsg API
+ * Receives messages from Evolution API (primary) and UltraMsg (legacy fallback)
  * Integrated with AI Engine for multi-tenant office routing
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { SubscriptionRepository } from "@/repositories/subscription.repo";
+import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { AIEngine } from "@/services/ai-engine.service";
 import { AIService } from "@/services/ai.service";
 import { ConversationService } from "@/services/conversation.service";
@@ -63,19 +64,10 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST: Handle incoming messages from UltraMsg
+ * POST: Handle incoming messages from Evolution API or UltraMsg
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get webhook secret from query
-    const searchParams = request.nextUrl.searchParams;
-    const secret = searchParams.get("secret");
-
-    // Verify secret
-    if (secret !== WEBHOOK_SECRET) {
-      return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
-    }
-
     // Parse request body
     const bodyText = await request.text();
 
@@ -94,6 +86,142 @@ export async function POST(request: NextRequest) {
           type: formData.get("type"),
         },
       };
+    }
+
+    // ── Evolution API Format ──────────────────────────────────────
+    if (payload?.instance && payload?.event) {
+      const officeId = (payload.instance as string).replace("office_", "");
+
+      // Handle connection status updates
+      if (payload.event === "connection.update") {
+        const isOpen = payload.data?.state === "open";
+        const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
+        if (session) {
+          await WhatsAppSessionRepository.updateStatus(
+            session.id,
+            isOpen ? "connected" : "disconnected",
+          );
+        }
+        return NextResponse.json({ ok: true });
+      }
+
+      // Handle incoming messages
+      if (payload.event === "messages.upsert") {
+        const msg = payload.data?.messages?.[0];
+        if (!msg || msg.key?.fromMe) {
+          return NextResponse.json({ ok: true });
+        }
+
+        const from = msg.key?.remoteJid?.replace("@s.whatsapp.net", "") ?? "";
+        const text =
+          msg.message?.conversation ||
+          msg.message?.extendedTextMessage?.text ||
+          "";
+        const messageId = msg.key?.id || `evo_${Date.now()}`;
+
+        if (!from || !text) {
+          return NextResponse.json({ ok: true });
+        }
+
+        // Deduplicate
+        if (processedMessages.has(messageId)) {
+          return NextResponse.json({ ok: true });
+        }
+        addToProcessedCache(messageId);
+
+        // Get the business phone from DB session for AI Engine routing
+        const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
+        const businessPhone = session?.phoneNumber || "";
+
+        if (!businessPhone) {
+          console.error(
+            `[Webhook] No session phone found for office: ${officeId}`,
+          );
+          return NextResponse.json({ ok: true });
+        }
+
+        // Create or update lead
+        const lead = await LeadService.createLeadFromMessage(
+          officeId,
+          from,
+          "",
+          text,
+        );
+
+        // Save incoming message
+        if (lead) {
+          await ConversationService.saveUserMessage(officeId, lead.id, text);
+        }
+
+        // Get conversation history
+        const conversationHistory = lead
+          ? await ConversationService.getConversationHistory(lead.id, 12)
+          : [];
+
+        // Process via AI Engine (office-aware path)
+        const engineResult = await AIEngine.processMessage(
+          businessPhone,
+          { phone: from, text, messageId },
+          conversationHistory,
+        );
+
+        if (engineResult) {
+          // Save assistant reply
+          if (lead) {
+            await ConversationService.saveAssistantMessage(
+              officeId,
+              lead.id,
+              engineResult.reply,
+            );
+          }
+
+          // Send reply via Evolution API
+          await WhatsAppService.sendMessage(from, engineResult.reply, officeId);
+
+          // Track usage
+          await SubscriptionRepository.incrementUsage(
+            officeId,
+            "whatsapp_message",
+          ).catch(() => {});
+
+          // Send property images if available (max 3)
+          if (engineResult.properties && engineResult.properties.length > 0) {
+            let imagesSent = 0;
+            for (const property of engineResult.properties) {
+              if (imagesSent >= 3) break;
+              const images = (property as any).images;
+              const imageUrl =
+                (Array.isArray(images) ? images[0] : undefined) ||
+                (property as any).image_url;
+              if (imageUrl) {
+                const caption = `🏠 ${property.title}\n📍 ${property.city || property.location}\n💰 ${property.price?.toLocaleString()} ريال`;
+                await WhatsAppService.sendMediaMessage(
+                  from,
+                  imageUrl,
+                  caption,
+                  officeId,
+                );
+                imagesSent++;
+                await new Promise((resolve) => setTimeout(resolve, 500));
+              }
+            }
+          }
+        }
+
+        return NextResponse.json({ ok: true });
+      }
+
+      // Other Evolution events — acknowledge
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── UltraMsg Legacy Format (fallback) ─────────────────────────
+    const searchParams = request.nextUrl.searchParams;
+    const secret = searchParams.get("secret");
+
+    // Verify secret for UltraMsg
+    if (secret !== WEBHOOK_SECRET) {
+      return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 
     // Skip outgoing messages early (before parsing)

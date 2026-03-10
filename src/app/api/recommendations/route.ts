@@ -3,14 +3,13 @@
  * GET: Get recommendation analytics for the logged-in office
  */
 
-import { createClient } from "@supabase/supabase-js";
-import {
-  ClientActionRepository,
-  ClientContextRepository,
-} from "@/repositories/client-context.repo";
 import { supabaseAdmin } from "@/lib/supabase";
-import { NextRequest, NextResponse } from "next/server";
+import {
+    ClientActionRepository
+} from "@/repositories/client-context.repo";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,10 +43,7 @@ export async function GET(request: NextRequest) {
 
     const officeId = userRow?.office_id || userRow?.tenant_id;
     if (!officeId) {
-      return NextResponse.json(
-        { error: "No office linked" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "No office linked" }, { status: 403 });
     }
 
     // Gather analytics in parallel
@@ -58,7 +54,11 @@ export async function GET(request: NextRequest) {
       recommendationResult,
     ] = await Promise.all([
       ClientActionRepository.getTopProperties(officeId, "inquiry", 10),
-      ClientActionRepository.getTopProperties(officeId, "recommendation_shown", 10),
+      ClientActionRepository.getTopProperties(
+        officeId,
+        "recommendation_shown",
+        10,
+      ),
       ClientActionRepository.getConversionStats(officeId),
       ClientActionRepository.getRecommendationStats(officeId),
     ]);
@@ -77,9 +77,7 @@ export async function GET(request: NextRequest) {
         .select("id, title")
         .in("id", uniqueIds);
       if (props) {
-        propertyNames = Object.fromEntries(
-          props.map((p) => [p.id, p.title]),
-        );
+        propertyNames = Object.fromEntries(props.map((p) => [p.id, p.title]));
       }
     }
 

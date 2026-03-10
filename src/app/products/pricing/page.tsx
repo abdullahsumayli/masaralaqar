@@ -69,7 +69,7 @@ const plans = [
   },
 ]
 
-export function PricingPlans() {
+function PricingPlans() {
   const botPhone = process.env.NEXT_PUBLIC_BOT_WHATSAPP_NUMBER || '966XXXXXXXXX'
 
   return (

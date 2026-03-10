@@ -7,12 +7,15 @@
  */
 
 import { AIAgentRepository } from "@/repositories/ai-agent.repo";
+import { AIListingRepository } from "@/repositories/ai-listing.repo";
 import { ClientContextRepository } from "@/repositories/client-context.repo";
 import { PropertyRepository } from "@/repositories/property.repo";
 import { SubscriptionRepository } from "@/repositories/subscription.repo";
+import { UnansweredQuestionsRepo } from "@/repositories/unanswered-questions.repo";
+import { ViewingRepository } from "@/repositories/viewing.repo";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import type { AIAgent } from "@/types/ai-agent";
-import type { PropertyType } from "@/types/property";
+import type { Property, PropertyType } from "@/types/property";
 import { AIAgentService } from "./ai-agent.service";
 import { AIService } from "./ai.service";
 import { PropertyKnowledgeService } from "./property-knowledge.service";
@@ -91,6 +94,23 @@ export class AIEngine {
       conversationHistory,
     });
 
+    // ── Step 5b: Viewing Intent Detection ──
+    const viewingIntent = this.detectViewingIntent(message.text);
+    if (viewingIntent && recommendation.properties.length > 0) {
+      const topProperty = recommendation.properties[0];
+      try {
+        await ViewingRepository.createViewingRequest({
+          officeId,
+          propertyId: topProperty.id,
+          clientPhone: message.phone,
+          clientName: "",
+          notes: `طلب تلقائي من واتساب: "${message.text}"`,
+        });
+      } catch {
+        // viewing_requests table may not exist yet — continue normally
+      }
+    }
+
     const matchedProperties = recommendation.properties.map((p) => ({
       id: p.id,
       title: p.title,
@@ -118,7 +138,18 @@ export class AIEngine {
       },
     };
 
-    // Build enriched property context with knowledge
+    // Build enriched property context with knowledge + AI listings
+    const propertyIds = recommendation.properties.map((p) => p.id);
+    const aiListingsMap = new Map<string, string>();
+    try {
+      for (const pid of propertyIds) {
+        const listing = await AIListingRepository.getByPropertyId(pid);
+        if (listing) aiListingsMap.set(pid, listing.marketingDescription);
+      }
+    } catch {
+      // ai_listings table may not exist yet — continue without
+    }
+
     const propertyContext = recommendation.properties.map((p) => ({
       title: p.title,
       price: p.price,
@@ -126,12 +157,27 @@ export class AIEngine {
       type: p.type,
       knowledge: p.knowledge
         ? PropertyKnowledgeService.buildContextDescription(
-            { id: p.id, title: p.title, type: p.type, price: p.price, city: p.city, location: p.location, bedrooms: p.bedrooms, area: p.area },
+            {
+              id: p.id,
+              title: p.title,
+              type: p.type,
+              price: p.price,
+              city: p.city,
+              location: p.location,
+              bedrooms: p.bedrooms,
+              area: p.area,
+            },
             p.knowledge,
           )
         : undefined,
+      marketingDescription: aiListingsMap.get(p.id),
       matchReasons: p.matchReasons,
     }));
+
+    // ── Load office knowledge base from answered questions ──
+    const knowledgeQA = await UnansweredQuestionsRepo.getAnsweredQuestions(
+      officeId,
+    );
 
     const systemPrompt = this.buildEnrichedSystemPrompt(
       agent,
@@ -140,13 +186,40 @@ export class AIEngine {
       recommendation.contextualReply,
     );
 
+    const knowledgeBlock =
+      knowledgeQA.length > 0
+        ? "\n\nمعلومات إضافية من المكتب:\n" +
+          knowledgeQA
+            .map((q) => `س: ${q.question}\nج: ${q.answer}`)
+            .join("\n")
+        : "";
+
     const response = await this.generateReply(
       message.text,
-      systemPrompt,
+      systemPrompt + knowledgeBlock,
       matchedProperties,
       tenantContext,
       conversationHistory,
     );
+
+    // ── Auto-save unanswered questions when AI indicates low knowledge ──
+    try {
+      const unknownSignals = [
+        "لا أعلم",
+        "غير متوفر",
+        "لا تتوفر لدي",
+        "لا أملك معلومات",
+      ];
+      if (unknownSignals.some((s) => response.reply.includes(s))) {
+        await UnansweredQuestionsRepo.saveQuestion(
+          officeId,
+          message.text,
+          message.phone,
+        );
+      }
+    } catch (error) {
+      console.error("[AIEngine] Failed to save unanswered question:", error);
+    }
 
     // ── Step 7: Track usage ──
     await SubscriptionRepository.incrementUsage(officeId, "ai_message");
@@ -233,8 +306,23 @@ export class AIEngine {
         bedrooms: p.bedrooms,
         area: p.area,
         images: p.images,
-      }));
+      })) as Array<Record<string, unknown>>;
       contextualReply = recommendation.contextualReply;
+
+      // Viewing intent handling for legacy path
+      const viewingIntent = this.detectViewingIntent(message.text);
+      if (viewingIntent) {
+        try {
+          await ViewingRepository.createViewingRequest({
+            officeId: tenantId,
+            propertyId: recommendation.properties[0].id,
+            clientPhone: message.phone,
+            notes: `طلب تلقائي من واتساب: "${message.text}"`,
+          });
+        } catch {
+          // viewing_requests table may not exist
+        }
+      }
     } else {
       // Legacy: direct property search
       const analysis = AIService.analyzeMessage(message.text, tenantContext);
@@ -255,25 +343,30 @@ export class AIEngine {
             bedrooms: analysis.extractedData.bedrooms,
           },
         );
-        matchedProperties = searchResult || [];
+        matchedProperties =
+          (searchResult?.properties || []) as unknown as Array<
+            Record<string, unknown>
+          >;
       }
     }
 
-    const propertyContext = matchedProperties.map(
-      (p: Record<string, unknown>) => ({
-        title: p.title as string,
-        price: p.price as number,
-        city: ((p.city || p.location) as string) || "",
-        type: (p.type as string) || "",
-      }),
-    );
+    const propertyContext = matchedProperties.map((p) => ({
+      title: p.title as string,
+      price: p.price as number,
+      city: ((p.city || p.location) as string) || "",
+      type: (p.type as string) || "",
+    }));
 
     // Use enriched prompt if we have recommendation context
     const clientContext = recommendation?.clientContext || null;
     const systemPrompt = clientContext
       ? this.buildEnrichedSystemPrompt(
           activeAgent,
-          propertyContext.map((p) => ({ ...p, knowledge: undefined, matchReasons: [] })),
+          propertyContext.map((p) => ({
+            ...p,
+            knowledge: undefined,
+            matchReasons: [],
+          })),
           clientContext,
           contextualReply,
         )
@@ -295,7 +388,7 @@ export class AIEngine {
     };
   }
 
-  // ── Build enriched system prompt with knowledge + client context ──
+  // ── Build enriched system prompt with knowledge + client context + AI listings ──
   private static buildEnrichedSystemPrompt(
     agent: AIAgent,
     properties: Array<{
@@ -304,6 +397,7 @@ export class AIEngine {
       city: string;
       type: string;
       knowledge?: string;
+      marketingDescription?: string;
       matchReasons: string[];
     }>,
     clientContext: import("@/types/client-context").ClientContext | null,
@@ -337,11 +431,18 @@ export class AIEngine {
     }
 
     // Add knowledge-enriched properties
-    const enrichedProps = properties.filter((p) => p.knowledge);
+    const enrichedProps = properties.filter(
+      (p) => p.knowledge || p.marketingDescription,
+    );
     if (enrichedProps.length > 0) {
       prompt += "\n\n── تحليل العقارات المتاحة ──";
       enrichedProps.forEach((p, i) => {
-        prompt += `\n${i + 1}. ${p.title} (${p.city}): ${p.knowledge}`;
+        prompt += `\n${i + 1}. ${p.title} (${p.city}):`;
+        if (p.marketingDescription) {
+          prompt += ` ${p.marketingDescription}`;
+        } else if (p.knowledge) {
+          prompt += ` ${p.knowledge}`;
+        }
         if (p.matchReasons.length > 0)
           prompt += `\n   أسباب التوصية: ${p.matchReasons.join("، ")}`;
       });
@@ -356,6 +457,10 @@ export class AIEngine {
 
     prompt +=
       "\n\nمهم: قدّم رداً تحليلياً مخصصاً، وليس مجرد قائمة عقارات. اربط التوصيات بمعايير العميل واحتياجاته.";
+
+    // Add viewing booking awareness
+    prompt +=
+      '\n\nإذا طلب العميل معاينة أو زيارة للعقار (مثل "أبغى أشوف العقار" أو "ممكن زيارة" أو "متى المعاينة")، رتّب له موعد معاينة. اقترح 3 مواعيد قريبة واسأله أي موعد يناسبه. مثال:\n"يمكننا ترتيب معاينة للعقار 🏠\n\nالمواعيد المتاحة:\n• الأحد 6 مساءً\n• الاثنين 5 مساءً\n• الثلاثاء 7 مساءً\n\nأي موعد يناسبك؟"';
 
     return prompt;
   }
@@ -382,11 +487,17 @@ export class AIEngine {
   }> {
     try {
       // Use existing AIService.generateSmartReply which already handles OpenAI
+      const normalizedHistory = conversationHistory.map((h) => ({
+        role: (h.role === "assistant" ? "assistant" : "user") as
+          | "user"
+          | "assistant",
+        content: h.content,
+      }));
       const result = await AIService.generateSmartReply(
         userMessage,
-        properties,
+        properties as unknown as Property[],
         tenantContext,
-        conversationHistory,
+        normalizedHistory,
       );
 
       return {
@@ -396,14 +507,12 @@ export class AIEngine {
       };
     } catch (error) {
       console.error("[AIEngine] Error generating reply:", error);
-      // Fallback to rule-based reply
-      const fallback = AIService.generatePropertyReply(
-        properties,
-        tenantContext,
-      );
       return {
-        reply: fallback,
-        properties: properties.slice(0, 3),
+        reply: "عذراً، حدث خطأ أثناء توليد الرد. هل يمكنك إعادة صياغة سؤالك أو توضيح المدينة/الميزانية/نوع العقار؟",
+        properties: (properties as unknown as Array<Record<string, unknown>>).slice(
+          0,
+          3,
+        ),
         suggestions: [
           "أخبرني بالمدينة المفضلة",
           "ما ميزانيتك؟",
@@ -411,5 +520,39 @@ export class AIEngine {
         ],
       };
     }
+  }
+
+  // ── Detect viewing/visit intent in message ──
+  private static detectViewingIntent(text: string): boolean {
+    const viewingKeywords = [
+      "أبغى أشوف",
+      "ابغى اشوف",
+      "أبي أشوف",
+      "ابي اشوف",
+      "ممكن زيارة",
+      "ممكن معاينة",
+      "متى المعاينة",
+      "أبغى موعد",
+      "ابغى موعد",
+      "أبي موعد",
+      "ابي موعد",
+      "أريد معاينة",
+      "اريد معاينة",
+      "أريد زيارة",
+      "اريد زيارة",
+      "حجز معاينة",
+      "حجز موعد",
+      "حجز زيارة",
+      "أبغى أزور",
+      "ابغى ازور",
+      "نبي نشوف",
+      "ودي أشوف",
+      "ودي اشوف",
+      "متى نقدر نشوف",
+      "متى أقدر أشوف",
+    ];
+
+    const lower = text.toLowerCase();
+    return viewingKeywords.some((kw) => lower.includes(kw));
   }
 }

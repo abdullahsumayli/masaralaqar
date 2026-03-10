@@ -1,7 +1,13 @@
 /**
- * WhatsApp Connect API — ربط واتساب بالمكتب
+ * WhatsApp Connect API — ربط واتساب بالمكتب عبر Evolution API
  */
 
+import {
+    createEvolutionInstance,
+    deleteEvolutionInstance,
+    getEvolutionQR,
+    getEvolutionStatus,
+} from "@/integrations/whatsapp";
 import { getCurrentUser } from "@/lib/auth";
 import { OfficeService } from "@/services/office.service";
 import { WhatsAppSessionService } from "@/services/whatsapp-session.service";
@@ -21,13 +27,27 @@ export async function GET() {
       );
 
     const session = await WhatsAppSessionService.getSessionByOffice(office.id);
-    return NextResponse.json({ session });
+
+    // Check live status from Evolution API
+    let evolutionStatus: string | null = null;
+    try {
+      const instanceData = await getEvolutionStatus(office.id);
+      if (instanceData?.instance?.state === "open") {
+        evolutionStatus = "connected";
+      } else if (instanceData) {
+        evolutionStatus = "disconnected";
+      }
+    } catch {
+      // Evolution API not reachable — rely on DB status
+    }
+
+    return NextResponse.json({ session, evolutionStatus });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
 
-/** POST: Connect WhatsApp number to office */
+/** POST: Connect WhatsApp — create Evolution instance and return QR */
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -40,39 +60,65 @@ export async function POST(request: NextRequest) {
         { status: 404 },
       );
 
-    const body = await request.json();
-    const { phoneNumber, instanceId, apiToken } = body;
+    const body = await request.json().catch(() => ({}));
+    const { phoneNumber } = body;
 
-    if (!phoneNumber) {
-      return NextResponse.json({ error: "رقم الهاتف مطلوب" }, { status: 400 });
+    // Create Evolution instance (idempotent — ignores if already exists)
+    try {
+      await createEvolutionInstance(office.id);
+    } catch (err) {
+      console.error("Evolution instance creation error:", err);
+      // May already exist — continue to QR
     }
 
-    // Normalize Saudi phone number
-    let normalized = phoneNumber.replace(/[^0-9]/g, "");
-    if (normalized.startsWith("0")) normalized = "966" + normalized.slice(1);
-    if (!normalized.startsWith("966")) normalized = "966" + normalized;
-
-    const session = await WhatsAppSessionService.connectPhone({
-      officeId: office.id,
-      phoneNumber: normalized,
-      instanceId,
-      apiToken,
-    });
-
-    if (!session) {
+    // Get QR code
+    let qrData: any = null;
+    try {
+      qrData = await getEvolutionQR(office.id);
+    } catch (err) {
+      console.error("Evolution QR error:", err);
       return NextResponse.json(
-        { error: "فشل في ربط الواتساب" },
+        { error: "فشل في الحصول على QR Code" },
         { status: 500 },
       );
     }
 
-    return NextResponse.json({ session }, { status: 201 });
+    // Normalize phone if provided
+    let normalized = "";
+    if (phoneNumber) {
+      normalized = phoneNumber.replace(/[^0-9]/g, "");
+      if (normalized.startsWith("0")) normalized = "966" + normalized.slice(1);
+      if (!normalized.startsWith("966")) normalized = "966" + normalized;
+    }
+
+    // Upsert session in DB
+    if (normalized) {
+      await WhatsAppSessionService.connectPhone({
+        officeId: office.id,
+        phoneNumber: normalized,
+        instanceId: `office_${office.id}`,
+      });
+    }
+
+    // Return QR (base64 image)
+    return NextResponse.json({
+      qr: qrData?.base64 || null,
+      pairingCode: qrData?.pairingCode || null,
+      session: normalized
+        ? {
+            officeId: office.id,
+            phoneNumber: normalized,
+            sessionStatus: "pending",
+            instanceId: `office_${office.id}`,
+          }
+        : null,
+    });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
 
-/** DELETE: Disconnect WhatsApp */
+/** DELETE: Disconnect WhatsApp — delete Evolution instance */
 export async function DELETE() {
   try {
     const user = await getCurrentUser();
@@ -85,11 +131,19 @@ export async function DELETE() {
         { status: 404 },
       );
 
-    const session = await WhatsAppSessionService.getSessionByOffice(office.id);
-    if (!session)
-      return NextResponse.json({ error: "لا توجد جلسة" }, { status: 404 });
+    // Delete Evolution instance
+    try {
+      await deleteEvolutionInstance(office.id);
+    } catch {
+      // Instance may not exist
+    }
 
-    await WhatsAppSessionService.disconnect(session.id);
+    // Remove DB session
+    const session = await WhatsAppSessionService.getSessionByOffice(office.id);
+    if (session) {
+      await WhatsAppSessionService.disconnect(session.id);
+    }
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });

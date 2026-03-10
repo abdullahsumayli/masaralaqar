@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
         .limit(100);
 
       if (!properties || properties.length === 0) {
-        return NextResponse.json({ generated: 0, message: "No properties found" });
+        return NextResponse.json({
+          generated: 0,
+          message: "No properties found",
+        });
       }
 
       const mapped = properties.map((p) => ({

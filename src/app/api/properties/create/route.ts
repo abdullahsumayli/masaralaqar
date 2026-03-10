@@ -4,6 +4,8 @@
  */
 
 import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { invalidatePropertiesCache } from "@/lib/properties-cache";
+import { OfficeService } from "@/services/office.service";
 import { PropertyCreateInput } from "@/types/property";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -95,11 +97,14 @@ export async function POST(request: NextRequest) {
     // Use user's tenant if not specified
     const tenantId = tenant_id || userRow?.tenant_id || "default";
 
+    const office = await OfficeService.getOfficeByUserId(user.id);
+
     // Create property record
     const { data, error } = await supabase
       .from("properties")
       .insert([
         {
+          office_id: office?.id || null,
           tenant_id: tenantId,
           title,
           description: description || "",
@@ -125,6 +130,10 @@ export async function POST(request: NextRequest) {
         { error: "Failed to create property", details: error.message },
         { status: 500 },
       );
+    }
+
+    if (office?.id) {
+      invalidatePropertiesCache(office.id);
     }
 
     return NextResponse.json({
