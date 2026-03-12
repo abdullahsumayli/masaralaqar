@@ -187,7 +187,7 @@ export default function AdminSystemAnalyticsPage() {
           </div>
           <div className="flex justify-between p-3 bg-[#161b22] rounded-xl">
             <span className="text-gray-400">مزود واتساب</span>
-            <span className="text-white font-mono">UltraMsg</span>
+            <span className="text-white font-mono">Evolution API</span>
           </div>
           <div className="flex justify-between p-3 bg-[#161b22] rounded-xl">
             <span className="text-gray-400">قاعدة البيانات</span>

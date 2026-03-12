@@ -2,7 +2,8 @@
  * Plans API — إدارة الباقات
  */
 
-import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase";
 import { PlanService } from "@/services/plan.service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -19,10 +20,14 @@ export async function GET() {
 /** POST: Create plan (admin only) */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
-    const profile = await getUserProfile(user.id);
+    const { data: profile } = await supabaseAdmin
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
     if (profile?.role !== "admin") {
       return NextResponse.json({ error: "صلاحيات غير كافية" }, { status: 403 });
     }

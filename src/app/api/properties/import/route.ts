@@ -3,7 +3,8 @@
  * POST /api/properties/import
  */
 
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { invalidatePropertiesCache } from "@/lib/properties-cache";
 import { OfficeService } from "@/services/office.service";
 import { NextRequest, NextResponse } from "next/server";
@@ -53,11 +54,8 @@ function isRowEmpty(row: Record<string, unknown>): boolean {
 export async function POST(request: NextRequest) {
   try {
     // 1) تحقق المستخدم
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const user = await getServerUser();
+    if (!user) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
@@ -191,7 +189,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6) Insert batch واحد
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseAdmin
       .from("properties")
       .insert(toInsert);
 

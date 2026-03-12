@@ -1,22 +1,31 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
-// Lazy initialization to prevent build errors
-let _supabase: SupabaseClient | null = null;
 let _supabaseAdmin: SupabaseClient | null = null;
 
-export const supabase = (() => {
-  if (!_supabase && supabaseUrl && supabaseAnonKey) {
-    _supabase = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  // Return a mock client for build time if credentials are not available
-  if (!_supabase) {
+// Browser client — uses cookies for session storage so API routes can read auth
+// createBrowserClient is safe to call multiple times (singleton internally)
+export function getSupabaseBrowserClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
     return createClient("https://placeholder.supabase.co", "placeholder-key");
   }
-  return _supabase;
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Backward-compatible export used throughout the codebase
+export const supabase = (() => {
+  if (typeof window !== "undefined" && supabaseUrl && supabaseAnonKey) {
+    return getSupabaseBrowserClient() as unknown as SupabaseClient;
+  }
+  // Server-side or build: use regular createClient (no session persistence needed)
+  if (supabaseUrl && supabaseAnonKey) {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return createClient("https://placeholder.supabase.co", "placeholder-key");
 })();
 
 // Server-side admin client with service role key (bypasses RLS)

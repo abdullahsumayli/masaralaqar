@@ -4,7 +4,7 @@
  * DELETE /api/unanswered-questions/:id   -> status = ignored
  */
 
-import { getCurrentUser } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { OfficeService } from "@/services/office.service";
 import { UnansweredQuestionsRepo } from "@/repositories/unanswered-questions.repo";
@@ -54,7 +54,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const { id } = await params;
@@ -85,7 +85,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const { id } = await params;

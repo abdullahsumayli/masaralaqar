@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getServerUser } from '@/lib/supabase-server';
 import { isValidSaudiPhone, formatSaudiPhone } from '@/lib/bot';
 
 interface SubscriptionRequest {
@@ -18,7 +18,7 @@ interface BotWebhookPayload {
 export async function POST(request: NextRequest) {
   try {
     // Verify user authentication
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },

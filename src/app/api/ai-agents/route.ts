@@ -2,7 +2,7 @@
  * AI Agents API — إدارة وكلاء الذكاء الاصطناعي
  */
 
-import { getCurrentUser } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
 import { AIAgentService } from "@/services/ai-agent.service";
 import { OfficeService } from "@/services/office.service";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 /** GET: Get AI agent for current user's office */
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);
@@ -30,7 +30,7 @@ export async function GET() {
 /** PUT: Update AI agent for current user's office */
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);

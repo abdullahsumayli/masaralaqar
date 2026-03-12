@@ -4,7 +4,7 @@
  * POST /api/unanswered-questions
  */
 
-import { getCurrentUser } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
 import { OfficeService } from "@/services/office.service";
 import {
   UnansweredQuestionsRepo,
@@ -17,7 +17,7 @@ const isValidStatus = (s: string | null): s is UnansweredQuestionStatus =>
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);

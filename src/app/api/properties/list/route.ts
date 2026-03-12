@@ -3,7 +3,7 @@
  * GET /api/properties/list
  */
 
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
     // Build query
-    let query = supabase
+    let query = supabaseAdmin
       .from("properties")
       .select("*")
       .eq("status", "available")

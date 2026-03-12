@@ -2,14 +2,15 @@
  * Offices API — إدارة المكاتب العقارية
  */
 
-import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
+import { getUserProfile } from "@/lib/auth";
 import { OfficeService } from "@/services/office.service";
 import { NextRequest, NextResponse } from "next/server";
 
 /** GET: List offices (admin) or get current user's office */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const profile = await getUserProfile(user.id);
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 /** POST: Create a new office */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const body = await request.json();

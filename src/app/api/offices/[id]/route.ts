@@ -2,7 +2,8 @@
  * Office Detail API — تفاصيل المكتب
  */
 
-import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
+import { getUserProfile } from "@/lib/auth";
 import { OfficeService } from "@/services/office.service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const { id } = await params;
@@ -32,7 +33,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const { id } = await params;
@@ -54,7 +55,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const profile = await getUserProfile(user.id);

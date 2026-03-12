@@ -1,6 +1,6 @@
 /**
  * WhatsApp Webhook Handler
- * Receives messages from Evolution API (primary) and UltraMsg (legacy fallback)
+ * Receives messages from Evolution API
  * Integrated with AI Engine for multi-tenant office routing
  */
 
@@ -40,7 +40,6 @@ function addToProcessedCache(messageId: string) {
 
 /**
  * GET: Webhook verification
- * UltraMsg sends GET requests to verify the webhook URL
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -64,7 +63,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST: Handle incoming messages from Evolution API or UltraMsg
+ * POST: Handle incoming messages from Evolution API
  */
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
     try {
       payload = JSON.parse(bodyText);
     } catch {
-      // UltraMsg may send form-urlencoded data
+      // Webhook may send form-urlencoded data
       const formData = new URLSearchParams(bodyText);
       payload = {
         data: {
@@ -215,11 +214,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // ── UltraMsg Legacy Format (fallback) ─────────────────────────
+    // ── Fallback: unknown format ─────────────────────────
     const searchParams = request.nextUrl.searchParams;
     const secret = searchParams.get("secret");
 
-    // Verify secret for UltraMsg
+    // Verify webhook secret
     if (secret !== WEBHOOK_SECRET) {
       return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
@@ -232,7 +231,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Parse incoming message using UltraMsg format
+    // Parse incoming message
     const message = WhatsAppService.parseIncomingMessage(payload);
 
     if (!message) {
@@ -365,7 +364,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send reply back to user via UltraMsg
+    // Send reply back to user via Evolution API
     const sent = await WhatsAppService.sendMessage(
       message.phone,
       response.reply,

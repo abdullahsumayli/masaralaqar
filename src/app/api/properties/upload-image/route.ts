@@ -3,7 +3,7 @@
  * POST /api/properties/upload-image
  */
 
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const buffer = new Uint8Array(arrayBuffer);
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("property-images")
       .upload(path, buffer, {
         contentType: file.type,
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from("property-images").getPublicUrl(path);
+    } = supabaseAdmin.storage.from("property-images").getPublicUrl(path);
 
     // If property_id provided, update property images array
     if (property_id) {
-      const { data: property, error: fetchError } = await supabase
+      const { data: property, error: fetchError } = await supabaseAdmin
         .from("properties")
         .select("images")
         .eq("id", property_id)
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         const currentImages = Array.isArray(property.images)
           ? property.images
           : [];
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseAdmin
           .from("properties")
           .update({ images: [...currentImages, publicUrl] })
           .eq("id", property_id);

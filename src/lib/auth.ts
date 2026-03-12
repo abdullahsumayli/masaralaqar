@@ -135,8 +135,9 @@ export async function updateUserProfile(userId: string, updates: Partial<User>) 
 // Reset password
 export async function resetPassword(email: string) {
   try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || ''
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo: `${origin}/auth/reset-password`,
     })
 
     if (error) throw error

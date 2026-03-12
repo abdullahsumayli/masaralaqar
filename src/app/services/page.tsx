@@ -17,7 +17,7 @@ import {
     Shield,
     Target,
     Users,
-    Zap
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -167,7 +167,7 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
@@ -177,26 +177,26 @@ export default function ServicesPage() {
               <span className="text-primary font-bold text-xl block leading-tight">
                 مسار العقار
               </span>
-              <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
+              <span className="text-gray-500 text-xs">Masar Al-Aqar</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-primary transition-colors"
             >
               الرئيسية
             </Link>
             <Link
               href="/blog"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-primary transition-colors"
             >
               المدونة
             </Link>
             <Link
               href="/library"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-primary transition-colors"
             >
               المكتبة
             </Link>
@@ -206,7 +206,7 @@ export default function ServicesPage() {
             </Link>
             <Link
               href="/contact"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="text-gray-600 hover:text-primary transition-colors"
             >
               تواصل معنا
             </Link>

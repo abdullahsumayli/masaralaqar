@@ -4,13 +4,14 @@
  * Returns leads for the authenticated user's tenant
  */
 
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
+import { getServerUser } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await getServerUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -2,7 +2,8 @@
  * Admin Stats API — إحصائيات لوحة إدارة المنصة
  */
 
-import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { getServerUser } from "@/lib/supabase-server";
+import { getUserProfile } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { OfficeService } from "@/services/office.service";
 import { NextResponse } from "next/server";
@@ -10,7 +11,7 @@ import { NextResponse } from "next/server";
 /** GET: Platform statistics */
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const user = await getServerUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const profile = await getUserProfile(user.id);

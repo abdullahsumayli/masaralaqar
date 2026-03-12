@@ -8,15 +8,37 @@ import {
     getEvolutionQR,
     getEvolutionStatus,
 } from "@/integrations/whatsapp";
-import { getCurrentUser } from "@/lib/auth";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { OfficeService } from "@/services/office.service";
 import { WhatsAppSessionService } from "@/services/whatsapp-session.service";
 import { NextRequest, NextResponse } from "next/server";
 
+async function createSupabaseRouteClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: any[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            try { cookieStore.set(name, value, options); } catch {}
+          });
+        },
+      },
+    }
+  );
+}
+
 /** GET: Get WhatsApp session status for current office */
 export async function GET() {
   try {
-    const user = await getCurrentUser();
+    const supabase = await createSupabaseRouteClient();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);
@@ -42,7 +64,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ session, evolutionStatus });
-  } catch {
+  } catch (err) {
+    console.error("WhatsApp GET error:", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
@@ -50,7 +73,8 @@ export async function GET() {
 /** POST: Connect WhatsApp — create Evolution instance and return QR */
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const supabase = await createSupabaseRouteClient();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);
@@ -121,7 +145,8 @@ export async function POST(request: NextRequest) {
 /** DELETE: Disconnect WhatsApp — delete Evolution instance */
 export async function DELETE() {
   try {
-    const user = await getCurrentUser();
+    const supabase = await createSupabaseRouteClient();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
     const office = await OfficeService.getOfficeByUserId(user.id);

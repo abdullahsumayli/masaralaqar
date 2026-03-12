@@ -421,7 +421,7 @@ export default function WhatsAppBotPage() {
           <div className="flex items-center gap-3">
             <span className="text-gray-400">رابط الـ Webhook:</span>
             <code className="px-3 py-1 bg-[#0D1117] rounded-lg text-green-400 text-sm">
-              POST /webhook/ultramsg
+              POST /api/webhook/whatsapp
             </code>
           </div>
           <div className="flex items-center gap-3">
@@ -431,7 +431,7 @@ export default function WhatsAppBotPage() {
             </code>
           </div>
           <p className="text-gray-500 text-sm mt-4">
-            اضبط webhook في لوحة تحكم UltraMsg ليشير إلى عنوان السيرفر الخاص بك.
+            اضبط webhook في لوحة تحكم Evolution API ليشير إلى عنوان السيرفر الخاص بك.
           </p>
         </div>
       </div>

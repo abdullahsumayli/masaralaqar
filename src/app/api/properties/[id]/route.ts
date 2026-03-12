@@ -5,15 +5,14 @@
  */
 
 import { invalidatePropertiesCache } from "@/lib/properties-cache";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { OfficeService } from "@/services/office.service";
 import { PropertyUpdateInput } from "@/types/property";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getAuthUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return null;
-  return user;
+  return getServerUser();
 }
 
 export async function DELETE(
@@ -28,7 +27,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("properties")
       .delete()
       .eq("id", id)
@@ -84,7 +83,7 @@ export async function PATCH(
     if (body.status !== undefined) updateData.status = body.status;
     updateData.updated_at = new Date().toISOString();
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("properties")
       .update(updateData)
       .eq("id", id)

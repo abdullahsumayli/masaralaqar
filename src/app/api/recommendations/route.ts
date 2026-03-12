@@ -4,31 +4,16 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import {
     ClientActionRepository
 } from "@/repositories/client-context.repo";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
     // Get user's office from auth
-    const cookieStore = await cookies();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
-      },
-    });
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getServerUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

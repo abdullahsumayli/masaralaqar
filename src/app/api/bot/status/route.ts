@@ -1,11 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { getServerUser } from '@/lib/supabase-server'
 import { getBotSubscriptionByPhone } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
     // Verify user authentication
-    const user = await getCurrentUser()
+    const user = await getServerUser()
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },

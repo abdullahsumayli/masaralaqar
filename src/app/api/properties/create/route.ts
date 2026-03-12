@@ -3,7 +3,8 @@
  * POST /api/properties/create
  */
 
-import { supabase, supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { invalidatePropertiesCache } from "@/lib/properties-cache";
 import { OfficeService } from "@/services/office.service";
 import { PropertyCreateInput } from "@/types/property";
@@ -12,8 +13,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const user = await getServerUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 },
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     const office = await OfficeService.getOfficeByUserId(user.id);
 
     // Create property record
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("properties")
       .insert([
         {
