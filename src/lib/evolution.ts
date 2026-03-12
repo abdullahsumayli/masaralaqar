@@ -3,8 +3,8 @@
  * Isolated module: does NOT modify any existing files.
  */
 
-const EVO_URL = "https://evo.masaralaqar.com";
-const EVO_KEY = "masar123";
+const EVO_URL = process.env.EVOLUTION_URL || "https://evo.masaralaqar.com";
+const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
 
 export async function createInstance(userId: string) {
   const instanceName = `user_${userId}`;

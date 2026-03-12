@@ -300,6 +300,15 @@ export default function DashboardPage() {
                     طلبات المعاينة
                   </span>
                 </Link>
+                <Link
+                  href="/dashboard/reports"
+                  className="flex flex-col items-center gap-2 p-4 rounded-lg bg-surface hover:bg-primary/5 transition-colors text-center"
+                >
+                  <FileText className="w-6 h-6 text-primary" />
+                  <span className="text-sm text-text-secondary">
+                    التقارير
+                  </span>
+                </Link>
               </div>
             </motion.div>
 

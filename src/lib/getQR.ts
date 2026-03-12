@@ -6,8 +6,8 @@
  * This function retries up to 3 times with a 3-second delay.
  */
 
-const EVO_URL = "https://evo.masaralaqar.com";
-const EVO_KEY = "masar123";
+const EVO_URL = process.env.EVOLUTION_URL || "https://evo.masaralaqar.com";
+const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
