@@ -38,11 +38,14 @@ export default function AdminWhatsAppSessionsPage() {
     try {
       const res = await fetch("/api/admin/stats");
       const data = await res.json();
+      // API nests stats under data.stats
+      const s = data.stats || data;
+      const total = s.connectedWhatsApp ?? s.whatsappSessions ?? 0;
+      const connected = s.connectedWhatsApp ?? s.connectedSessions ?? 0;
       setStats({
-        total: data.whatsappSessions || 0,
-        connected: data.connectedSessions || 0,
-        disconnected:
-          (data.whatsappSessions || 0) - (data.connectedSessions || 0),
+        total,
+        connected,
+        disconnected: Math.max(0, total - connected),
       });
     } catch {
       // silent

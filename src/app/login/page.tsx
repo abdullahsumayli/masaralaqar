@@ -1,43 +1,62 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Mail, Lock, Loader2, AlertCircle, Building2, Eye, EyeOff, ArrowRight } from 'lucide-react'
-import { signIn } from '@/lib/auth'
+import { getUserProfile, signIn } from "@/lib/auth";
+import {
+  AlertCircle,
+  ArrowRight,
+  Building2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-    if (error) setError(null)
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
       if (!formData.email || !formData.password) {
-        throw new Error('البريد الإلكتروني وكلمة المرور مطلوبة')
+        throw new Error("البريد الإلكتروني وكلمة المرور مطلوبة");
       }
 
-      const { user, error: signInError } = await signIn(formData.email, formData.password)
+      const { user, error: signInError } = await signIn(
+        formData.email,
+        formData.password,
+      );
 
-      if (signInError) throw new Error(signInError)
-      if (user) router.push('/dashboard')
+      if (signInError) throw new Error(signInError);
+      if (user) {
+        const profile = await getUserProfile(user.id);
+        if (profile && (profile as any).onboarding_completed === false) {
+          router.push("/onboarding");
+        } else {
+          router.push("/dashboard");
+        }
+      }
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-[#010409] flex flex-col">
@@ -53,9 +72,14 @@ export default function LoginPage() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
             <Building2 className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-white hidden sm:block">مسار العقار</span>
+          <span className="font-bold text-white hidden sm:block">
+            مسار العقار
+          </span>
         </Link>
-        <Link href="/auth/signup" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
+        <Link
+          href="/auth/signup"
+          className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
+        >
           إنشاء حساب جديد
           <ArrowRight className="w-4 h-4" />
         </Link>
@@ -64,7 +88,6 @@ export default function LoginPage() {
       {/* Main content */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
-
           {/* Card */}
           <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-8 shadow-2xl">
             {/* Header */}
@@ -72,8 +95,12 @@ export default function LoginPage() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center mx-auto mb-4">
                 <Lock className="w-7 h-7 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-1.5">تسجيل الدخول</h1>
-              <p className="text-gray-400 text-sm">سجّل دخولك للوصول إلى لوحة التحكم</p>
+              <h1 className="text-2xl font-bold text-white mb-1.5">
+                تسجيل الدخول
+              </h1>
+              <p className="text-gray-400 text-sm">
+                سجّل دخولك للوصول إلى لوحة التحكم
+              </p>
             </div>
 
             {/* Error */}
@@ -110,7 +137,9 @@ export default function LoginPage() {
               {/* Password */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">كلمة المرور</label>
+                  <label className="block text-sm font-medium text-gray-300">
+                    كلمة المرور
+                  </label>
                   <Link
                     href="/auth/reset-password"
                     className="text-xs text-primary hover:text-primary-light transition-colors"
@@ -121,7 +150,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
@@ -136,7 +165,11 @@ export default function LoginPage() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
                     tabIndex={-1}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -152,15 +185,20 @@ export default function LoginPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                     جاري الدخول...
                   </>
-                ) : 'دخول'}
+                ) : (
+                  "دخول"
+                )}
               </button>
             </form>
 
             {/* Divider & signup */}
             <div className="mt-6 pt-6 border-t border-[#21262d] text-center">
               <p className="text-gray-500 text-sm">
-                لا تملك حساباً؟{' '}
-                <Link href="/auth/signup" className="text-primary hover:text-primary-light transition-colors font-medium">
+                لا تملك حساباً؟{" "}
+                <Link
+                  href="/auth/signup"
+                  className="text-primary hover:text-primary-light transition-colors font-medium"
+                >
                   إنشاء حساب مجاني
                 </Link>
               </p>
@@ -169,13 +207,23 @@ export default function LoginPage() {
 
           {/* Trust */}
           <p className="text-center text-gray-600 text-xs mt-5">
-            بتسجيل دخولك، أنت توافق على{' '}
-            <Link href="/terms" className="hover:text-gray-400 transition-colors underline">الشروط والأحكام</Link>
-            {' '}و{' '}
-            <Link href="/privacy" className="hover:text-gray-400 transition-colors underline">سياسة الخصوصية</Link>
+            بتسجيل دخولك، أنت توافق على{" "}
+            <Link
+              href="/terms"
+              className="hover:text-gray-400 transition-colors underline"
+            >
+              الشروط والأحكام
+            </Link>{" "}
+            و{" "}
+            <Link
+              href="/privacy"
+              className="hover:text-gray-400 transition-colors underline"
+            >
+              سياسة الخصوصية
+            </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

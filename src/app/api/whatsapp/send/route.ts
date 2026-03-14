@@ -16,7 +16,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    const profile = await getUserProfile(user.id) as Record<string, unknown> | null;
+    const profile = (await getUserProfile(user.id)) as Record<
+      string,
+      unknown
+    > | null;
     const office = await OfficeService.getOfficeByUserId(user.id);
     if (!office) {
       return NextResponse.json(

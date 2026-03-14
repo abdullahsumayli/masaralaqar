@@ -5,15 +5,11 @@
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
-import { SubscriptionRepository } from "@/repositories/subscription.repo";
+import { captureError } from "@/lib/sentry";
+import { enqueueMessage } from "@/queues/message.queue";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
-import { AIEngine } from "@/services/ai-engine.service";
-import { AIService } from "@/services/ai.service";
-import { ConversationService } from "@/services/conversation.service";
-import { LeadService } from "@/services/lead.service";
-import { PropertyService } from "@/services/property.service";
+import { METRIC, MetricsService } from "@/services/metrics.service";
 import { TenantService } from "@/services/tenant.service";
-import { TenantContext } from "@/types/message";
 import { NextRequest, NextResponse } from "next/server";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
@@ -89,17 +85,30 @@ export async function POST(request: NextRequest) {
 
     // ── Evolution API Format ──────────────────────────────────────
     if (payload?.instance && payload?.event) {
-      const officeId = (payload.instance as string).replace("office_", "");
+      const instanceName = payload.instance as string;
 
       // Handle connection status updates
       if (payload.event === "connection.update") {
         const isOpen = payload.data?.state === "open";
-        const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
+
+        // روتينج بـ instance_id (saqr) — يجد الجلسة المرتبطة
+        const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
         if (session) {
           await WhatsAppSessionRepository.updateStatus(
             session.id,
             isOpen ? "connected" : "disconnected",
           );
+          console.log(`[Webhook] connection.update → office ${session.officeId}: ${isOpen ? "connected" : "disconnected"}`);
+        } else {
+          // fallback: حاول عبر officeId القديم إن وُجد
+          const legacyOfficeId = instanceName.replace("office_", "");
+          const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
+          if (legacySession) {
+            await WhatsAppSessionRepository.updateStatus(
+              legacySession.id,
+              isOpen ? "connected" : "disconnected",
+            );
+          }
         }
         return NextResponse.json({ ok: true });
       }
@@ -128,83 +137,63 @@ export async function POST(request: NextRequest) {
         }
         addToProcessedCache(messageId);
 
-        // Get the business phone from DB session for AI Engine routing
-        const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
-        const businessPhone = session?.phoneNumber || "";
+        // ── حل office_id عبر instance_id (saqr) ──────────────────
+        // instance واحد يخدم مكتب واحد (أو أول مكتب متصل)
+        let officeId = "";
+        let businessPhone = "";
 
-        if (!businessPhone) {
-          console.error(
-            `[Webhook] No session phone found for office: ${officeId}`,
-          );
+        const instanceSession = await WhatsAppSessionRepository.getByInstanceId(instanceName);
+        if (instanceSession) {
+          officeId = instanceSession.officeId;
+          businessPhone = instanceSession.phoneNumber;
+        } else {
+          // fallback لدعم الـ naming القديم office_xxx
+          const legacyOfficeId = instanceName.replace("office_", "");
+          const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
+          if (legacySession) {
+            officeId = legacySession.officeId;
+            businessPhone = legacySession.phoneNumber;
+          }
+        }
+
+        if (!officeId) {
+          console.error(`[Webhook] No office found for instance: ${instanceName}`);
           return NextResponse.json({ ok: true });
         }
 
-        // Create or update lead
-        const lead = await LeadService.createLeadFromMessage(
-          officeId,
-          from,
-          "",
-          text,
-        );
-
-        // Save incoming message
-        if (lead) {
-          await ConversationService.saveUserMessage(officeId, lead.id, text);
+        if (!businessPhone) {
+          console.error(`[Webhook] No phone found for office: ${officeId}`);
+          return NextResponse.json({ ok: true });
         }
 
-        // Get conversation history
-        const conversationHistory = lead
-          ? await ConversationService.getConversationHistory(lead.id, 12)
-          : [];
+        // Track incoming message metric
+        MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
+          officeId,
+          route: "evolution",
+        });
 
-        // Process via AI Engine (office-aware path)
-        const engineResult = await AIEngine.processMessage(
-          businessPhone,
-          { phone: from, text, messageId },
-          conversationHistory,
-        );
-
-        if (engineResult) {
-          // Save assistant reply
-          if (lead) {
-            await ConversationService.saveAssistantMessage(
-              officeId,
-              lead.id,
-              engineResult.reply,
-            );
-          }
-
-          // Send reply via Evolution API
-          await WhatsAppService.sendMessage(from, engineResult.reply, officeId);
-
-          // Track usage
-          await SubscriptionRepository.incrementUsage(
+        // Enqueue for async processing by the worker
+        try {
+          await enqueueMessage({
+            messageId,
+            phone: from,
+            message: text,
             officeId,
-            "whatsapp_message",
-          ).catch(() => {});
-
-          // Send property images if available (max 3)
-          if (engineResult.properties && engineResult.properties.length > 0) {
-            let imagesSent = 0;
-            for (const property of engineResult.properties) {
-              if (imagesSent >= 3) break;
-              const images = (property as any).images;
-              const imageUrl =
-                (Array.isArray(images) ? images[0] : undefined) ||
-                (property as any).image_url;
-              if (imageUrl) {
-                const caption = `🏠 ${property.title}\n📍 ${property.city || property.location}\n💰 ${property.price?.toLocaleString()} ريال`;
-                await WhatsAppService.sendMediaMessage(
-                  from,
-                  imageUrl,
-                  caption,
-                  officeId,
-                );
-                imagesSent++;
-                await new Promise((resolve) => setTimeout(resolve, 500));
-              }
-            }
-          }
+            businessPhone,
+            timestamp: new Date().toISOString(),
+            route: "evolution",
+          });
+        } catch (enqueueError) {
+          captureError(enqueueError, {
+            module: "Webhook",
+            action: "enqueueEvolution",
+            officeId,
+          });
+          // Return 500 so Evolution API retries
+          return NextResponse.json(
+            { error: "Failed to enqueue" },
+            { status: 500 },
+          );
         }
 
         return NextResponse.json({ ok: true });
@@ -256,160 +245,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    const defaultAiPersona = {
-      agentName: "مساعد مسار العقار",
-      responseStyle: "friendly" as const,
-      welcomeMessage:
-        "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
-    };
+    // Track incoming message metric
+    MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
+      officeId: tenant.id,
+      route: "legacy",
+    });
 
-    const tenantContext: TenantContext = {
-      tenantId: tenant.id,
-      whatsappNumber: tenant.whatsappNumber,
-      aiPersona: tenant.aiPersona || defaultAiPersona,
-    };
-
-    // Create or update lead
-    const lead = await LeadService.createLeadFromMessage(
-      tenant.id,
-      message.phone,
-      "",
-      message.text,
-    );
-
-    // ── MEMORY: save incoming user message ────────────────────────────────
-    if (lead) {
-      await ConversationService.saveUserMessage(
-        tenant.id,
-        lead.id,
-        message.text,
-      );
-    }
-
-    // ── MEMORY: fetch last 12 messages for GPT context ────────────────────
-    const conversationHistory = lead
-      ? await ConversationService.getConversationHistory(lead.id, 12)
-      : [];
-
-    // ── AI ENGINE: Process via central AI Engine (office-aware) ─────────
-    const engineResult = await AIEngine.processMessageLegacy(
-      tenant.id,
-      { phone: message.phone, text: message.text, messageId: message.id },
-      conversationHistory,
-    );
-
-    // Fallback to direct AIService if engine fails
-    let response: { reply: string; properties?: any[]; suggestions?: string[] };
-    if (engineResult) {
-      response = engineResult;
-      // Track WhatsApp message usage
-      await SubscriptionRepository.incrementUsage(
-        tenant.id,
-        "whatsapp_message",
-      ).catch(() => {});
-    } else {
-      // Legacy fallback
-      const analysis = AIService.analyzeMessage(message.text, tenantContext);
-      let matchedProperties: any[] = [];
-      if (
-        analysis.extractedData.propertyType ||
-        analysis.extractedData.budget
-      ) {
-        const searchResult = await PropertyService.searchProperties(tenant.id, {
-          type: analysis.extractedData.propertyType as
-            | import("@/types/property").PropertyType
-            | undefined,
-          minPrice: analysis.extractedData.budget?.min,
-          maxPrice: analysis.extractedData.budget?.max,
-          city: analysis.extractedData.city,
-          bedrooms: analysis.extractedData.bedrooms,
-        });
-        matchedProperties = searchResult.properties || [];
-      }
-      response = await AIService.generateSmartReply(
-        message.text,
-        matchedProperties,
-        tenantContext,
-        conversationHistory,
-      );
-    }
-
-    // ── MEMORY: save assistant reply ──────────────────────────────────────
-    if (lead) {
-      await ConversationService.saveAssistantMessage(
-        tenant.id,
-        lead.id,
-        response.reply,
-      );
-    }
-
-    // Update lead with preferences if extracted
-    const analysis = AIService.analyzeMessage(message.text, tenantContext);
-    if (lead && Object.keys(analysis.extractedData).length > 0) {
-      await LeadService.updateLeadPreferences(tenant.id, message.phone, {
-        city: analysis.extractedData.city,
-        budget: analysis.extractedData.budget,
-        propertyType: analysis.extractedData.propertyType,
-        bedrooms: analysis.extractedData.bedrooms,
+    // Enqueue for async processing by the worker
+    try {
+      await enqueueMessage({
+        messageId: message.id,
+        phone: message.phone,
+        message: message.text,
+        officeId: tenant.id,
+        businessPhone: tenant.whatsappNumber || "",
+        timestamp: new Date().toISOString(),
+        route: "legacy",
+        tenantId: tenant.id,
       });
-    }
-
-    // Add response to legacy conversation_history JSONB (backward compat)
-    if (lead) {
-      await LeadService.addMessageToLead(
-        tenant.id,
-        lead.id,
-        response.reply,
-        "outgoing",
-      );
-    }
-
-    // Send reply back to user via Evolution API
-    const sent = await WhatsAppService.sendMessage(
-      message.phone,
-      response.reply,
-      tenant.id,
-    );
-
-    if (!sent) {
-      console.error("Failed to send WhatsApp reply");
-    }
-
-    // Send property images if available (max 3 images)
-    if (response.properties && response.properties.length > 0) {
-      let imagesSent = 0;
-      for (const property of response.properties) {
-        if (imagesSent >= 3) break; // Limit to 3 images
-
-        const imageUrl = property.images?.[0] || property.image_url;
-        if (imageUrl) {
-          const caption = `🏠 ${property.title}\n📍 ${property.city || property.location}\n💰 ${property.price?.toLocaleString()} ريال`;
-          await WhatsAppService.sendMediaMessage(
-            message.phone,
-            imageUrl,
-            caption,
-            tenant.id,
-          );
-          imagesSent++;
-          // Small delay between image sends
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-    }
-
-    // Send suggestions if any
-    if (response.suggestions && response.suggestions.length > 0) {
-      const suggestionsText =
-        "📋 اقتراحات:\n" + response.suggestions.map((s) => `• ${s}`).join("\n");
-      await WhatsAppService.sendMessage(
-        message.phone,
-        suggestionsText,
-        tenant.id,
-      );
+    } catch (enqueueError) {
+      captureError(enqueueError, {
+        module: "Webhook",
+        action: "enqueueLegacy",
+        officeId: tenant.id,
+      });
+      return NextResponse.json({ error: "Failed to enqueue" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    captureError(error, { module: "Webhook", action: "POST" });
+    MetricsService.track(METRIC.WEBHOOK_ERROR, 1);
     console.error("Webhook handler error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

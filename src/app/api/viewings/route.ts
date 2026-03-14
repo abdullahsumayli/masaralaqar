@@ -4,12 +4,21 @@
  * POST /api/viewings — إنشاء طلب معاينة أو تحديث حالته
  */
 
+import { getServerUser } from "@/lib/supabase-server";
 import { ViewingRepository } from "@/repositories/viewing.repo";
 import type { ViewingStatus } from "@/types/viewing";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "غير مصرح" },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = request.nextUrl;
     const officeId = searchParams.get("officeId");
     const status = searchParams.get("status") as ViewingStatus | null;
@@ -38,6 +47,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "غير مصرح" },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
     const { action } = body;
 

@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import {
   Users,
-  ChevronRight,
   Loader2,
   Phone,
   MapPin,
@@ -108,29 +107,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2 text-sm">
-              <Link href="/dashboard" className="text-text-secondary hover:text-primary transition-colors">
-                لوحة التحكم
-              </Link>
-              <ChevronRight className="w-4 h-4 text-text-muted" />
-              <span className="text-text-primary font-medium">العملاء</span>
-            </div>
-            <button
-              onClick={fetchLeads}
-              className="p-2 text-text-secondary hover:text-primary transition-colors"
-              title="تحديث"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Title + stats */}
         <div className="flex items-center justify-between mb-6">
@@ -140,6 +117,13 @@ export default function ClientsPage() {
               {leads.length} عميل إجمالاً
             </p>
           </div>
+          <button
+            onClick={fetchLeads}
+            className="p-2 text-text-secondary hover:text-primary transition-colors"
+            title="تحديث"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
           <Link
             href="/dashboard/messages"
             className="flex items-center gap-2 text-sm text-primary hover:underline"

@@ -30,9 +30,14 @@ export async function GET(request: NextRequest) {
       query = query.eq("tenant_id", tenant_id);
     }
 
-    // Apply city filter
+    // Apply city filter (sanitize to prevent injection in PostgREST .or())
     if (city) {
-      query = query.or(`city.ilike.%${city}%,location.ilike.%${city}%`);
+      const sanitizedCity = city.replace(/[^\p{L}\p{N}\s-]/gu, "").trim();
+      if (sanitizedCity) {
+        query = query.or(
+          `city.ilike.%${sanitizedCity}%,location.ilike.%${sanitizedCity}%`,
+        );
+      }
     }
 
     // Apply type filter

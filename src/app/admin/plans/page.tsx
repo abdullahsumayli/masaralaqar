@@ -1,10 +1,13 @@
 "use client";
 
 import {
-    CreditCard,
-    Edit2,
-    Loader2,
-    Plus
+  Check,
+  CreditCard,
+  Edit2,
+  Loader2,
+  Plus,
+  Save,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,20 +23,25 @@ interface Plan {
   isActive: boolean;
 }
 
+const EMPTY_NEW: Omit<Plan, "id" | "isActive" | "features"> = {
+  name: "",
+  nameAr: "",
+  maxProperties: 10,
+  maxAiMessages: 100,
+  maxWhatsappMessages: 500,
+  price: 0,
+};
+
 export default function AdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Plan>>({});
+  const [savingEdit, setSavingEdit] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
-  const [newPlan, setNewPlan] = useState({
-    name: "",
-    nameAr: "",
-    maxProperties: 10,
-    maxAiMessages: 100,
-    maxWhatsappMessages: 500,
-    price: 0,
-  });
+  const [newPlan, setNewPlan] = useState({ ...EMPTY_NEW });
+  const [savingNew, setSavingNew] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/plans")
@@ -43,9 +51,14 @@ export default function AdminPlansPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const startEdit = (plan: Plan) => {
     setEditingId(plan.id);
-    setEditForm(plan);
+    setEditForm({ ...plan });
   };
 
   const cancelEdit = () => {
@@ -53,8 +66,57 @@ export default function AdminPlansPage() {
     setEditForm({});
   };
 
+  const saveEdit = async () => {
+    if (!editingId || !editForm) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/plans/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل في الحفظ");
+      setPlans((prev) =>
+        prev.map((p) => (p.id === editingId ? { ...p, ...editForm } as Plan : p))
+      );
+      setEditingId(null);
+      setEditForm({});
+      showToast("تم حفظ التغييرات ✓");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "حدث خطأ");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const saveNew = async () => {
+    if (!newPlan.name) { showToast("اسم الباقة مطلوب"); return; }
+    setSavingNew(true);
+    try {
+      const res = await fetch("/api/plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPlan),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل في الإضافة");
+      if (data.plan) setPlans((prev) => [...prev, data.plan]);
+      setNewPlan({ ...EMPTY_NEW });
+      setShowAdd(false);
+      showToast("تم إضافة الباقة ✓");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "حدث خطأ");
+    } finally {
+      setSavingNew(false);
+    }
+  };
+
   const formatLimit = (val: number) =>
     val === -1 ? "غير محدود" : val.toLocaleString();
+
+  const inputClass =
+    "bg-[#161b22] border border-[#21262d] rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-primary w-full";
 
   if (loading) {
     return (
@@ -66,19 +128,24 @@ export default function AdminPlansPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-[#0D1117] border border-primary/30 text-white rounded-xl shadow-xl text-sm">
+          {toast}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white font-cairo">
-            إدارة الباقات
-          </h1>
+          <h1 className="text-2xl font-bold text-white font-cairo">إدارة الباقات</h1>
           <p className="text-gray-400 mt-1">إدارة باقات الاشتراك والأسعار</p>
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm"
         >
           <Plus className="w-4 h-4" />
-          <span>إضافة باقة</span>
+          إضافة باقة
         </button>
       </div>
 
@@ -87,74 +154,39 @@ export default function AdminPlansPage() {
         <div className="bg-[#0D1117] border border-primary/30 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4">باقة جديدة</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <input
-              placeholder="اسم الباقة (إنجليزي)"
-              value={newPlan.name}
-              onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
-            <input
-              placeholder="اسم الباقة (عربي)"
-              value={newPlan.nameAr}
-              onChange={(e) =>
-                setNewPlan({ ...newPlan, nameAr: e.target.value })
-              }
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
-            <input
-              type="number"
-              placeholder="السعر"
-              value={newPlan.price}
-              onChange={(e) =>
-                setNewPlan({ ...newPlan, price: Number(e.target.value) })
-              }
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
-            <input
-              type="number"
-              placeholder="حد العقارات"
-              value={newPlan.maxProperties}
-              onChange={(e) =>
-                setNewPlan({
-                  ...newPlan,
-                  maxProperties: Number(e.target.value),
-                })
-              }
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
-            <input
-              type="number"
-              placeholder="حد رسائل AI"
-              value={newPlan.maxAiMessages}
-              onChange={(e) =>
-                setNewPlan({
-                  ...newPlan,
-                  maxAiMessages: Number(e.target.value),
-                })
-              }
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
-            <input
-              type="number"
-              placeholder="حد رسائل واتساب"
-              value={newPlan.maxWhatsappMessages}
-              onChange={(e) =>
-                setNewPlan({
-                  ...newPlan,
-                  maxWhatsappMessages: Number(e.target.value),
-                })
-              }
-              className="bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary"
-            />
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">اسم (إنجليزي) *</label>
+              <input value={newPlan.name} onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })} placeholder="basic" className={inputClass} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">اسم (عربي)</label>
+              <input value={newPlan.nameAr} onChange={(e) => setNewPlan({ ...newPlan, nameAr: e.target.value })} placeholder="أساسي" className={inputClass} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">السعر (ر.س)</label>
+              <input type="number" value={newPlan.price} onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })} className={inputClass} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">حد العقارات (-1 = غير محدود)</label>
+              <input type="number" value={newPlan.maxProperties} onChange={(e) => setNewPlan({ ...newPlan, maxProperties: Number(e.target.value) })} className={inputClass} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">حد رسائل AI</label>
+              <input type="number" value={newPlan.maxAiMessages} onChange={(e) => setNewPlan({ ...newPlan, maxAiMessages: Number(e.target.value) })} className={inputClass} />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">حد رسائل واتساب</label>
+              <input type="number" value={newPlan.maxWhatsappMessages} onChange={(e) => setNewPlan({ ...newPlan, maxWhatsappMessages: Number(e.target.value) })} className={inputClass} />
+            </div>
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-5">
+            <button onClick={() => setShowAdd(false)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors text-sm">إلغاء</button>
             <button
-              onClick={() => setShowAdd(false)}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+              onClick={saveNew}
+              disabled={savingNew}
+              className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm disabled:opacity-50"
             >
-              إلغاء
-            </button>
-            <button className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors">
+              {savingNew ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               حفظ
             </button>
           </div>
@@ -167,80 +199,95 @@ export default function AdminPlansPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#21262d]">
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  الباقة
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  السعر
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  العقارات
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  رسائل AI
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  رسائل واتساب
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  الحالة
-                </th>
-                <th className="text-right text-gray-400 text-sm font-medium px-6 py-4">
-                  إجراءات
-                </th>
+                {["الباقة", "السعر", "العقارات", "رسائل AI", "رسائل واتساب", "الحالة", "إجراءات"].map((h) => (
+                  <th key={h} className="text-right text-gray-400 text-sm font-medium px-5 py-4">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {plans.map((plan) => (
-                <tr
-                  key={plan.id}
-                  className="border-b border-[#21262d]/50 hover:bg-[#161b22] transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="font-medium text-white">
-                        {plan.nameAr || plan.name}
-                      </p>
-                      <p className="text-gray-500 text-xs">{plan.name}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-white font-medium">
-                    {plan.price.toLocaleString()} ر.س
-                  </td>
-                  <td className="px-6 py-4 text-gray-300">
-                    {formatLimit(plan.maxProperties)}
-                  </td>
-                  <td className="px-6 py-4 text-gray-300">
-                    {formatLimit(plan.maxAiMessages)}
-                  </td>
-                  <td className="px-6 py-4 text-gray-300">
-                    {formatLimit(plan.maxWhatsappMessages)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}
-                    >
-                      {plan.isActive ? "مفعّلة" : "معطّلة"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => startEdit(plan)}
-                      className="p-2 text-gray-400 hover:text-primary transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {plans.map((plan) => {
+                const isEditing = editingId === plan.id;
+                return (
+                  <tr key={plan.id} className={`border-b border-[#21262d]/50 transition-colors ${isEditing ? "bg-[#161b22]" : "hover:bg-[#161b22]"}`}>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <div className="space-y-1">
+                          <input value={editForm.nameAr || ""} onChange={(e) => setEditForm({ ...editForm, nameAr: e.target.value })} placeholder="الاسم العربي" className={inputClass} />
+                          <input value={editForm.name || ""} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="الاسم الإنجليزي" className={inputClass} />
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-medium text-white">{plan.nameAr || plan.name}</p>
+                          <p className="text-gray-500 text-xs">{plan.name}</p>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <input type="number" value={editForm.price ?? plan.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })} className={inputClass + " w-24"} />
+                      ) : (
+                        <span className="text-white font-medium">{plan.price.toLocaleString()} ر.س</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <input type="number" value={editForm.maxProperties ?? plan.maxProperties} onChange={(e) => setEditForm({ ...editForm, maxProperties: Number(e.target.value) })} className={inputClass + " w-24"} />
+                      ) : (
+                        <span className="text-gray-300">{formatLimit(plan.maxProperties)}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <input type="number" value={editForm.maxAiMessages ?? plan.maxAiMessages} onChange={(e) => setEditForm({ ...editForm, maxAiMessages: Number(e.target.value) })} className={inputClass + " w-24"} />
+                      ) : (
+                        <span className="text-gray-300">{formatLimit(plan.maxAiMessages)}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <input type="number" value={editForm.maxWhatsappMessages ?? plan.maxWhatsappMessages} onChange={(e) => setEditForm({ ...editForm, maxWhatsappMessages: Number(e.target.value) })} className={inputClass + " w-24"} />
+                      ) : (
+                        <span className="text-gray-300">{formatLimit(plan.maxWhatsappMessages)}</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <button
+                          onClick={() => setEditForm({ ...editForm, isActive: !editForm.isActive })}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer ${editForm.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}
+                        >
+                          {editForm.isActive ? "مفعّلة" : "معطّلة"}
+                        </button>
+                      ) : (
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${plan.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                          {plan.isActive ? "مفعّلة" : "معطّلة"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <button onClick={saveEdit} disabled={savingEdit} className="p-1.5 bg-green-500/10 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors disabled:opacity-50">
+                            {savingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          </button>
+                          <button onClick={cancelEdit} disabled={savingEdit} className="p-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={() => startEdit(plan)} className="p-2 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {plans.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-center py-12">
                     <CreditCard className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">
-                      لا توجد باقات. قم بتشغيل Migration 019 لإنشاء الباقات
-                      الافتراضية.
-                    </p>
+                    <p className="text-gray-400">لا توجد باقات. قم بتشغيل Migration لإنشاء الباقات الافتراضية.</p>
                   </td>
                 </tr>
               )}

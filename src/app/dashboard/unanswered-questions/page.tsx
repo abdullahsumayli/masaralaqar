@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, MessageCircleQuestion, Save, Trash2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -167,7 +166,7 @@ export default function UnansweredQuestionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
+    <div className="min-h-full bg-surface">
       {toast && (
         <div className="fixed top-4 left-4 z-50">
           <div
@@ -182,44 +181,22 @@ export default function UnansweredQuestionsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="text-sm text-text-secondary hover:text-primary transition-colors"
-              >
-                لوحة التحكم
-              </Link>
-              <span className="text-border">/</span>
-              <div className="flex items-center gap-2">
-                <MessageCircleQuestion className="w-5 h-5 text-primary" />
-                <h1 className="text-lg font-bold text-text-primary">
-                  أسئلة بدون إجابة
-                </h1>
-                <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  {counts.pending} بانتظار
-                </span>
-              </div>
-            </div>
-
-            <Button variant="secondary" onClick={fetchAll} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  تحديث...
-                </>
-              ) : (
-                "تحديث"
-              )}
-            </Button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Page title */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <MessageCircleQuestion className="w-5 h-5 text-primary" />
+            <h1 className="text-xl font-bold text-text-primary">أسئلة معلّقة</h1>
+            {counts.pending > 0 && (
+              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                {counts.pending} بانتظار
+              </span>
+            )}
+          </div>
+          <Button variant="secondary" onClick={fetchAll} disabled={loading}>
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" />تحديث...</> : "تحديث"}
+          </Button>
+        </div>
         {/* Tabs */}
         <div className="flex items-center gap-2 mb-6">
           {([

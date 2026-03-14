@@ -43,45 +43,56 @@ export default function AdminSystemAnalyticsPage() {
     );
   }
 
+  // API returns stats as data.stats, recentOffices as data.recentOffices
+  const officesCount = (stats as any)?.stats?.totalOffices ?? stats?.totalOffices ?? 0;
+  const subsCount = (stats as any)?.stats?.activeSubscriptions ?? stats?.totalSubscriptions ?? 0;
+  const propsCount = (stats as any)?.stats?.totalProperties ?? stats?.totalProperties ?? 0;
+  const leadsCount = (stats as any)?.stats?.totalLeads ?? stats?.totalLeads ?? 0;
+  const aiToday = (stats as any)?.stats?.todayAiMessages ?? stats?.todayAiMessages ?? 0;
+  const waToday = (stats as any)?.stats?.todayWhatsappMessages ?? stats?.todayWhatsappMessages ?? 0;
+  const connectedSess = (stats as any)?.stats?.connectedWhatsApp ?? stats?.connectedSessions ?? 0;
+  const waSessions = (stats as any)?.stats?.connectedWhatsApp ?? stats?.whatsappSessions ?? 0;
+  const recentOfficesData = (stats as any)?.recentOffices ?? stats?.recentOffices ?? [];
+
   const metricsCards = [
     {
       label: "المكاتب المسجّلة",
-      value: stats?.totalOffices || 0,
+      value: officesCount,
       icon: Building2,
       color: "text-primary",
       bg: "bg-primary/10",
     },
     {
       label: "الاشتراكات الفعّالة",
-      value: stats?.totalSubscriptions || 0,
+      value: subsCount,
       icon: TrendingUp,
       color: "text-green-400",
       bg: "bg-green-500/10",
     },
     {
       label: "إجمالي العقارات",
-      value: stats?.totalProperties || 0,
+      value: propsCount,
       icon: Database,
       color: "text-purple-400",
       bg: "bg-purple-500/10",
     },
     {
       label: "إجمالي العملاء",
-      value: stats?.totalLeads || 0,
+      value: leadsCount,
       icon: Users,
       color: "text-amber-400",
       bg: "bg-amber-500/10",
     },
     {
       label: "رسائل AI اليوم",
-      value: stats?.todayAiMessages || 0,
+      value: aiToday,
       icon: MessageSquare,
       color: "text-cyan-400",
       bg: "bg-cyan-500/10",
     },
     {
       label: "رسائل واتساب اليوم",
-      value: stats?.todayWhatsappMessages || 0,
+      value: waToday,
       icon: Activity,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
@@ -129,14 +140,14 @@ export default function AdminSystemAnalyticsPage() {
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-400">الجلسات المتصلة</span>
               <span className="text-white font-medium">
-                {stats?.connectedSessions || 0} / {stats?.whatsappSessions || 0}
+                {connectedSess} / {waSessions}
               </span>
             </div>
             <div className="h-3 bg-[#161b22] rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all"
                 style={{
-                  width: `${stats?.whatsappSessions ? ((stats.connectedSessions || 0) / stats.whatsappSessions) * 100 : 0}%`,
+                  width: `${waSessions ? (connectedSess / waSessions) * 100 : 0}%`,
                 }}
               />
             </div>
@@ -149,9 +160,9 @@ export default function AdminSystemAnalyticsPage() {
         <h3 className="text-base font-bold text-white mb-4">
           آخر المكاتب المسجّلة
         </h3>
-        {stats?.recentOffices && stats.recentOffices.length > 0 ? (
+        {recentOfficesData.length > 0 ? (
           <div className="space-y-3">
-            {stats.recentOffices.map((office, idx) => (
+            {recentOfficesData.map((office: { id: string; office_name?: string; name?: string; created_at: string }, idx: number) => (
               <div
                 key={office.id}
                 className="flex items-center justify-between p-3 bg-[#161b22] rounded-xl"
@@ -160,7 +171,7 @@ export default function AdminSystemAnalyticsPage() {
                   <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                     <Building2 className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-white text-sm">{office.name}</span>
+                  <span className="text-white text-sm">{office.office_name || office.name || '—'}</span>
                 </div>
                 <span className="text-gray-500 text-xs">
                   {new Date(office.created_at).toLocaleDateString("ar-SA")}

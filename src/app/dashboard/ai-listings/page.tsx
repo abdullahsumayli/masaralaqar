@@ -5,7 +5,6 @@ import type { AIListing, ExportFormat } from "@/types/ai-listing";
 import { motion } from "framer-motion";
 import {
     Building2,
-    ChevronRight,
     ClipboardCopy,
     Download,
     FileText,
@@ -16,7 +15,6 @@ import {
     Twitter,
     X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -56,6 +54,7 @@ export default function AIListingsPage() {
   const [exportFormat, setExportFormat] = useState<ExportFormat | null>(null);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [officeId, setOfficeId] = useState<string | null>(null);
 
   // Check for auto-generate from property page
   const autoGeneratePropertyId = searchParams.get("generate");
@@ -66,11 +65,22 @@ export default function AIListingsPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch real office ID
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/offices/my")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.office?.id) setOfficeId(data.office.id);
+      })
+      .catch(() => {});
+  }, [user]);
+
   const fetchListings = useCallback(async () => {
+    if (!officeId) return;
     try {
       setLoading(true);
-      // Get office listings
-      const res = await fetch("/api/ai-listings?officeId=default");
+      const res = await fetch(`/api/ai-listings?officeId=${officeId}`);
       const data = await res.json();
       if (data.success && data.listings) {
         setListings(data.listings);
@@ -80,11 +90,11 @@ export default function AIListingsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [officeId]);
 
   useEffect(() => {
-    fetchListings();
-  }, [fetchListings]);
+    if (officeId) fetchListings();
+  }, [fetchListings, officeId]);
 
   // Auto-generate if coming from properties page
   useEffect(() => {
@@ -167,31 +177,7 @@ export default function AIListingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-                <span className="text-sm">لوحة التحكم</span>
-              </Link>
-              <span className="text-border">/</span>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <h1 className="text-lg font-bold text-text-primary">
-                  الإعلانات الذكية
-                </h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Info banner */}
         <motion.div

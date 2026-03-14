@@ -39,6 +39,23 @@ export class WhatsAppSessionRepository {
     return this.formatSession(data);
   }
 
+  /** Get session by instance_id (used for single-instance routing like saqr) */
+  static async getByInstanceId(
+    instanceId: string,
+  ): Promise<WhatsAppSession | null> {
+    const { data, error } = await supabaseAdmin
+      .from("whatsapp_sessions")
+      .select("*")
+      .eq("instance_id", instanceId)
+      .eq("session_status", "connected")
+      .order("last_connected_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+    return this.formatSession(data);
+  }
+
   static async getByPhone(phone: string): Promise<WhatsAppSession | null> {
     const { data, error } = await supabaseAdmin
       .from("whatsapp_sessions")

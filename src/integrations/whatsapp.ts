@@ -1,35 +1,35 @@
 /**
- * WhatsApp Integration — Evolution API
- * Handle Evolution API communication for WhatsApp
+ * WhatsApp Integration — Evolution API v2
+ *
+ * Base URL : https://evo.masaralaqar.com
+ * API Key  : iR8QFbVi9XafMvgVt6d4gdgx880Je6VB
+ * Instance : saqr  ← instance واحد مشترك، لا يتغير بالـ officeId
  */
 
 import { WhatsAppMessage } from "@/types/message";
 
-const EVOLUTION_URL = process.env.EVOLUTION_URL || "";
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY || "";
+const EVO_URL      = process.env.EVOLUTION_URL     || "https://evo.masaralaqar.com";
+const EVO_KEY      = process.env.EVOLUTION_API_KEY || "iR8QFbVi9XafMvgVt6d4gdgx880Je6VB";
+const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || "saqr";
 
-function instanceName(officeId: string): string {
-  return `office_${officeId}`;
+function evoHeaders() {
+  return { "Content-Type": "application/json", apikey: EVO_KEY };
 }
 
 function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, "");
-  if (cleaned.startsWith("0")) {
-    cleaned = "966" + cleaned.substring(1);
-  }
-  if (!cleaned.startsWith("966") && cleaned.length === 9) {
-    cleaned = "966" + cleaned;
-  }
+  if (cleaned.startsWith("0")) cleaned = "966" + cleaned.substring(1);
+  if (!cleaned.startsWith("966") && cleaned.length === 9) cleaned = "966" + cleaned;
   return cleaned;
 }
 
-/** Create a new Evolution API instance for an office */
-export async function createEvolutionInstance(officeId: string) {
-  const res = await fetch(`${EVOLUTION_URL}/instance/create`, {
+/** Create / ensure the saqr instance exists */
+export async function createEvolutionInstance(_officeId?: string) {
+  const res = await fetch(`${EVO_URL}/instance/create`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", apikey: EVOLUTION_KEY },
+    headers: evoHeaders(),
     body: JSON.stringify({
-      instanceName: instanceName(officeId),
+      instanceName: EVO_INSTANCE,
       qrcode: true,
       integration: "WHATSAPP-BAILEYS",
       webhook: {
@@ -39,84 +39,80 @@ export async function createEvolutionInstance(officeId: string) {
       },
     }),
   });
-  return res.json();
+
+  const text = await res.text();
+  if (!res.ok) {
+    if ((res.status === 400 || res.status === 409) && text.toLowerCase().includes("exist")) {
+      return { instance: { instanceName: EVO_INSTANCE, status: "existing" } };
+    }
+    throw new Error(`Evolution createInstance ${res.status}: ${text}`);
+  }
+
+  try { return JSON.parse(text); } catch { return {}; }
 }
 
-/** Get QR code for connecting the WhatsApp instance */
-export async function getEvolutionQR(officeId: string) {
-  const res = await fetch(
-    `${EVOLUTION_URL}/instance/connect/${instanceName(officeId)}`,
-    { headers: { apikey: EVOLUTION_KEY } },
-  );
+/** Get QR code for connecting the saqr instance */
+export async function getEvolutionQR(_officeId?: string) {
+  const res = await fetch(`${EVO_URL}/instance/connect/${EVO_INSTANCE}`, {
+    headers: evoHeaders(),
+  });
+  if (!res.ok) throw new Error(`Evolution QR ${res.status}`);
   return res.json(); // { base64: 'data:image/png;base64,...' }
 }
 
-/** Get the status of an Evolution instance */
-export async function getEvolutionStatus(officeId: string) {
-  const res = await fetch(`${EVOLUTION_URL}/instance/fetchInstances`, {
-    headers: { apikey: EVOLUTION_KEY },
+/** Get live connection state of the saqr instance */
+export async function getEvolutionStatus(_officeId?: string) {
+  const res = await fetch(`${EVO_URL}/instance/fetchInstances`, {
+    headers: evoHeaders(),
   });
+  if (!res.ok) return null;
+
   const data = await res.json();
-  const found = Array.isArray(data)
-    ? data.find(
-        (i: Record<string, any>) =>
-          i.instance?.instanceName === instanceName(officeId),
-      )
-    : null;
-  return found;
+  const list = Array.isArray(data) ? data : [];
+  return list.find(
+    (i: Record<string, any>) =>
+      i.instance?.instanceName === EVO_INSTANCE ||
+      i.instanceName === EVO_INSTANCE,
+  ) || null;
 }
 
-/** Delete an Evolution instance */
-export async function deleteEvolutionInstance(officeId: string) {
-  const res = await fetch(
-    `${EVOLUTION_URL}/instance/delete/${instanceName(officeId)}`,
-    { method: "DELETE", headers: { apikey: EVOLUTION_KEY } },
-  );
+/** Delete the saqr instance */
+export async function deleteEvolutionInstance(_officeId?: string) {
+  const res = await fetch(`${EVO_URL}/instance/delete/${EVO_INSTANCE}`, {
+    method: "DELETE",
+    headers: evoHeaders(),
+  });
+  if (!res.ok) throw new Error(`Evolution deleteInstance ${res.status}`);
   return res.json();
 }
 
 /**
- * WhatsAppService — backward-compatible static class
- * Used by webhook handler and legacy code
+ * WhatsAppService — static class used across the codebase
  */
 export class WhatsAppService {
   static formatPhoneNumber = formatPhoneNumber;
 
-  /**
-   * Send WhatsApp text message via Evolution API
-   * @param recipientPhone - recipient phone number
-   * @param message - text to send
-   * @param tenantOrOfficeId - office ID or tenant ID (used to resolve instance)
-   */
+  /** Send a WhatsApp text message via the saqr instance */
   static async sendMessage(
     recipientPhone: string,
     message: string,
-    tenantOrOfficeId: string,
+    _tenantOrOfficeId?: string, // kept for backward compat — no longer used
   ): Promise<boolean> {
     try {
-      if (!EVOLUTION_URL || !EVOLUTION_KEY) {
-        console.error("Evolution API not configured");
-        return false;
-      }
-
       const formattedPhone = formatPhoneNumber(recipientPhone);
-      const instance = instanceName(tenantOrOfficeId);
 
       const response = await fetch(
-        `${EVOLUTION_URL}/message/sendText/${instance}`,
+        `${EVO_URL}/message/sendText/${EVO_INSTANCE}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: EVOLUTION_KEY,
-          },
+          headers: evoHeaders(),
           body: JSON.stringify({ number: formattedPhone, text: message }),
         },
       );
 
       if (!response.ok) {
         console.error(
-          "Evolution sendMessage error:",
+          "[WhatsApp] sendMessage error:",
           response.status,
           await response.text().catch(() => ""),
         );
@@ -125,17 +121,53 @@ export class WhatsAppService {
 
       return true;
     } catch (error) {
-      console.error("WhatsAppService.sendMessage error:", error);
+      console.error("[WhatsApp] sendMessage exception:", error);
       return false;
     }
   }
 
-  /**
-   * Parse incoming Evolution API webhook payload
-   */
+  /** Send an image/media message via the saqr instance */
+  static async sendMediaMessage(
+    recipientPhone: string,
+    mediaUrl: string,
+    caption: string,
+    _tenantOrOfficeId?: string,
+  ): Promise<boolean> {
+    try {
+      const formattedPhone = formatPhoneNumber(recipientPhone);
+
+      const response = await fetch(
+        `${EVO_URL}/message/sendMedia/${EVO_INSTANCE}`,
+        {
+          method: "POST",
+          headers: evoHeaders(),
+          body: JSON.stringify({
+            number: formattedPhone,
+            mediatype: "image",
+            media: mediaUrl,
+            caption: caption || "",
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        console.error(
+          "[WhatsApp] sendMedia error:",
+          await response.text().catch(() => ""),
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("[WhatsApp] sendMediaMessage exception:", error);
+      return false;
+    }
+  }
+
+  /** Parse incoming Evolution API webhook payload into WhatsAppMessage */
   static parseIncomingMessage(payload: any): WhatsAppMessage | null {
     try {
-      // Evolution API format: { instance, event, data: { messages: [...] } }
       if (payload?.event === "messages.upsert" && payload?.data?.messages) {
         const msg = payload.data.messages[0];
         if (!msg || msg.key?.fromMe) return null;
@@ -149,78 +181,21 @@ export class WhatsAppService {
 
         if (!phone || !text) return null;
 
-        return {
-          id,
-          phone,
-          text,
-          timestamp: new Date().toISOString(),
-          media: undefined,
-        };
+        return { id, phone, text, timestamp: new Date().toISOString(), media: undefined };
       }
-
       return null;
     } catch (error) {
-      console.error("WhatsAppService.parseIncomingMessage error:", error);
+      console.error("[WhatsApp] parseIncomingMessage error:", error);
       return null;
     }
   }
 
-  /**
-   * Verify webhook signature — Evolution uses API key, not per-request signature
-   */
+  /** Evolution uses API key auth — no per-request signature needed */
   static verifyWebhookSignature(
-    payload: string,
-    signature: string,
-    secret: string,
+    _payload: string,
+    _signature: string,
+    _secret: string,
   ): boolean {
     return true;
   }
-
-  /**
-   * Send media/image message via Evolution API
-   */
-  static async sendMediaMessage(
-    recipientPhone: string,
-    mediaUrl: string,
-    caption: string,
-    tenantOrOfficeId: string,
-  ): Promise<boolean> {
-    try {
-      if (!EVOLUTION_URL || !EVOLUTION_KEY) return false;
-
-      const formattedPhone = formatPhoneNumber(recipientPhone);
-      const instance = instanceName(tenantOrOfficeId);
-
-      const response = await fetch(
-        `${EVOLUTION_URL}/message/sendMedia/${instance}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: EVOLUTION_KEY,
-          },
-          body: JSON.stringify({
-            number: formattedPhone,
-            mediatype: "image",
-            media: mediaUrl,
-            caption: caption || "",
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        console.error(
-          "Evolution sendMedia error:",
-          await response.text().catch(() => ""),
-        );
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error("WhatsAppService.sendMediaMessage error:", error);
-      return false;
-    }
-  }
-
 }

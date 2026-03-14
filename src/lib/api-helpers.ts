@@ -98,7 +98,9 @@ export function validateBody<T>(
 ): { data: T | null; error: string | null } {
   const result = schema.safeParse(data);
   if (!result.success) {
-    const messages = result.error.issues.map((e: { message: string }) => e.message).join(", ");
+    const messages = result.error.issues
+      .map((e: { message: string }) => e.message)
+      .join(", ");
     return { data: null, error: messages };
   }
   return { data: result.data, error: null };

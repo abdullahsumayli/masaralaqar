@@ -4,14 +4,27 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    const tenant_id = (formData.get("tenant_id") as string) || "default";
     const property_id = formData.get("property_id") as string;
+
+    // استخرج tenant_id من جلسة المستخدم (لا من الـ client)
+    const { data: userRow } = await supabaseAdmin
+      .from("users")
+      .select("tenant_id")
+      .eq("id", user.id)
+      .single();
+    const tenant_id = userRow?.tenant_id || user.id;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });

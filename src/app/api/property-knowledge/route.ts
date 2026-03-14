@@ -5,10 +5,16 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { PropertyKnowledgeService } from "@/services/property-knowledge.service";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
+  const user = await getServerUser();
+  if (!user) {
+    return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  }
+
   const propertyId = request.nextUrl.searchParams.get("propertyId");
 
   if (!propertyId) {
@@ -24,6 +30,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { propertyId, officeId, generateAll } = body;
 

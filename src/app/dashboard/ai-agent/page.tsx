@@ -3,7 +3,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import {
-    ArrowRight,
     Bot,
     Clock,
     Globe,
@@ -140,49 +139,30 @@ export default function DashboardAIAgentPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#070B14] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#4F8EF7]" />
+      <div className="min-h-full bg-surface flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white">
-      {/* Header */}
-      <div className="border-b border-[#1E293B] bg-[#0D1526]">
-        <div className="max-w-5xl mx-auto px-6 py-5">
-          <div className="flex items-center gap-3 mb-1">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <ArrowRight className="w-5 h-5" />
-            </button>
-            <div className="w-10 h-10 bg-[#4F8EF7]/10 rounded-xl flex items-center justify-center">
-              <Bot className="w-5 h-5 text-[#4F8EF7]" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold font-cairo">
-                مساعد الذكاء الاصطناعي
-              </h1>
-              <p className="text-gray-400 text-sm">
-                تخصيص شخصية وسلوك مساعد AI الخاص بمكتبك
-              </p>
-            </div>
+    <div className="min-h-full bg-surface text-text-primary">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {/* Page title */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <Bot className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">الوكيل الذكي</h1>
+            <p className="text-text-secondary text-sm">تخصيص شخصية وسلوك مساعد AI الخاص بمكتبك</p>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
         {!agent && (
-          <div className="bg-[#111E35] border border-[#4F8EF7]/20 rounded-2xl p-6 text-center">
-            <Bot className="w-12 h-12 text-[#4F8EF7] mx-auto mb-3" />
-            <p className="text-gray-300">
-              لم يتم إعداد مساعد AI بعد. يتم إنشاؤه تلقائياً عند تسجيل المكتب.
-            </p>
-            <p className="text-gray-500 text-sm mt-1">
-              تأكد من تشغيل Migration 019 وربط حسابك بمكتب.
-            </p>
+          <div className="bg-background border border-primary/20 rounded-2xl p-6 text-center">
+            <Bot className="w-12 h-12 text-primary mx-auto mb-3" />
+            <p className="text-text-secondary">لم يتم إعداد مساعد AI بعد. يتم إنشاؤه تلقائياً عند تسجيل المكتب.</p>
+            <p className="text-text-muted text-sm mt-1">تأكد من تشغيل Migration 019 وربط حسابك بمكتب.</p>
           </div>
         )}
 
@@ -190,52 +170,40 @@ export default function DashboardAIAgentPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#111E35] border border-[#1E293B] rounded-2xl p-6"
+          className="bg-background border border-border rounded-2xl p-6"
         >
           <div className="flex items-center gap-3 mb-5">
-            <Sparkles className="w-5 h-5 text-[#E5B84A]" />
+            <Sparkles className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-bold">الهوية والشخصية</h2>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">
-                اسم المساعد
-              </label>
+              <label className="block text-sm text-text-secondary mb-1.5">اسم المساعد</label>
               <input
                 value={form.agent_name}
-                onChange={(e) =>
-                  setForm({ ...form, agent_name: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, agent_name: e.target.value })}
                 placeholder="مثال: مساعد مكتب النخبة"
-                className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7] transition-colors"
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">
-                رسالة الترحيب
-              </label>
+              <label className="block text-sm text-text-secondary mb-1.5">رسالة الترحيب</label>
               <textarea
                 value={form.greeting_message}
-                onChange={(e) =>
-                  setForm({ ...form, greeting_message: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, greeting_message: e.target.value })}
                 placeholder="رسالة الترحيب التي يبدأ بها المساعد عند أول تواصل..."
                 rows={3}
-                className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7] transition-colors resize-none"
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors resize-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">
-                وصف المكتب
-              </label>
+              <label className="block text-sm text-text-secondary mb-1.5">وصف المكتب</label>
               <textarea
                 value={form.office_description}
-                onChange={(e) =>
-                  setForm({ ...form, office_description: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, office_description: e.target.value })}
                 placeholder="وصف مختصر عن المكتب ونوع العقارات المتخصص فيها..."
                 rows={2}
-                className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7] transition-colors resize-none"
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors resize-none"
               />
             </div>
           </div>
@@ -246,50 +214,35 @@ export default function DashboardAIAgentPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-[#111E35] border border-[#1E293B] rounded-2xl p-6"
+          className="bg-background border border-border rounded-2xl p-6"
         >
           <div className="flex items-center gap-3 mb-5">
-            <MessageSquare className="w-5 h-5 text-[#4F8EF7]" />
+            <MessageSquare className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold">أسلوب المحادثة</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
-                نبرة الردود
-              </label>
+              <label className="block text-sm text-text-secondary mb-2">نبرة الردود</label>
               <div className="space-y-2">
                 {toneOptions.map((opt) => (
                   <label
                     key={opt.value}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border ${form.tone === opt.value ? "border-[#4F8EF7] bg-[#4F8EF7]/5" : "border-[#1E293B] hover:border-[#4F8EF7]/30"}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border ${form.tone === opt.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
                   >
-                    <input
-                      type="radio"
-                      name="tone"
-                      value={opt.value}
-                      checked={form.tone === opt.value}
-                      onChange={(e) =>
-                        setForm({ ...form, tone: e.target.value })
-                      }
-                      className="hidden"
-                    />
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.tone === opt.value ? "border-[#4F8EF7]" : "border-gray-600"}`}
-                    >
-                      {form.tone === opt.value && (
-                        <div className="w-2 h-2 bg-[#4F8EF7] rounded-full" />
-                      )}
+                    <input type="radio" name="tone" value={opt.value} checked={form.tone === opt.value} onChange={(e) => setForm({ ...form, tone: e.target.value })} className="hidden" />
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.tone === opt.value ? "border-primary" : "border-text-muted"}`}>
+                      {form.tone === opt.value && <div className="w-2 h-2 bg-primary rounded-full" />}
                     </div>
                     <div>
-                      <p className="text-white text-sm">{opt.label}</p>
-                      <p className="text-gray-500 text-xs">{opt.desc}</p>
+                      <p className="text-text-primary text-sm">{opt.label}</p>
+                      <p className="text-text-muted text-xs">{opt.desc}</p>
                     </div>
                   </label>
                 ))}
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-text-secondary mb-2">
                 <Globe className="w-4 h-4 inline ml-1" />
                 لغة الردود
               </label>
@@ -297,26 +250,13 @@ export default function DashboardAIAgentPage() {
                 {languageOptions.map((opt) => (
                   <label
                     key={opt.value}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border ${form.language === opt.value ? "border-[#4F8EF7] bg-[#4F8EF7]/5" : "border-[#1E293B] hover:border-[#4F8EF7]/30"}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border ${form.language === opt.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
                   >
-                    <input
-                      type="radio"
-                      name="language"
-                      value={opt.value}
-                      checked={form.language === opt.value}
-                      onChange={(e) =>
-                        setForm({ ...form, language: e.target.value })
-                      }
-                      className="hidden"
-                    />
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.language === opt.value ? "border-[#4F8EF7]" : "border-gray-600"}`}
-                    >
-                      {form.language === opt.value && (
-                        <div className="w-2 h-2 bg-[#4F8EF7] rounded-full" />
-                      )}
+                    <input type="radio" name="language" value={opt.value} checked={form.language === opt.value} onChange={(e) => setForm({ ...form, language: e.target.value })} className="hidden" />
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${form.language === opt.value ? "border-primary" : "border-text-muted"}`}>
+                      {form.language === opt.value && <div className="w-2 h-2 bg-primary rounded-full" />}
                     </div>
-                    <p className="text-white text-sm">{opt.label}</p>
+                    <p className="text-text-primary text-sm">{opt.label}</p>
                   </label>
                 ))}
               </div>
@@ -329,43 +269,33 @@ export default function DashboardAIAgentPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-[#111E35] border border-[#1E293B] rounded-2xl p-6"
+          className="bg-background border border-border rounded-2xl p-6"
         >
           <div className="flex items-center gap-3 mb-5">
-            <Clock className="w-5 h-5 text-[#E5B84A]" />
+            <Clock className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-bold">ساعات العمل</h2>
           </div>
           <div className="grid grid-cols-2 gap-4 max-w-md">
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">
-                بداية الدوام
-              </label>
+              <label className="block text-sm text-text-secondary mb-1.5">بداية الدوام</label>
               <input
                 type="time"
                 value={form.working_hours_start}
-                onChange={(e) =>
-                  setForm({ ...form, working_hours_start: e.target.value })
-                }
-                className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7]"
+                onChange={(e) => setForm({ ...form, working_hours_start: e.target.value })}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary text-sm focus:outline-none focus:border-primary"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">
-                نهاية الدوام
-              </label>
+              <label className="block text-sm text-text-secondary mb-1.5">نهاية الدوام</label>
               <input
                 type="time"
                 value={form.working_hours_end}
-                onChange={(e) =>
-                  setForm({ ...form, working_hours_end: e.target.value })
-                }
-                className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7]"
+                onChange={(e) => setForm({ ...form, working_hours_end: e.target.value })}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary text-sm focus:outline-none focus:border-primary"
               />
             </div>
           </div>
-          <p className="text-gray-500 text-xs mt-2">
-            المنطقة الزمنية: توقيت الرياض (GMT+3)
-          </p>
+          <p className="text-text-muted text-xs mt-2">المنطقة الزمنية: توقيت الرياض (GMT+3)</p>
         </motion.div>
 
         {/* Custom Instructions */}
@@ -373,20 +303,18 @@ export default function DashboardAIAgentPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-[#111E35] border border-[#1E293B] rounded-2xl p-6"
+          className="bg-background border border-border rounded-2xl p-6"
         >
           <div className="flex items-center gap-3 mb-5">
-            <Bot className="w-5 h-5 text-[#4F8EF7]" />
+            <Bot className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold">تعليمات مخصصة</h2>
           </div>
           <textarea
             value={form.custom_instructions}
-            onChange={(e) =>
-              setForm({ ...form, custom_instructions: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, custom_instructions: e.target.value })}
             placeholder="أضف تعليمات خاصة للمساعد... مثال: لا ترد على أسئلة خارج نطاق العقارات، أذكر دائماً رقم الهاتف للتواصل..."
             rows={4}
-            className="w-full bg-[#070B14] border border-[#1E293B] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4F8EF7] transition-colors resize-none"
+            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors resize-none"
           />
         </motion.div>
 
@@ -395,20 +323,20 @@ export default function DashboardAIAgentPage() {
           <label className="flex items-center gap-3 cursor-pointer">
             <div
               onClick={() => setForm({ ...form, is_active: !form.is_active })}
-              className={`w-12 h-6 rounded-full transition-colors relative ${form.is_active ? "bg-[#4F8EF7]" : "bg-gray-600"}`}
+              className={`w-12 h-6 rounded-full transition-colors relative ${form.is_active ? "bg-primary" : "bg-text-muted"}`}
             >
               <div
                 className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${form.is_active ? "right-0.5" : "right-[26px]"}`}
               />
             </div>
-            <span className="text-sm text-gray-300">
+            <span className="text-sm text-text-secondary">
               {form.is_active ? "المساعد مفعّل" : "المساعد معطّل"}
             </span>
           </label>
           <button
             onClick={handleSave}
             disabled={saving || !agent}
-            className="flex items-center gap-2 px-6 py-3 bg-[#4F8EF7] text-white rounded-xl hover:bg-[#4F8EF7]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

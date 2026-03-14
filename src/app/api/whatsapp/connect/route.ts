@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       await WhatsAppSessionService.connectPhone({
         officeId: office.id,
         phoneNumber: normalized,
-        instanceId: `office_${office.id}`,
+        instanceId: "saqr",
       });
     }
 
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
             officeId: office.id,
             phoneNumber: normalized,
             sessionStatus: "pending",
-            instanceId: `office_${office.id}`,
+            instanceId: "saqr",
           }
         : null,
     });

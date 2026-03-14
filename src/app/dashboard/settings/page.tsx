@@ -6,7 +6,6 @@ import {
     AlertCircle,
     Building2,
     CheckCircle2,
-    ChevronRight,
     Loader2,
     Lock,
     Mail,
@@ -15,7 +14,6 @@ import {
     Settings,
     User,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -118,22 +116,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16 gap-2 text-sm">
-            <Link
-              href="/dashboard"
-              className="text-text-secondary hover:text-primary transition-colors"
-            >
-              لوحة التحكم
-            </Link>
-            <ChevronRight className="w-4 h-4 text-text-muted" />
-            <span className="text-text-primary font-medium">الإعدادات</span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         {/* Profile Section */}
         <section className="bg-background rounded-xl border border-border p-6">

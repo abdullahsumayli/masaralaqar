@@ -2,115 +2,164 @@
 
 ## نظرة عامة
 
-**Masaralaqar (مسار العقار)** منصة عربية (RTL) مبنية بـ **Next.js 15**. تجمع بين:
-- **موقع تسويقي ومحتوى**: منتجات، مدونة، مكتبة…
-- **لوحات تحكم**: Dashboard للمستخدم و Admin للإدارة
-- **اشتراكات/مدفوعات** عبر Supabase
-- **صقر (Saqr)**: بوت واتساب للاشتراك والتواصل والردود/الأتمتة
+**Masaralaqar (مسار العقار)** منصة PropTech عربية (RTL) مبنية بـ **Next.js 15 App Router**. تجمع:
+- **موقع تسويقي**: منتجات، مدونة، مكتبة
+- **Dashboard المستخدم**: إدارة العقارات، العملاء، الرسائل، الإحصائيات
+- **بوت صقر**: واتساب AI مع Evolution API + Redis/BullMQ
+- **Admin panel**: إدارة المنصة، المشتركين، المدفوعات
+- **نظام اشتراكات** عبر Moyasar + تحويل بنكي
 
 ---
 
-## التقنيات (Tech Stack)
+## Tech Stack
 
-- **Framework**: Next.js (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI**: shadcn/ui + Radix UI
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Content**: MDX (`@next/mdx`)
-- **Backend/DB**: Supabase (PostgreSQL + RLS) + Supabase Auth + Supabase Storage
-- **Optional Media**: Cloudinary (حسب الإعداد)
-- **Node**: موصى به Node >= 20 (حسب `package.json`)
-- **Deploy**: Vercel
+| Layer | التقنية |
+|---|---|
+| Framework | Next.js 15 (App Router) + TypeScript |
+| Styling | Tailwind CSS + shadcn/ui + Framer Motion |
+| DB | Supabase (PostgreSQL + RLS + Auth + Storage) |
+| Queue | Redis + BullMQ (whatsapp-messages queue) |
+| WhatsApp | Evolution API (instance: `saqr`) |
+| AI | OpenAI (GPT-4o-mini) |
+| Payments | Moyasar + Bank Transfer |
+| Media | Cloudinary |
+| Deploy | EasyPanel (Hostinger VPS) + Vercel |
 
 ---
 
-## هيكل المشروع (Structure)
+## هيكل المشروع
 
 ```text
 masaralaqar/
 ├─ src/
-│  ├─ app/                      # صفحات Next.js (App Router) + API routes
-│  │  ├─ layout.tsx             # Root layout + RTL + SEO/Metadata + JSON-LD
-│  │  ├─ page.tsx               # Landing page الرئيسية
-│  │  ├─ dashboard/             # لوحة المستخدم
-│  │  ├─ admin/                 # لوحة الإدارة
-│  │  ├─ products/              # صفحات المنتجات والتسعير
-│  │  ├─ blog/                  # المدونة (قائمة + [slug])
-│  │  ├─ library/               # المكتبة
-│  │  └─ api/                   # API routes (مثل خطط/بوت/ويبهوكات…)
-│  ├─ components/               # مكوّنات مشتركة + UI primitives
-│  ├─ hooks/                    # React hooks (مثل auth)
-│  ├─ lib/                      # أدوات/مكتبات (Supabase/Payments/Bot…)
-│  ├─ services/                 # منطق الأعمال (Business logic)
-│  ├─ repositories/             # طبقة الوصول للبيانات (Queries/CRUD)
-│  ├─ integrations/             # تكاملات خارجية (WhatsApp/OpenAI…)
-│  └─ types/                    # تعريفات TypeScript للنماذج
-├─ supabase/                    # SQL schema + migrations + سياسات RLS
-├─ public/                      # ملفات ثابتة (Static assets)
-├─ server/                      # خادم صقر (بوت واتساب) — Express
-├─ scripts/                     # سكربتات مساعدة (تهيئة/إدارة…)
-├─ next.config.ts               # إعدادات Next.js
-├─ tailwind.config.ts           # إعدادات Tailwind والثيم
-└─ tsconfig.json                # إعدادات TypeScript
+│  ├─ app/
+│  │  ├─ dashboard/        ← لوحة المستخدم (sidebar layout موحّد)
+│  │  │  ├─ layout.tsx     ← DashboardSidebar + mobile top bar
+│  │  │  ├─ page.tsx       ← الرئيسية (إحصائيات حقيقية)
+│  │  │  ├─ properties/    ← إدارة العقارات + add
+│  │  │  ├─ clients/       ← العملاء المحتملون (leads)
+│  │  │  ├─ messages/      ← المحادثات (full-height flex layout)
+│  │  │  ├─ viewings/      ← طلبات المعاينة
+│  │  │  ├─ analytics/     ← Recharts + system metrics
+│  │  │  ├─ whatsapp/      ← ربط QR + حالة الاتصال
+│  │  │  ├─ ai-listings/   ← مولّد الإعلانات الذكي
+│  │  │  ├─ ai-agent/      ← شخصية وإعدادات البوت
+│  │  │  ├─ unanswered-questions/ ← أسئلة معلّقة
+│  │  │  ├─ reports/       ← تصدير PDF (pdfkit)
+│  │  │  ├─ settings/      ← بيانات شخصية + كلمة مرور
+│  │  │  └─ subscription/  ← باقات الاشتراك + checkout
+│  │  ├─ admin/            ← لوحة الإدارة (AdminSidebar)
+│  │  │  ├─ page.tsx       ← إحصائيات المنصة
+│  │  │  ├─ subscribers/   ← المكاتب (API حقيقي)
+│  │  │  ├─ plans/         ← الباقات
+│  │  │  ├─ payments/      ← التحويلات البنكية
+│  │  │  ├─ invoices/      ← الفواتير
+│  │  │  ├─ trials/        ← طلبات التجربة
+│  │  │  ├─ support/       ← تذاكر الدعم
+│  │  │  ├─ ai-usage/      ← استهلاك AI
+│  │  │  ├─ queues/        ← مراقبة BullMQ
+│  │  │  ├─ system-analytics/ ← تحليلات المنصة
+│  │  │  └─ whatsapp-sessions/ ← جلسات واتساب
+│  │  └─ api/              ← API routes
+│  ├─ components/
+│  │  └─ dashboard/sidebar.tsx  ← Sidebar (profile-aware, collapse, WA status)
+│  ├─ services/            ← Business logic
+│  ├─ repositories/        ← Data access layer
+│  ├─ integrations/        ← whatsapp.ts, openai.ts
+│  └─ lib/                 ← evolution.ts, moyasar.ts, payments.ts, redis.ts...
+├─ server/                 ← Express bot server (صقر WhatsApp)
+└─ supabase/               ← Migrations + RLS policies
 ```
 
 ---
 
-## Subscription tiers (free / basic / professional)
+## Evolution API (واتساب)
 
-### 1) خطط صقر (Saqr WhatsApp Bot)
+```
+Base URL : https://evo.masaralaqar.com
+API Key  : iR8QFbVi9XafMvgVt6d4gdgx880Je6VB
+Instance : saqr   ← ثابت لكل المستخدمين
+```
 
-داخل الكود، مفتاح الخطة هو: **`free` / `basic` / `pro`**.  
-في التسويق/الواجهة، **Professional = `pro` (احترافي)**.
-
-| Tier | Key (في الكود) | السعر الشهري (ر.س) | حد الرسائل/الشهر |
-|------|-----------------|--------------------|------------------|
-| Free | `free` | 0 | 10 |
-| Basic | `basic` | 99 | 100 |
-| Professional | `pro` | 299 | غير محدود |
-
-ملاحظات تنفيذية:
-- حد “غير محدود” ممثل برقم **`-1`** في دالة `getPlanChatLimit`.
-- صفحة التسعير الخاصة بصقر: المسار `/products/pricing`.
-
-### 2) اشتراكات المنصة (Platform subscriptions)
-
-يوجد نظام اشتراكات/مدفوعات عام مرتبط بـ Supabase عبر جداول مثل:
-`subscription_plans`, `user_subscriptions`, `bank_transfers`, `invoices`
-(انظر `supabase/payment-schema.sql` و `src/lib/payments.ts`).
+**مهم**: `instanceId` = `"saqr"` دائماً. لا `user_${userId}` ولا `office_${officeId}`.
 
 ---
 
-## `server/` هو خادم صقر (بوت واتساب)
+## خطط الاشتراك
 
-المجلد `server/` يحتوي **خادم Node/Express منفصل** مخصص لبوت/تكاملات صقر، ويشغّل Routes مثل:
-- Webhook endpoints
-- إدارة بيانات (leads/properties/stats) بحسب routes الموجودة
+| Key | الاسم | السعر/شهر | العقارات | رسائل AI |
+|-----|------|-----------|---------|---------|
+| `free` | مجاني | 0 | 10 | 10 |
+| `basic` | أساسي | 99 | 50 | 100 |
+| `pro` | احترافي | 299 | غير محدود | غير محدود (-1) |
 
-ملفات مهمة:
-- `server/index.js`: نقطة تشغيل الخادم (Express + CORS + logging + routes)
-- `server/package.json`: اعتماديات الخادم (express, cors, better-sqlite3, pino…)
+- جداول DB: `subscription_plans`, `user_subscriptions`, `bank_transfers`, `invoices`, `payments`
+- Moyasar callback → `/api/payments/callback` → يفعّل الاشتراك
+- Bank transfer → `/api/payments/bank-transfer` → `status: pending` → Admin يوافق
 
-تشغيله:
+---
+
+## Tailwind Theme (ألوان المشروع)
+
+```
+background  : #070B14    surface : #0D1526   card : #111E35
+primary     : #4F8EF7    primary-dark : #2B6DE8
+text-primary: #F0F4FF    text-secondary : #94A3B8   text-muted : #475569
+border      : rgba(79,142,247,0.12)
+success     : #34D399    error : #F87171
+```
+
+---
+
+## Dashboard Layout Rules
+
+كل صفحة في `/dashboard/*` يجب أن:
+- **تبدأ** بـ `<div className="min-h-full bg-surface">` (ليس `min-h-screen`)
+- **لا تحتوي** على `<header>` sticky خاص بها (الـ layout يتكفّل بذلك)
+- صفحة messages استثناء: تستخدم `h-full flex flex-col` + `flex-1 min-h-0`
+
+---
+
+## API الرئيسية
+
+```
+GET  /api/analytics              ← إحصائيات المكتب
+GET  /api/leads/list             ← قائمة العملاء
+GET  /api/offices/my             ← مكتب المستخدم الحالي
+GET  /api/properties/my          ← عقارات المستخدم
+GET  /api/unanswered-questions   ← أسئلة معلّقة
+GET  /api/whatsapp/connect       ← حالة اتصال واتساب
+POST /api/webhook/whatsapp       ← webhook من Evolution API
+GET  /api/plans                  ← الباقات المتاحة
+GET  /api/subscription/current   ← اشتراك المستخدم الحالي
+POST /api/payments/bank-transfer ← تسجيل تحويل بنكي
+POST /api/payments/callback      ← Moyasar callback (GET)
+GET  /api/admin/stats            ← إحصائيات المنصة (admin)
+GET  /api/admin/subscribers      ← المشتركين (admin, paginated)
+```
+
+---
+
+## أوامر التشغيل
 
 ```bash
-cd server
+# Next.js
 npm install
 npm run dev
+
+# Bot server
+cd server && npm install && npm run dev
+
+# Worker (BullMQ) — في EasyPanel container منفصل
+npm run worker
 ```
 
 ---
 
-## أوامر التشغيل (Quick commands)
+## ملاحظات مهمة
 
-تشغيل الواجهة (Next.js):
-
-```bash
-npm install
-npm run dev
-```
-
-> بيئة البوت تحتاج مثلًا: `BOT_SERVER_URL` و `NEXT_PUBLIC_BOT_WHATSAPP_NUMBER` (راجع `.env.example` و `BOT_INTEGRATION_GUIDE.md`).
-
+1. **tenant_id**: يُستخرج دائماً من الجلسة في الـ API، لا من client
+2. **instanaceId**: ثابت `"saqr"` — لا قيم ديناميكية
+3. **supabaseAdmin**: للعمليات server-side التي تحتاج bypass RLS
+4. **getServerUser()**: في `/api/*` routes للتحقق من المستخدم
+5. **Admin role**: يُتحقق من `profile.role === 'admin'` في كل admin API

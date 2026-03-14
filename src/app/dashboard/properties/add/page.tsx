@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import {
   Building2,
-  ChevronRight,
   Loader2,
   Upload,
   X,
@@ -82,7 +81,7 @@ export default function AddPropertyPage() {
     for (let i = 0; i < files.length; i++) {
       const formData = new FormData()
       formData.append('file', files[i])
-      formData.append('tenant_id', 'default')
+      // tenant_id يُحدَّد في الـ API من الجلسة
       try {
         const response = await fetch('/api/properties/upload-image', { method: 'POST', body: formData })
         const data = await response.json()
@@ -114,7 +113,7 @@ export default function AddPropertyPage() {
         images,
         license_number: form.license_number,
         status: form.status,
-        tenant_id: 'default',
+        // tenant_id يُحدَّد تلقائياً من جلسة المستخدم في الـ API
       }
       const response = await fetch('/api/properties/create', {
         method: 'POST',
@@ -144,24 +143,7 @@ export default function AddPropertyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16 gap-2 text-sm">
-            <Link href="/dashboard" className="text-text-secondary hover:text-primary transition-colors">
-              لوحة التحكم
-            </Link>
-            <ChevronRight className="w-4 h-4 text-text-muted" />
-            <Link href="/dashboard/properties" className="text-text-secondary hover:text-primary transition-colors">
-              العقارات
-            </Link>
-            <ChevronRight className="w-4 h-4 text-text-muted" />
-            <span className="text-text-primary font-medium">إضافة عقار</span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

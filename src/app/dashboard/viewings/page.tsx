@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
     Calendar,
     Check,
-    ChevronRight,
     Clock,
     Loader2,
     MapPin,
@@ -14,7 +13,6 @@ import {
     User,
     X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -52,6 +50,7 @@ export default function ViewingsPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [filter, setFilter] = useState<ViewingStatus | "all">("all");
+  const [officeId, setOfficeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -59,10 +58,23 @@ export default function ViewingsPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch real office ID
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/offices/my")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.office?.id) setOfficeId(data.office.id);
+      })
+      .catch(() => {});
+  }, [user]);
+
   const fetchViewings = useCallback(async () => {
+    const resolvedOfficeId = officeId;
+    if (!resolvedOfficeId) return;
     try {
       setLoading(true);
-      const params = new URLSearchParams({ officeId: "default" });
+      const params = new URLSearchParams({ officeId: resolvedOfficeId });
       if (filter !== "all") params.set("status", filter);
       const res = await fetch(`/api/viewings?${params}`);
       const data = await res.json();
@@ -74,11 +86,11 @@ export default function ViewingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, officeId]);
 
   useEffect(() => {
-    fetchViewings();
-  }, [fetchViewings]);
+    if (officeId) fetchViewings();
+  }, [fetchViewings, officeId]);
 
   const updateStatus = async (id: string, status: ViewingStatus) => {
     setUpdating(id);
@@ -113,31 +125,7 @@ export default function ViewingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-                <span className="text-sm">لوحة التحكم</span>
-              </Link>
-              <span className="text-border">/</span>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" />
-                <h1 className="text-lg font-bold text-text-primary">
-                  طلبات المعاينة
-                </h1>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

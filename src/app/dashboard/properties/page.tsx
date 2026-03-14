@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import {
     BedDouble,
     Building2,
-    ChevronRight,
     DollarSign,
     FileText,
     Loader2,
@@ -95,7 +94,8 @@ export default function PropertiesPage() {
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/properties/list");
+      // /api/properties/my يستخدم جلسة المستخدم لجلب عقاراته فقط
+      const response = await fetch("/api/properties/my");
       const data = await response.json();
       if (data.success) {
         setProperties(data.properties);
@@ -150,7 +150,7 @@ export default function PropertiesPage() {
     for (let i = 0; i < files.length; i++) {
       const formData = new FormData();
       formData.append("file", files[i]);
-      formData.append("tenant_id", "default");
+      // tenant_id يُحدَّد في الـ API من الجلسة
       try {
         const response = await fetch("/api/properties/upload-image", {
           method: "POST",
@@ -247,40 +247,22 @@ export default function PropertiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-                <span className="text-sm">لوحة التحكم</span>
-              </Link>
-              <span className="text-border">/</span>
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                <h1 className="text-lg font-bold text-text-primary">
-                  إدارة العقارات
-                </h1>
-              </div>
-            </div>
+    <div className="min-h-full bg-surface">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Page actions bar */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold text-text-primary">إدارة العقارات</h1>
+          <div className="flex items-center gap-3">
+            <ImportExcelButton onImported={fetchProperties} />
             <Link
               href="/dashboard/properties/add"
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-colors font-medium text-sm shadow-button-blue"
             >
               <Plus className="w-4 h-4" />
               إضافة عقار
             </Link>
-            <ImportExcelButton onImported={fetchProperties} />
           </div>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-background rounded-xl p-4 border border-border">

@@ -4,8 +4,10 @@
 
 import { getUserProfile } from "@/lib/auth";
 import { createPayment, sarToHalalas } from "@/lib/moyasar";
+import { captureError } from "@/lib/sentry";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getServerUser } from "@/lib/supabase-server";
+import { METRIC, MetricsService } from "@/services/metrics.service";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -15,7 +17,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    const profile = await getUserProfile(user.id) as Record<string, unknown> | null;
+    const profile = (await getUserProfile(user.id)) as Record<
+      string,
+      unknown
+    > | null;
     const body = await request.json();
     const { planName, source } = body as {
       planName?: string;
@@ -84,6 +89,7 @@ export async function POST(request: NextRequest) {
     // If payment is immediately successful (rare for card)
     if (payment.status === "paid") {
       await activateSubscription(user.id, planName, plan.id);
+      MetricsService.track(METRIC.PAYMENT_SUCCESS, 1, { planName });
     }
 
     return NextResponse.json({
@@ -95,6 +101,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
+    captureError(err, { module: "Payments", action: "createPayment" });
+    MetricsService.track(METRIC.PAYMENT_FAILED, 1);
     const message = err instanceof Error ? err.message : "خطأ في الخادم";
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -105,6 +113,19 @@ async function activateSubscription(
   planName: string,
   planId: string,
 ) {
+  // Check if an active subscription already exists (idempotency guard)
+  const { data: existing } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("plan_name", planName)
+    .eq("status", "active")
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return; // Already activated — prevent duplicate
+  }
+
   // Deactivate current subscription
   await supabaseAdmin
     .from("user_subscriptions")

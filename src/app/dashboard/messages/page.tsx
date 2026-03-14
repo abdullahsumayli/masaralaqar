@@ -3,7 +3,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import {
     Bot,
-    ChevronRight,
     Loader2,
     MessageSquare,
     Phone,
@@ -12,7 +11,6 @@ import {
     User,
     X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -154,35 +152,19 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      {/* Header */}
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2 text-sm">
-              <Link
-                href="/dashboard"
-                className="text-text-secondary hover:text-primary transition-colors"
-              >
-                لوحة التحكم
-              </Link>
-              <ChevronRight className="w-4 h-4 text-text-muted" />
-              <span className="text-text-primary font-medium">الرسائل</span>
-            </div>
-            <button
-              onClick={fetchLeads}
-              className="p-2 text-text-secondary hover:text-primary transition-colors"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
+    <div className="h-full bg-surface flex flex-col">
+      <main className="flex-1 flex flex-col max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 overflow-hidden">
+        {/* Title bar */}
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+          <h1 className="text-xl font-bold text-text-primary">الرسائل</h1>
+          <button
+            onClick={fetchLeads}
+            className="p-2 text-text-secondary hover:text-primary transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex gap-6 h-[calc(100vh-10rem)]">
+        <div className="flex gap-6 flex-1 min-h-0">
           {/* Leads list (sidebar) */}
           <div
             className={`flex flex-col ${selected ? "hidden md:flex md:w-80" : "w-full md:w-80"} bg-background rounded-xl border border-border overflow-hidden`}

@@ -7,6 +7,7 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase";
+import { getServerUser } from "@/lib/supabase-server";
 import { AIListingRepository } from "@/repositories/ai-listing.repo";
 import { PropertyKnowledgeRepository } from "@/repositories/property-knowledge.repo";
 import { ListingGeneratorService } from "@/services/listing-generator.service";
@@ -16,6 +17,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "غير مصرح" },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = request.nextUrl;
     const propertyId = searchParams.get("propertyId");
     const officeId = searchParams.get("officeId");
@@ -51,6 +60,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getServerUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "غير مصرح" },
+        { status: 401 },
+      );
+    }
+
     const body = await request.json();
     const { action } = body;
 

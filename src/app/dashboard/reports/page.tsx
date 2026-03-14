@@ -4,12 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import {
     Building2,
     CalendarDays,
-    ChevronRight,
     Download,
     Loader2,
     Users
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -77,22 +75,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface" dir="rtl">
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16 gap-2 text-sm">
-            <Link
-              href="/dashboard"
-              className="text-text-secondary hover:text-primary transition-colors"
-            >
-              لوحة التحكم
-            </Link>
-            <ChevronRight className="w-4 h-4 text-text-muted" />
-            <span className="text-text-primary font-medium">التقارير</span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-full bg-surface">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-text-primary mb-2">
