@@ -1,0 +1,271 @@
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+let _supabaseAdmin: SupabaseClient | null = null;
+
+// Browser client — uses cookies for session storage so API routes can read auth
+// createBrowserClient is safe to call multiple times (singleton internally)
+export function getSupabaseBrowserClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return createClient("https://placeholder.supabase.co", "placeholder-key");
+  }
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
+
+// Backward-compatible export used throughout the codebase
+export const supabase = (() => {
+  if (typeof window !== "undefined" && supabaseUrl && supabaseAnonKey) {
+    return getSupabaseBrowserClient() as unknown as SupabaseClient;
+  }
+  // Server-side or build: use regular createClient (no session persistence needed)
+  if (supabaseUrl && supabaseAnonKey) {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return createClient("https://placeholder.supabase.co", "placeholder-key");
+})();
+
+// Server-side admin client with service role key (bypasses RLS)
+export const supabaseAdmin = (() => {
+  if (!_supabaseAdmin && supabaseUrl && supabaseServiceRoleKey) {
+    _supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  // Fallback to regular client if service role not available
+  if (!_supabaseAdmin) {
+    return supabase;
+  }
+  return _supabaseAdmin;
+})();
+
+// Types for blog posts
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  date: string;
+  reading_time: number;
+  image?: string;
+  published: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Types for library resources
+export interface LibraryResource {
+  id: string;
+  title: string;
+  description: string;
+  type: "book" | "course" | "template" | "tool";
+  category: string;
+  download_url?: string;
+  external_url?: string;
+  published: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Blog functions
+export async function getAllBlogPosts(publishedOnly = true) {
+  let query = supabase
+    .from("blog_posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (publishedOnly) {
+    query = query.eq("published", true);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching blog posts:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .eq("published", true)
+    .single();
+
+  if (error) {
+    console.error("Error fetching blog post:", error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function createBlogPost(
+  post: Omit<BlogPost, "id" | "created_at" | "updated_at">,
+) {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .insert([post])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating blog post:", error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function updateBlogPost(id: string, updates: Partial<BlogPost>) {
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating blog post:", error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function deleteBlogPost(id: string) {
+  const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting blog post:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// Library functions
+export async function getAllLibraryResources(publishedOnly = true) {
+  let query = supabase
+    .from("library_resources")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (publishedOnly) {
+    query = query.eq("published", true);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching library resources:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+export async function createLibraryResource(
+  resource: Omit<LibraryResource, "id" | "created_at" | "updated_at">,
+) {
+  const { data, error } = await supabase
+    .from("library_resources")
+    .insert([resource])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating library resource:", error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function updateLibraryResource(
+  id: string,
+  updates: Partial<LibraryResource>,
+) {
+  const { data, error } = await supabase
+    .from("library_resources")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating library resource:", error);
+    return null;
+  }
+
+  return data;
+}
+
+export async function deleteLibraryResource(id: string) {
+  const { error } = await supabase
+    .from("library_resources")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting library resource:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// Upload image to Supabase Storage
+export async function uploadImage(
+  file: File,
+  bucket: string = "blog-images",
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw uploadError;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(fileName);
+
+    return { url: publicUrl, error: null };
+  } catch (error: any) {
+    console.error("Error uploading image:", error);
+    return { url: null, error: error.message };
+  }
+}
+
+// Bot subscription functions
+export async function getBotSubscriptionByPhone(phone: string) {
+  const { data, error } = await supabase
+    .from("bot_subscriptions")
+    .select("*")
+    .eq("phone", phone)
+    .single();
+
+  return { data, error };
+}
