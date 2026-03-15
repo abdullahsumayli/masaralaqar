@@ -13,6 +13,7 @@ import {
   Home,
   MessageCircleQuestion,
   MessageSquare,
+  Settings,
   Sparkles,
   TrendingUp,
   Users,
