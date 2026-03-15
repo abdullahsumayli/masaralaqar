@@ -39,7 +39,9 @@ export default function WhatsAppPage() {
   const [success, setSuccess] = useState("");
 
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [noOffice, setNoOffice] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -53,14 +55,14 @@ export default function WhatsAppPage() {
       setLoading(true);
       const res = await fetch("/api/whatsapp/connect");
       const data = await res.json();
-      if (data.session) {
-        setSession(data.session);
+      if (res.status === 404 && data.error === "لا يوجد مكتب مرتبط") {
+        setNoOffice(true);
+        return;
       }
-      if (data.evolutionStatus) {
-        setEvolutionStatus(data.evolutionStatus);
-      }
+      if (data.session) setSession(data.session);
+      if (data.evolutionStatus) setEvolutionStatus(data.evolutionStatus);
     } catch {
-      // No session yet
+      // Network error — stay quiet, user can still try connecting
     } finally {
       setLoading(false);
     }
@@ -93,6 +95,14 @@ export default function WhatsAppPage() {
   }, []);
 
   const handleConnect = async () => {
+    // Phone validation (only if provided)
+    if (phoneNumber.trim()) {
+      if (!/^05\d{8}$/.test(phoneNumber.trim())) {
+        setPhoneError("رقم الواتساب يجب أن يكون 10 أرقام ويبدأ بـ 05");
+        return;
+      }
+    }
+
     setError("");
     setSuccess("");
     setQrCode(null);
@@ -110,7 +120,12 @@ export default function WhatsAppPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "فشل في ربط الواتساب");
+        // Handle no-office case (new user who hasn't completed onboarding)
+        if (res.status === 404) {
+          setError("لم يتم إعداد مكتبك بعد. تأكد من اكتمال خطوات الإعداد أولاً.");
+        } else {
+          setError(data.error || "فشل في ربط الواتساب");
+        }
         return;
       }
 
@@ -348,6 +363,19 @@ export default function WhatsAppPage() {
           </>
         ) : (
           <>
+            {/* No-office notice — shown only for new users without onboarding */}
+            {noOffice && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-3">
+                <span className="text-amber-400 mt-0.5 flex-shrink-0 text-lg leading-none">⚠️</span>
+                <div>
+                  <p className="text-amber-300 text-sm font-medium mb-0.5">لم يتم إعداد مكتبك بعد</p>
+                  <p className="text-amber-400/80 text-xs">
+                    يمكنك إكمال خطوات الإعداد أولاً، ثم العودة لهذه الصفحة لربط الواتساب.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Connect Form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -373,21 +401,38 @@ export default function WhatsAppPage() {
               <div className="space-y-4">
                 {/* Phone Number (optional) */}
                 <div>
-                  <label className="block text-text-primary text-sm mb-2 font-medium">
+                  <label
+                    htmlFor="whatsapp-number"
+                    className="block text-text-primary text-sm mb-2 font-medium"
+                  >
                     رقم الواتساب{" "}
-                    <span className="text-text-muted">(اختياري)</span>
+                    <span className="text-text-muted text-xs">(اختياري)</span>
                   </label>
                   <input
+                    id="whatsapp-number"
+                    name="whatsapp"
                     type="tel"
                     dir="ltr"
+                    inputMode="numeric"
+                    maxLength={10}
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      const onlyNums = e.target.value.replace(/[^0-9]/g, "");
+                      setPhoneNumber(onlyNums);
+                      if (phoneError) setPhoneError(null);
+                    }}
                     placeholder="05XXXXXXXX"
-                    className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+                    className={`w-full bg-surface border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none transition-colors ${
+                      phoneError ? "border-red-500 focus:border-red-400" : "border-border focus:border-primary"
+                    }`}
                   />
-                  <p className="text-text-muted text-xs mt-1">
-                    يمكنك إدخال رقمك لحفظه، أو تخطي هذا الحقل ومسح QR مباشرة
-                  </p>
+                  {phoneError ? (
+                    <p className="text-red-400 text-xs mt-1">{phoneError}</p>
+                  ) : (
+                    <p className="text-text-muted text-xs mt-1">
+                      يمكنك إدخال رقمك لحفظه، أو تخطي هذا الحقل ومسح QR مباشرة
+                    </p>
+                  )}
                 </div>
 
                 {error && (

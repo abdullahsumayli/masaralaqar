@@ -4,6 +4,7 @@ import './globals.css'
 import { ReferralCookieHandler } from '@/components/affiliate/ReferralCookieHandler'
 import { AnnouncementBar } from '@/components/AnnouncementBar'
 import { ScrollToTop } from '@/components/ScrollToTop'
+import { ChatWidget } from '@/components/ChatWidget'
 
 export const viewport: Viewport = {
   themeColor: '#070B14',
@@ -107,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         {children}
         <ScrollToTop />
+        <ChatWidget />
       </body>
     </html>
   )

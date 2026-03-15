@@ -69,9 +69,9 @@ export default function DashboardLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-sm font-bold text-text-primary font-cairo truncate">
+          <span className="text-sm font-bold text-text-primary font-cairo truncate">
             {getTitle(pathname)}
-          </h1>
+          </span>
         </header>
 
         {/* Page content — flex-1 + overflow-auto so pages control their own scroll/height */}

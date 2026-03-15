@@ -19,26 +19,39 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    // Check if we have a valid session from the reset link
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        // Listen for auth state changes (when user clicks reset link)
-        supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === "PASSWORD_RECOVERY") {
-            // User came from password reset link
-          }
-        });
+    // Supabase handles the token from the URL hash automatically via onAuthStateChange.
+    // We wait for a PASSWORD_RECOVERY event — if it never fires (no valid token),
+    // we redirect to forgot-password.
+    let redirectTimer: ReturnType<typeof setTimeout>;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // Valid recovery session — allow access
+        setChecking(false);
       }
+    });
+
+    // Give Supabase 2s to process the URL hash token.
+    // If no event fired, the user arrived without a valid link.
+    redirectTimer = setTimeout(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/auth/forgot-password");
+      } else {
+        setChecking(false);
+      }
+    }, 2000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(redirectTimer);
     };
-    checkSession();
-  }, []);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,22 +70,25 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
-
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-
       setSuccess(true);
-      setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+      setTimeout(() => router.push("/login"), 3000);
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء تحديث كلمة المرور");
     } finally {
       setLoading(false);
     }
   };
+
+  // Loading state while checking token
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#010409] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -87,10 +103,7 @@ export default function ResetPasswordPage() {
           <p className="text-gray-400 mb-6">
             سيتم توجيهك لصفحة تسجيل الدخول...
           </p>
-          <Link
-            href="/login"
-            className="text-primary hover:text-primary/80 transition-colors"
-          >
+          <Link href="/login" className="text-primary hover:text-primary/80 transition-colors">
             اذهب لصفحة الدخول الآن
           </Link>
         </div>
@@ -140,11 +153,7 @@ export default function ResetPasswordPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -183,10 +192,7 @@ export default function ResetPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link
-              href="/admin/login"
-              className="text-gray-400 hover:text-white text-sm transition-colors"
-            >
+            <Link href="/login" className="text-gray-400 hover:text-white text-sm transition-colors">
               العودة لتسجيل الدخول
             </Link>
           </div>

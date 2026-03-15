@@ -141,7 +141,7 @@ export default function LoginPage() {
                     كلمة المرور
                   </label>
                   <Link
-                    href="/auth/reset-password"
+                    href="/auth/forgot-password"
                     className="text-xs text-primary hover:text-primary-light transition-colors"
                   >
                     نسيت كلمة المرور؟

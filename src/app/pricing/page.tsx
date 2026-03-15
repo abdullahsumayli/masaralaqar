@@ -84,6 +84,7 @@ const DEFAULT_PLANS: PricingPlan[] = [
 ];
 
 export default function PricingPage() {
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discountPercent: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
@@ -135,15 +136,34 @@ export default function PricingPage() {
     clearCouponCookie();
   };
 
+  const ANNUAL_DISCOUNT = 0.20;
+
   const plans: PricingPlan[] = DEFAULT_PLANS.map((p) => {
-    if (!couponApplied || p.price === 0) return { ...p, ctaHref: p.ctaHref };
-    const discount = (p.price * couponApplied.discountPercent) / 100;
-    const firstMonthPrice = Math.round(p.price - discount);
+    let basePrice = p.price;
+    let originalPrice: number | undefined;
+
+    // Apply annual discount first
+    if (billing === "annual") {
+      originalPrice = basePrice;
+      basePrice = Math.round(basePrice * (1 - ANNUAL_DISCOUNT));
+    }
+
+    // Then apply coupon on top (first month only)
+    if (couponApplied && p.price > 0) {
+      const couponDiscount = (basePrice * couponApplied.discountPercent) / 100;
+      return {
+        ...p,
+        price: Math.round(basePrice - couponDiscount),
+        priceOriginal: originalPrice ?? p.price,
+        ctaHref: `/auth/signup?coupon=${encodeURIComponent(couponApplied.code)}${billing === "annual" ? "&billing=annual" : ""}`,
+      };
+    }
+
     return {
       ...p,
-      price: firstMonthPrice,
-      priceOriginal: p.price,
-      ctaHref: `/auth/signup?coupon=${encodeURIComponent(couponApplied.code)}`,
+      price: basePrice,
+      priceOriginal: billing === "annual" ? originalPrice : undefined,
+      ctaHref: billing === "annual" ? `${p.ctaHref}?billing=annual` : p.ctaHref,
     };
   });
 
@@ -160,9 +180,43 @@ export default function PricingPage() {
         <h1 className="text-4xl md:text-5xl font-bold text-text-primary text-center mb-4">
           خطط التسعير
         </h1>
-        <p className="text-xl text-text-secondary text-center mb-12">
+        <p className="text-xl text-text-secondary text-center mb-8">
           اختر الخطة المناسبة لمكتبك العقاري — صقر ومنتجات المنصة
         </p>
+
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <span className={`text-sm font-medium transition-colors ${billing === "monthly" ? "text-text-primary" : "text-text-secondary"}`}>
+            شهري
+          </span>
+          <button
+            type="button"
+            onClick={() => setBilling(billing === "monthly" ? "annual" : "monthly")}
+            className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+              billing === "annual" ? "bg-primary" : "bg-border"
+            }`}
+            aria-label="تبديل طريقة الدفع"
+          >
+            <span
+              className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300 ${
+                billing === "annual" ? "translate-x-[-32px] right-1" : "right-1"
+              }`}
+            />
+          </button>
+          <span className={`text-sm font-medium transition-colors ${billing === "annual" ? "text-text-primary" : "text-text-secondary"}`}>
+            سنوي
+            <span className="mr-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/15 text-primary border border-primary/20">
+              وفر 20%
+            </span>
+          </span>
+        </div>
+
+        {/* Annual saving note */}
+        {billing === "annual" && (
+          <p className="text-center text-sm text-text-secondary mb-8">
+            الأسعار التالية شهرية — يُدفع مبلغ سنة كاملة دفعة واحدة
+          </p>
+        )}
 
         {/* Coupon */}
         <div className="max-w-md mx-auto mb-12">

@@ -27,8 +27,6 @@ interface PricingCardProps {
 }
 
 export function PricingCard({ plan, className, highlighted }: PricingCardProps) {
-  const displayPrice = plan.priceOriginal ?? plan.price;
-
   return (
     <div
       className={cn(
@@ -61,8 +59,10 @@ export function PricingCard({ plan, className, highlighted }: PricingCardProps) 
         </div>
         {plan.priceOriginal != null && plan.priceOriginal !== plan.price && (
           <p className="text-xs text-text-muted mt-1">
-            <span className="line-through">{plan.priceOriginal.toLocaleString("ar-SA")} ر.س</span>
-            {" "}(شهرك الأول بعد الخصم)
+            <span className="line-through text-text-muted">{plan.priceOriginal.toLocaleString("ar-SA")} ر.س</span>
+            <span className="mr-1.5 text-green-400 font-medium">
+              وفر {Math.round((1 - plan.price / plan.priceOriginal) * 100)}%
+            </span>
           </p>
         )}
       </div>

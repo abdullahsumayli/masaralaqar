@@ -10,7 +10,6 @@ import {
   Building2,
   Calendar,
   Clock,
-  Loader2,
   Search,
 } from "lucide-react";
 import Link from "next/link";
@@ -141,8 +140,23 @@ export default function KnowledgeBlogPage() {
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden animate-pulse">
+                  <div className="aspect-video bg-[#1a2a45]" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-5 bg-[#1a2a45] rounded-full w-1/3" />
+                    <div className="h-4 bg-[#1a2a45] rounded-full w-full" />
+                    <div className="h-4 bg-[#1a2a45] rounded-full w-5/6" />
+                    <div className="h-3 bg-[#1a2a45] rounded-full w-full" />
+                    <div className="h-3 bg-[#1a2a45] rounded-full w-4/5" />
+                    <div className="flex justify-between pt-2">
+                      <div className="h-3 bg-[#1a2a45] rounded-full w-1/4" />
+                      <div className="h-3 bg-[#1a2a45] rounded-full w-1/4" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filteredArticles.length === 0 ? (
             <div className="text-center py-16">

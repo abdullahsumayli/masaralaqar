@@ -192,15 +192,19 @@ export function DashboardSidebar({
             collapsed && "mx-auto mt-0",
           )}
           title={collapsed ? "توسيع" : "طيّ"}
+          aria-label={collapsed ? "توسيع القائمة الجانبية" : "طيّ القائمة الجانبية"}
+          aria-expanded={!collapsed}
+          aria-controls="sidebar-nav"
         >
           <ChevronLeft
             className={cn("w-4 h-4 transition-transform duration-300", collapsed && "rotate-180")}
+            aria-hidden="true"
           />
         </button>
       </div>
 
       {/* ── Scrollable nav ───────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-0.5 scrollbar-thin">
+      <nav id="sidebar-nav" className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-0.5 scrollbar-thin">
         {/* Main section */}
         {!collapsed ? (
           <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
