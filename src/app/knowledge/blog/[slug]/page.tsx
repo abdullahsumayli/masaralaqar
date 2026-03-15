@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { getAllBlogPosts, getBlogPostBySlug } from "@/lib/supabase";
 import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   ArrowRight,
   Building2,
@@ -176,7 +177,13 @@ export default function KnowledgeBlogSlugPage({
         <div className="max-w-4xl mx-auto">
           {article.image ? (
             <div className="relative aspect-video rounded-2xl overflow-hidden -mt-4">
-              <img src={article.image} alt={article.title} className="w-full h-full object-cover" />
+              <Image
+                src={article.image}
+                alt={article.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 896px"
+                className="object-cover"
+              />
             </div>
           ) : (
             <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl -mt-4 flex items-center justify-center">
@@ -244,11 +251,13 @@ export default function KnowledgeBlogSlugPage({
                   className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
                 >
                   {related.image ? (
-                    <div className="aspect-video">
-                      <img
+                    <div className="aspect-video relative">
+                      <Image
                         src={related.image}
                         alt={related.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover"
                       />
                     </div>
                   ) : (

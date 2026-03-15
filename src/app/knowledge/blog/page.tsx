@@ -4,6 +4,7 @@ import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { getAllBlogPosts } from "@/lib/supabase";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   ArrowLeft,
   Building2,
@@ -166,15 +167,17 @@ export default function KnowledgeBlogPage() {
                 >
                   <Link href={`${BLOG_BASE}/${article.slug}`}>
                     {article.image ? (
-                      <div className="aspect-video overflow-hidden">
-                        <img
+                      <div className="aspect-video overflow-hidden relative">
+                        <Image
                           src={article.image}
                           alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     ) : (
-                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                      <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                         <Building2 className="w-12 h-12 text-primary/30" />
                       </div>
                     )}

@@ -1,15 +1,14 @@
-import type { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
+
+const BASE = "https://masaralaqar.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/dashboard/', '/admin/', '/api/', '/auth/'],
-      },
-    ],
-    sitemap: 'https://masaralaqar.com/sitemap.xml',
-    host: 'https://masaralaqar.com',
-  }
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      disallow: ["/dashboard/", "/admin/", "/api/", "/auth/"],
+    },
+    sitemap: `${BASE}/sitemap.xml`,
+  };
 }

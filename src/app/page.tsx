@@ -7,7 +7,7 @@ import {
   Target, TrendingUp, Users, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Navbar } from '@/components/navbar'
 import { AffiliateCTASection } from '@/components/affiliate/AffiliateCTASection'
 import { KnowledgeCard } from '@/components/knowledge/KnowledgeCard'
@@ -28,10 +28,10 @@ const stagger = {
 
 /* ─── Data ───────────────────────────────────────── */
 const stats = [
-  { value: '+500',   label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]' },
-  { value: '+1,000', label: 'صفقة ناجحة',    icon: TrendingUp,  color: 'text-[#E5B84A]' },
-  { value: '+2,500', label: 'متدرب محترف',   icon: Users,       color: 'text-[#34D399]' },
-  { value: '5+',     label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]' },
+  { value: '+500',   numeric: 500,   label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]', prefix: '+', suffix: '' },
+  { value: '+1,000', numeric: 1000,  label: 'صفقة ناجحة',    icon: TrendingUp,  color: 'text-[#E5B84A]', prefix: '+', suffix: '' },
+  { value: '+2,500', numeric: 2500,  label: 'متدرب محترف',   icon: Users,       color: 'text-[#34D399]', prefix: '+', suffix: '' },
+  { value: '5+',     numeric: 5,     label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]', prefix: '', suffix: '+' },
 ]
 
 const features = [
@@ -55,11 +55,29 @@ const testimonials = [
 ]
 
 /* ─── Animated Counter ───────────────────────────── */
-function StatCard({ value, label, icon: Icon, color, delay }: {
-  value: string; label: string; icon: React.ElementType; color: string; delay: number;
+function StatCard({ value, numeric, label, icon: Icon, color, delay, prefix = '', suffix = '' }: {
+  value: string; numeric: number; label: string; icon: React.ElementType; color: string; delay: number; prefix?: string; suffix?: string;
 }) {
-  const ref = useRef(null)
+  const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!inView) return
+    const duration = 1500
+    const start = performance.now()
+    const step = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.floor(easeOut * numeric))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    const id = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(id)
+  }, [inView, numeric])
+
+  const display = numeric >= 1000 ? `${prefix}${count.toLocaleString('ar-SA')}${suffix}` : `${prefix}${count}${suffix}`
 
   return (
     <motion.div
@@ -69,7 +87,7 @@ function StatCard({ value, label, icon: Icon, color, delay }: {
       transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center text-center py-2"
     >
-      <div className={`text-4xl md:text-5xl font-black mb-1 counter ${color}`}>{value}</div>
+      <div className={`text-4xl md:text-5xl font-black mb-1 counter ${color}`}>{display}</div>
       <div className="text-[#475569] text-sm font-medium">{label}</div>
     </motion.div>
   )

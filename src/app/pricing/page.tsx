@@ -5,6 +5,7 @@ import { Check, Loader2, Tag, X } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { PricingCard, type PricingPlan } from "@/components/pricing/PricingCard";
+import { PricingSchema } from "@/components/pricing/PricingSchema";
 
 const COUPON_COOKIE_NAME = "saqr_coupon";
 
@@ -148,6 +149,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PricingSchema />
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <p className="text-center mb-4">
@@ -219,6 +221,46 @@ export default function PricingPage() {
           <PricingCard plan={plans[1]} highlighted />
           <PricingCard plan={plans[2]} />
         </div>
+
+        {/* جدول مقارنة الخطط */}
+        <section className="mt-24 overflow-x-auto">
+          <h2 className="text-2xl font-bold text-text-primary text-center mb-8">
+            مقارنة الخطط
+          </h2>
+          <div className="border border-border rounded-xl overflow-hidden">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="bg-surface border-b border-border">
+                  <th className="text-right py-4 px-4 text-text-primary font-semibold w-[45%]">الميزة</th>
+                  <th className="text-center py-4 px-4 text-text-primary font-semibold">المبتدئ</th>
+                  <th className="text-center py-4 px-4 text-primary font-semibold bg-primary/5">احترافي</th>
+                  <th className="text-center py-4 px-4 text-text-primary font-semibold">أعمال</th>
+                </tr>
+              </thead>
+              <tbody className="text-text-secondary">
+                {[
+                  ["عدد المستخدمين", "1", "حتى 5", "حتى 10"],
+                  ["عدد أرقام واتساب", "1", "حتى 5", "حتى 10"],
+                  ["رد آلي ذكي", "✅", "✅", "✅"],
+                  ["إدارة العملاء المحتملين", "✅", "✅", "✅"],
+                  ["كتالوج العقارات", "❌", "✅", "✅"],
+                  ["سير عمل أتمتة", "❌", "✅", "✅"],
+                  ["تحليلات متقدمة", "أساسية", "✅", "✅"],
+                  ["إدارة الفريق", "❌", "❌", "✅"],
+                  ["تقارير متقدمة", "❌", "❌", "✅"],
+                  ["دعم ذو أولوية", "❌", "❌", "✅"],
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-border last:border-0 hover:bg-white/[0.02]">
+                    <td className="py-3 px-4 text-text-primary">{row[0]}</td>
+                    <td className="py-3 px-4 text-center">{row[1]}</td>
+                    <td className="py-3 px-4 text-center bg-primary/5">{row[2]}</td>
+                    <td className="py-3 px-4 text-center">{row[3]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         {/* Compare the Cost */}
         <section className="mt-24">

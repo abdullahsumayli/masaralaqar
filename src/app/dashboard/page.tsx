@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Clock,
   FileText,
+  Home,
   MessageCircleQuestion,
   MessageSquare,
   Sparkles,

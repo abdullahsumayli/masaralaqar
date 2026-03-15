@@ -102,7 +102,7 @@ export function getPlanPrice(planType: 'free' | 'basic' | 'pro'): number {
   const prices: Record<'free' | 'basic' | 'pro', number> = {
     free: 0,
     basic: 99,
-    pro: 299,
+    pro: 499,
   };
   return prices[planType];
 }

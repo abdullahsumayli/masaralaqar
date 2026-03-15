@@ -12,6 +12,7 @@ const quickLinks = [
 
 const companyLinks = [
   { href: '/about', label: 'عن المنصة' },
+  { href: '/faq', label: 'الأسئلة الشائعة' },
   { href: '/partners', label: 'الشركاء' },
   { href: '/contact', label: 'تواصل معنا' },
   { href: '/privacy', label: 'سياسة الخصوصية' },
@@ -19,8 +20,8 @@ const companyLinks = [
 ]
 
 const socialLinks = [
-  { href: 'https://twitter.com', label: 'Twitter / X', icon: Twitter },
-  { href: 'https://linkedin.com', label: 'LinkedIn', icon: Linkedin },
+  { href: 'https://twitter.com/masaralaqar', label: 'Twitter / X', icon: Twitter },
+  { href: 'https://linkedin.com/company/masaralaqar', label: 'LinkedIn', icon: Linkedin },
   { href: 'https://wa.me/966545374069', label: 'WhatsApp', icon: MessageCircle },
 ]
 
