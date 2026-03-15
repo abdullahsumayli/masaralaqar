@@ -1,14 +1,14 @@
 /**
  * Evolution API v2.x — Connection helpers
  * Instance: سقر (saqr) — instance واحد مشترك لكل المنصة
- *
- * Base URL : https://evo.masaralaqar.com
- * API Key  : iR8QFbVi9XafMvgVt6d4gdgx880Je6VB
- * Instance : saqr
+ * Base URL: https://evo.masaralaqar.com (via Traefik, no direct IP)
  */
 
-const EVO_URL      = process.env.EVOLUTION_URL      || "https://evo.masaralaqar.com";
-const EVO_KEY      = process.env.EVOLUTION_API_KEY  || "iR8QFbVi9XafMvgVt6d4gdgx880Je6VB";
+const EVO_URL =
+  process.env.EVOLUTION_API_URL ||
+  process.env.EVOLUTION_URL ||
+  "https://evo.masaralaqar.com";
+const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
 export const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || "saqr";
 
 function headers() {

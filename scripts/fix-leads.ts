@@ -89,5 +89,6 @@ NOTIFY pgrst, 'reload schema';
 
 fixLeadsTable();
 
-EVOLUTION_URL=http://localhost:8080
-EVOLUTION_API_KEY=TROCA_PELA_SUA_CHAVE_AQUI
+# Evolution API (use in .env)
+# EVOLUTION_API_URL=https://evo.masaralaqar.com
+# EVOLUTION_API_KEY=your-evolution-api-key

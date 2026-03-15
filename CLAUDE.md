@@ -76,8 +76,9 @@ masaralaqar/
 ## Evolution API (واتساب)
 
 ```
-Base URL : https://evo.masaralaqar.com
-API Key  : iR8QFbVi9XafMvgVt6d4gdgx880Je6VB
+Base URL : https://evo.masaralaqar.com (عبر Traefik — لا تستخدم IP مباشرة)
+Env      : EVOLUTION_API_URL أو EVOLUTION_URL، EVOLUTION_API_KEY
+API Key  : يُرسل في الـ headers باسم apikey
 Instance : saqr   ← ثابت لكل المستخدمين
 ```
 

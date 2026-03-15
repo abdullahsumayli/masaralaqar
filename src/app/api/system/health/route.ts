@@ -99,15 +99,15 @@ async function checkOpenAI(): Promise<ServiceStatus> {
 
 async function checkWhatsApp(): Promise<ServiceStatus> {
   const start = Date.now();
-  const evoUrl = process.env.EVOLUTION_URL;
-  const evoKey = process.env.EVOLUTION_API_KEY;
-  if (!evoUrl) {
-    return { status: "error", error: "EVOLUTION_URL not configured" };
-  }
+  const evoUrl =
+    process.env.EVOLUTION_API_URL ||
+    process.env.EVOLUTION_URL ||
+    "https://evo.masaralaqar.com";
+  const evoKey = process.env.EVOLUTION_API_KEY || "";
   try {
     const res = await fetch(`${evoUrl}/instance/fetchInstances`, {
       method: "GET",
-      headers: { apikey: evoKey || "" },
+      headers: { "Content-Type": "application/json", apikey: evoKey },
       signal: AbortSignal.timeout(5000),
     });
     return {

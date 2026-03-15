@@ -1,12 +1,13 @@
 /**
- * Evolution API v2.x — Get QR Code helper
- * Instance: saqr (ثابت)
- *
- * يحاول جلب QR code مع retry تلقائي لأن Evolution قد لا يُولّده فوراً.
+ * Evolution API v2.x — Get QR Code helper (instance: saqr).
+ * Base URL: https://evo.masaralaqar.com
  */
 
-const EVO_URL      = process.env.EVOLUTION_URL     || "https://evo.masaralaqar.com";
-const EVO_KEY      = process.env.EVOLUTION_API_KEY || "iR8QFbVi9XafMvgVt6d4gdgx880Je6VB";
+const EVO_URL =
+  process.env.EVOLUTION_API_URL ||
+  process.env.EVOLUTION_URL ||
+  "https://evo.masaralaqar.com";
+const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
 const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || "saqr";
 
 function sleep(ms: number) {
