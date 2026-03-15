@@ -29,14 +29,19 @@ export default function AdminLoginPage() {
       const result = await signIn(email, password)
       
       if (result.error) {
-        setError(result.error || 'بيانات الدخول غير صحيحة')
+        const msg = result.error
+        const arabicMessage =
+          msg?.toLowerCase().includes('invalid') || msg?.toLowerCase().includes('credentials')
+            ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة. تأكد من الحساب في Supabase أو جرّب إعادة تعيين كلمة المرور.'
+            : msg || 'بيانات الدخول غير صحيحة'
+        setError(arabicMessage)
         setIsLoading(false)
         return
       }
       
       // Check if email is in admin list
-      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
-        setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة')
+      if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(email.toLowerCase())) {
+        setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة. أضف بريدك في NEXT_PUBLIC_ADMIN_EMAILS.')
         setIsLoading(false)
         return
       }
@@ -45,7 +50,12 @@ export default function AdminLoginPage() {
       router.push('/admin')
     } catch (err: any) {
       console.error('Admin login error:', err)
-      setError(err.message || 'بيانات الدخول غير صحيحة')
+      const msg = err?.message || ''
+      const arabicMessage =
+        msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials')
+          ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
+          : msg || 'بيانات الدخول غير صحيحة'
+      setError(arabicMessage)
       setIsLoading(false)
     }
   }
