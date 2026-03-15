@@ -87,6 +87,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { phoneNumber } = body;
 
+    if (!process.env.EVOLUTION_API_KEY?.trim()) {
+      return NextResponse.json(
+        { error: "إعدادات Evolution API غير مكتملة (EVOLUTION_API_KEY)" },
+        { status: 503 },
+      );
+    }
+
     // Create Evolution instance (idempotent — ignores if already exists)
     try {
       await createEvolutionInstance(office.id);
@@ -95,24 +102,25 @@ export async function POST(request: NextRequest) {
       // May already exist — continue to QR
     }
 
-    // Get QR code
-    let qrData: any = null;
-    try {
-      qrData = await getEvolutionQR(office.id);
-    } catch (err) {
-      console.error("Evolution QR error:", err);
-      return NextResponse.json(
-        { error: "فشل في الحصول على QR Code" },
-        { status: 500 },
-      );
-    }
-
-    // Normalize phone if provided
+    // Normalize phone if provided (for DB and optional Evolution query)
     let normalized = "";
     if (phoneNumber) {
       normalized = phoneNumber.replace(/[^0-9]/g, "");
       if (normalized.startsWith("0")) normalized = "966" + normalized.slice(1);
       if (!normalized.startsWith("966")) normalized = "966" + normalized;
+    }
+
+    // Get QR (with retry); some Evolution versions accept number for better QR
+    let qrData: { base64: string | null; pairingCode: string | null } = { base64: null, pairingCode: null };
+    try {
+      const raw = await getEvolutionQR(office.id, normalized || undefined);
+      qrData = { base64: raw.base64 ?? null, pairingCode: raw.pairingCode ?? null };
+    } catch (err) {
+      console.error("Evolution QR error:", err);
+      return NextResponse.json(
+        { error: "فشل في الحصول على QR أو رمز الربط — تحقق من Evolution API والاتصال بالسيرفر" },
+        { status: 500 },
+      );
     }
 
     // Upsert session in DB
@@ -124,10 +132,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Return QR (base64 image)
+    // Return QR image and/or pairing code (Evolution v2 may return only pairingCode)
     return NextResponse.json({
-      qr: qrData?.base64 || null,
-      pairingCode: qrData?.pairingCode || null,
+      qr: qrData.base64 || null,
+      pairingCode: qrData.pairingCode || null,
       session: normalized
         ? {
             officeId: office.id,

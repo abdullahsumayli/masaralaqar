@@ -41,6 +41,7 @@ export default function WhatsAppPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [noOffice, setNoOffice] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -83,6 +84,7 @@ export default function WhatsAppPage() {
         pollRef.current = null;
       }
       setQrCode(null);
+      setPairingCode(null);
       setSuccess("تم ربط الواتساب بنجاح! ✅");
     }
   }, [evolutionStatus, session?.sessionStatus]);
@@ -106,6 +108,7 @@ export default function WhatsAppPage() {
     setError("");
     setSuccess("");
     setQrCode(null);
+    setPairingCode(null);
 
     setSaving(true);
     try {
@@ -129,8 +132,9 @@ export default function WhatsAppPage() {
         return;
       }
 
-      if (data.qr) {
-        setQrCode(data.qr);
+      if (data.qr || data.pairingCode) {
+        setQrCode(data.qr || null);
+        setPairingCode(data.pairingCode || null);
         if (data.session) setSession(data.session);
 
         // Start polling for connection status
@@ -148,7 +152,7 @@ export default function WhatsAppPage() {
           }
         }, 5000);
       } else {
-        setError("لم يتم استلام QR Code — تحقق من إعدادات السيرفر");
+        setError("لم يتم استلام QR أو رمز الربط — تحقق من Evolution API وإعدادات السيرفر (EVOLUTION_API_KEY)");
       }
     } catch {
       setError("حدث خطأ أثناء الربط");
@@ -164,16 +168,17 @@ export default function WhatsAppPage() {
       const res = await fetch("/api/whatsapp/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ phoneNumber: phoneNumber.trim() || undefined }),
       });
       const data = await res.json();
-      if (data.qr) {
-        setQrCode(data.qr);
+      if (data.qr || data.pairingCode) {
+        setQrCode(data.qr || null);
+        setPairingCode(data.pairingCode || null);
       } else {
-        setError("لم يتم استلام QR Code");
+        setError("لم يتم استلام QR أو رمز الربط");
       }
     } catch {
-      setError("فشل في تحديث QR Code");
+      setError("فشل في تحديث QR / رمز الربط");
     } finally {
       setSaving(false);
     }
@@ -189,6 +194,7 @@ export default function WhatsAppPage() {
         setSession(null);
         setEvolutionStatus(null);
         setQrCode(null);
+        setPairingCode(null);
         setSuccess("تم فصل الواتساب بنجاح");
       }
     } catch {
@@ -297,7 +303,7 @@ export default function WhatsAppPage() {
               </div>
             )}
           </>
-        ) : qrCode ? (
+        ) : (qrCode || pairingCode) ? (
           <>
             {/* QR Code Display */}
             <motion.div
@@ -317,20 +323,35 @@ export default function WhatsAppPage() {
                   ربط جهاز ← امسح الرمز أدناه
                 </p>
 
-                {/* QR Image */}
-                <div className="flex justify-center py-4">
-                  <div className="bg-white p-4 rounded-2xl shadow-lg">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={qrCode}
-                      alt="WhatsApp QR Code"
-                      className="w-64 h-64"
-                    />
+                {/* QR Image (if Evolution returns base64) */}
+                {qrCode && (
+                  <div className="flex justify-center py-4">
+                    <div className="bg-white p-4 rounded-2xl shadow-lg">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrCode}
+                        alt="WhatsApp QR Code"
+                        className="w-64 h-64"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Pairing code (Evolution v2 may return only this) */}
+                {pairingCode && (
+                  <div className="bg-surface rounded-xl border border-border p-4 text-center">
+                    <p className="text-text-muted text-sm mb-2">أو استخدم رمز الربط:</p>
+                    <p className="text-text-primary font-mono text-xl font-bold tracking-widest" dir="ltr">
+                      {pairingCode}
+                    </p>
+                    <p className="text-text-muted text-xs mt-2">
+                      واتساب ← الإعدادات ← الأجهزة المرتبطة ← ربط جهاز ← ربط برقم الهاتف ← أدخل الرمز أعلاه
+                    </p>
+                  </div>
+                )}
 
                 <p className="text-text-muted text-xs">
-                  يتم التحقق تلقائياً بعد المسح...
+                  {qrCode ? "يتم التحقق تلقائياً بعد المسح..." : "بعد إدخال الرمز سيتم الربط تلقائياً."}
                 </p>
 
                 {/* Refresh QR */}
@@ -344,7 +365,7 @@ export default function WhatsAppPage() {
                   ) : (
                     <RefreshCw className="w-4 h-4" />
                   )}
-                  تحديث QR Code
+                  تحديث QR / رمز الربط
                 </button>
               </div>
             </motion.div>

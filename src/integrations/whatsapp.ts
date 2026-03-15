@@ -51,13 +51,51 @@ export async function createEvolutionInstance(_officeId?: string) {
   try { return JSON.parse(text); } catch { return {}; }
 }
 
-/** Get QR code for connecting the saqr instance */
-export async function getEvolutionQR(_officeId?: string) {
-  const res = await fetch(`${EVO_URL}/instance/connect/${EVO_INSTANCE}`, {
-    headers: evoHeaders(),
-  });
-  if (!res.ok) throw new Error(`Evolution QR ${res.status}`);
-  return res.json(); // { base64: 'data:image/png;base64,...' }
+/** Evolution API v2 may return base64, code (data URL), or only pairingCode; sometimes count:0 at first — retry */
+const QR_RETRY_ATTEMPTS = 4;
+const QR_RETRY_DELAY_MS = 2500;
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Normalize Evolution connect response to { base64, pairingCode } for UI */
+function normalizeQRResponse(data: Record<string, unknown>): { base64: string | null; pairingCode: string | null } {
+  const base64 =
+    (typeof data.base64 === "string" && data.base64 ? data.base64 : null) ||
+    (typeof data.qrcode === "object" && data.qrcode && typeof (data.qrcode as any).base64 === "string"
+      ? (data.qrcode as any).base64
+      : null) ||
+    (typeof data.code === "string" && data.code.startsWith("data:")
+      ? data.code
+      : null);
+  const pairingCode =
+    typeof data.pairingCode === "string" && data.pairingCode ? data.pairingCode : null;
+  return { base64, pairingCode };
+}
+
+/** Get QR code for connecting the saqr instance (with retry — Evolution may return count:0 at first) */
+export async function getEvolutionQR(_officeId?: string, phoneNumber?: string) {
+  const query = phoneNumber ? `?number=${encodeURIComponent(phoneNumber)}` : "";
+  const url = `${EVO_URL}/instance/connect/${EVO_INSTANCE}${query}`;
+
+  for (let attempt = 1; attempt <= QR_RETRY_ATTEMPTS; attempt++) {
+    const res = await fetch(url, { headers: evoHeaders() });
+    if (!res.ok) throw new Error(`Evolution QR ${res.status}: ${await res.text().catch(() => "")}`);
+
+    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const { base64, pairingCode } = normalizeQRResponse(data);
+
+    if (base64 || pairingCode) {
+      return { base64, pairingCode, code: data.code ?? null };
+    }
+
+    if (attempt < QR_RETRY_ATTEMPTS) {
+      await sleep(QR_RETRY_DELAY_MS);
+    }
+  }
+
+  return { base64: null, pairingCode: null, code: null };
 }
 
 /** Get live connection state of the saqr instance */
