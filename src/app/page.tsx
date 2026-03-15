@@ -2,12 +2,19 @@
 
 import { motion, useInView } from 'framer-motion'
 import {
-  ArrowLeft, BarChart3, Brain, Building2, CheckCircle2, ChevronLeft,
-  Clock, MessageSquare, Phone, Rocket, Shield, Sparkles, Star,
+  ArrowLeft, BarChart3, BookOpen, Brain, Building2, CheckCircle2, ChevronLeft,
+  Clock, FileText, Megaphone, MessageSquare, Phone, Rocket, Shield, Sparkles, Star,
   Target, TrendingUp, Users, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRef } from 'react'
+import { Navbar } from '@/components/navbar'
+import { AffiliateCTASection } from '@/components/affiliate/AffiliateCTASection'
+import { KnowledgeCard } from '@/components/knowledge/KnowledgeCard'
+import { StatsSection } from '@/components/stats/StatsSection'
+import { ProductCard } from '@/components/product/ProductCard'
+import { SectionTitle } from '@/components/brand/SectionTitle'
+import { PageContainer } from '@/components/layout/PageContainer'
 
 /* ─── Animation variants ─────────────────────────── */
 const fadeUp = {
@@ -72,6 +79,7 @@ function StatCard({ value, label, icon: Icon, color, delay }: {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#070B14] text-[#F0F4FF] overflow-x-hidden">
+      <Navbar />
 
       {/* ════════════════════════════════════════════
           Floating WhatsApp
@@ -100,21 +108,21 @@ export default function HomePage() {
         {/* Dot pattern */}
         <div className="absolute inset-0 bg-dot-pattern opacity-100" />
         {/* Gradient radial from center */}
-        <div className="absolute inset-0 bg-gradient-radial from-[#4F8EF7]/[0.07] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-radial from-primary/[0.07] via-transparent to-transparent" />
 
         {/* Ambient orbs */}
-        <div className="orb w-[700px] h-[700px] -top-40 -right-60 bg-[#4F8EF7]/[0.06]" />
-        <div className="orb w-[500px] h-[500px] -bottom-20 -left-40 bg-[#E5B84A]/[0.05]" />
+        <div className="orb w-[700px] h-[700px] -top-40 -right-60 bg-primary/[0.06]" />
+        <div className="orb w-[500px] h-[500px] -bottom-20 -left-40 bg-accent/[0.05]" />
         <div className="orb w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#a78bfa]/[0.04]" />
 
         <div className="relative max-w-7xl mx-auto w-full">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="flex flex-col items-center text-center max-w-5xl mx-auto">
 
-            {/* Badge */}
+            {/* Badge — Platform identity */}
             <motion.div variants={fadeUp} className="mb-8">
               <span className="badge-blue text-xs md:text-sm">
                 <Sparkles className="w-3.5 h-3.5" />
-                الحل الشامل للمكاتب العقارية في السعودية
+                Masar AlAqar — AI tools for modern real estate teams
               </span>
             </motion.div>
 
@@ -131,7 +139,7 @@ export default function HomePage() {
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: 0.9, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute -bottom-2 inset-x-0 h-1 rounded-full bg-gradient-to-r from-[#4F8EF7] to-[#2B6DE8] origin-right"
+                  className="absolute -bottom-2 inset-x-0 h-1 rounded-full bg-gradient-to-r from-primary to-primary-dark origin-right"
                 />
               </span>
               <br className="hidden sm:block" />
@@ -141,9 +149,9 @@ export default function HomePage() {
 
             {/* Subline */}
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
-              نظام <span className="text-[#F0F4FF] font-bold">صقر</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
+              نظام <span className="text-[#F0F4FF] font-bold">صقر</span> من منصة مسار العقار يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
               <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
-              جربه <span className="text-[#E5B84A] font-bold">مجاناً 14 يوم</span>.
+              جربه <span className="text-accent font-bold">مجاناً 14 يوم</span>.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -153,7 +161,7 @@ export default function HomePage() {
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
               <Link href="/demo" className="btn-outline text-base px-8 py-4">
-                <Rocket className="w-4.5 h-4.5 text-[#4F8EF7]" />
+                <Rocket className="w-4.5 h-4.5 text-primary" />
                 شاهد كيف يعمل
               </Link>
             </motion.div>
@@ -353,7 +361,151 @@ export default function HomePage() {
       </section>
 
       {/* ════════════════════════════════════════════
-          PRODUCT SHOWCASE
+          PRODUCTS SECTION — highlight Saqr + link to /products
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-surface/40" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="relative max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
+            <motion.div variants={fadeUp} className="mb-4">
+              <span className="badge-blue">المنتجات</span>
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
+              حلول <span className="gradient-text-blue">Masar AlAqar</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-8">
+              أدوات مصممة لرفع كفاءة المكاتب العقارية
+            </motion.p>
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-4">
+              <Link href="/products/saqr" className="card p-6 flex items-center gap-4 max-w-md mx-auto group cursor-pointer hover:border-primary/30 transition-colors">
+                <div className="w-14 h-14 rounded-2xl bg-[#25D366]/15 border border-[#25D366]/25 flex items-center justify-center">
+                  <MessageSquare className="w-7 h-7 text-[#25D366]" />
+                </div>
+                <div className="text-right">
+                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">صقر</h3>
+                  <p className="text-[#475569] text-sm">رد آلي ذكي عبر واتساب — تجربة مجانية 14 يوم</p>
+                </div>
+                <ArrowLeft className="w-5 h-5 text-primary mr-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              <Link href="/products" className="text-primary font-medium text-sm hover:underline">
+                عرض كل المنتجات ←
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          TOOLS INSIDE THE MASAR PLATFORM
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4 relative overflow-hidden border-t border-white/[0.06]">
+        <div className="absolute inset-0 bg-surface/30" />
+        <PageContainer className="relative">
+          <SectionTitle
+            label="المنصة"
+            title="أدوات ضمن منصة Masar AlAqar"
+            description="منتجنا الحالي وأدوات قادمة ضمن نفس المنصة."
+            align="center"
+          />
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto"
+          >
+            <motion.div variants={fadeUp}>
+              <Link
+                href="/products/saqr"
+                className="card p-6 flex items-center gap-4 group cursor-pointer hover:border-primary/30 transition-colors block"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center">
+                  <MessageSquare className="w-7 h-7 text-primary" />
+                </div>
+                <div className="flex-1 text-right">
+                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">صقر</h3>
+                  <p className="text-[#94A3B8] text-sm mb-2">أتمتة واتساب بالذكاء الاصطناعي للعقار</p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34D399]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
+                    Active
+                  </span>
+                </div>
+                <ArrowLeft className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </Link>
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <div className="card p-6 flex items-center gap-4 opacity-80 cursor-default">
+                <div className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
+                  <Rocket className="w-7 h-7 text-[#94A3B8]" />
+                </div>
+                <div className="flex-1 text-right">
+                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">أدوات قادمة</h3>
+                  <p className="text-[#94A3B8] text-sm mb-2">CRM، أتمتة تسويق، تحليلات — قريباً</p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280]">
+                    Coming Soon
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </PageContainer>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          KNOWLEDGE SECTION — Blog + Library
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#0D1526]/30" />
+        <div className="relative max-w-7xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
+            <motion.div variants={fadeUp} className="mb-4">
+              <span className="badge-gold">المعرفة</span>
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
+              مدونة <span className="gradient-text-gold">ومكتبة</span>
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-10">
+              مقالات، أدلة وموارد لمساعدتك في تطوير عملك العقاري
+            </motion.p>
+            <motion.div variants={stagger} className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <motion.div variants={fadeUp}>
+                <KnowledgeCard
+                  title="المدونة"
+                  description="مقالات متخصصة في العقار، الأتمتة والذكاء الاصطناعي."
+                  href="/knowledge/blog"
+                  icon={FileText}
+                />
+              </motion.div>
+              <motion.div variants={fadeUp}>
+                <KnowledgeCard
+                  title="المكتبة"
+                  description="كتب إلكترونية، أدلة ونماذج للوسيط العقاري."
+                  href="/knowledge/library"
+                  icon={BookOpen}
+                />
+              </motion.div>
+            </motion.div>
+            <motion.div variants={fadeUp} className="mt-6">
+              <Link href="/knowledge" className="text-primary font-medium text-sm hover:underline">
+                مركز المعرفة ←
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          AFFILIATE SECTION
+          ════════════════════════════════════════════ */}
+      <section className="section-padding px-4">
+        <div className="max-w-4xl mx-auto">
+          <AffiliateCTASection />
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          PRODUCT SHOWCASE (Saqr detail)
           ════════════════════════════════════════════ */}
       <section className="section-padding px-4 relative overflow-hidden">
         {/* Background */}
@@ -380,6 +532,46 @@ export default function HomePage() {
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
               منصة متكاملة مدعومة بالذكاء الاصطناعي تحوّل مكتبك إلى آلة مبيعات ذكية تعمل دون توقف
             </motion.p>
+          </motion.div>
+
+          {/* Product cards — Saqr + placeholders */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            <motion.div variants={fadeUp}>
+              <ProductCard
+                title="صقر"
+                description="أتمتة واتساب بالذكاء الاصطناعي — رد فوري وتصنيف العملاء"
+                href="/products/saqr"
+                icon={MessageSquare}
+                available
+              />
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <ProductCard
+                title="CRM"
+                description="إدارة العملاء والعقارات والمتابعة الذكية"
+                href="/products"
+                icon={Users}
+                available={false}
+              />
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <ProductCard
+                title="أتمتة التسويق"
+                description="حملات تلقائية وإعلانات موجّهة"
+                href="/products"
+                icon={Megaphone}
+                available={false}
+              />
+            </motion.div>
+            <motion.div variants={fadeUp}>
+              <ProductCard
+                title="تحليلات السوق"
+                description="رؤى السوق والأداء والاتجاهات"
+                href="/products"
+                icon={BarChart3}
+                available={false}
+              />
+            </motion.div>
           </motion.div>
 
           {/* Feature grid — 3 cols */}
@@ -474,6 +666,18 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════════
+          TRUSTED BY REAL ESTATE TEAMS
+          ════════════════════════════════════════════ */}
+      <StatsSection
+        title="موثوق من فرق العقارات"
+        stats={[
+          { value: '+1,000', label: 'محادثة يومية' },
+          { value: '50+', label: 'مكتب عقاري' },
+          { value: '+10,000', label: 'تفاعل عميل' },
+        ]}
+      />
 
       {/* ════════════════════════════════════════════
           CTA SECTION

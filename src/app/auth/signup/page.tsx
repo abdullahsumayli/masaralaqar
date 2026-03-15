@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Mail, Lock, User, Building2, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react'
 import { signUp } from '@/lib/auth'
+import { getReferralCookie, clearReferralCookie } from '@/lib/referral'
 
 const trustItems = [
   'تجربة مجانية 14 يوم',
@@ -53,7 +54,27 @@ export default function SignUpPage() {
       )
 
       if (signUpError) throw new Error(signUpError)
-      if (user) setSuccess(true)
+      if (user) {
+        setSuccess(true)
+        const refCode = getReferralCookie()
+        const couponCode = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('coupon') : null
+        const codeToAttach = refCode || couponCode
+        if (codeToAttach) {
+          try {
+            await fetch('/api/affiliate/attach-referral', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(
+                refCode ? { referralCode: refCode } : { couponCode: couponCode! }
+              ),
+              credentials: 'include',
+            })
+            if (refCode) clearReferralCookie()
+          } catch {
+            // ignore; referral can be attached on next login
+          }
+        }
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {

@@ -3,6 +3,13 @@ import createMDX from '@next/mdx'
 
 const nextConfig: NextConfig = {
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  async redirects() {
+    return [
+      { source: '/blog', destination: '/knowledge/blog', permanent: true },
+      { source: '/blog/:path*', destination: '/knowledge/blog/:path*', permanent: true },
+      { source: '/library', destination: '/knowledge/library', permanent: true },
+    ]
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

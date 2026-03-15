@@ -11,17 +11,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ─── Primary: Sapphire Blue ───────────────────────
+        // ─── Brand: Masar AlAqar ─────────────────────────
+        // Primary: Masar Blue
         primary: {
-          DEFAULT: '#4F8EF7',
-          dark:    '#2B6DE8',
-          light:   '#7AAEFF',
+          DEFAULT: '#2563EB',
+          dark:    '#1D4ED8',
+          light:   '#3B82F6',
         },
-        // ─── Secondary: Royal Gold ────────────────────────
+        // Accent: Golden Orange
+        accent: {
+          DEFAULT: '#F59E0B',
+          dark:    '#D97706',
+          light:   '#FBBF24',
+        },
+        // Brand neutrals (marketing / light sections)
+        brand: {
+          dark:      '#111827',
+          muted:     '#6B7280',
+          background: '#F9FAFB',
+        },
+        // Legacy gold (alias for accent where used)
         gold: {
-          DEFAULT: '#E5B84A',
-          dark:    '#C9962A',
-          light:   '#F4D17A',
+          DEFAULT: '#F59E0B',
+          dark:    '#D97706',
+          light:   '#FBBF24',
         },
         // ─── Backgrounds ──────────────────────────────────
         background:     '#070B14',
@@ -91,17 +104,17 @@ const config: Config = {
       backgroundImage: {
         'gradient-radial':   'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':    'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'grid-pattern':      "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234F8EF7' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-        'dot-pattern':       "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%234F8EF7' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E\")",
+        'grid-pattern':      "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563EB' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+        'dot-pattern':       "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%232563EB' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='1.5'/%3E%3C/g%3E%3C/svg%3E\")",
         'shimmer-gradient':  'linear-gradient(90deg, transparent 0%, rgba(79,142,247,0.08) 50%, transparent 100%)',
       },
       boxShadow: {
-        'glow-blue':   '0 0 30px rgba(79,142,247,0.3)',
-        'glow-gold':   '0 0 30px rgba(229,184,74,0.25)',
+        'glow-blue':   '0 0 30px rgba(37,99,235,0.3)',
+        'glow-gold':   '0 0 30px rgba(245,158,11,0.25)',
         'card':        '0 4px 24px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5)',
-        'card-hover':  '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,142,247,0.15)',
-        'button-blue': '0 4px 20px rgba(79,142,247,0.35)',
-        'button-gold': '0 4px 20px rgba(229,184,74,0.3)',
+        'card-hover':  '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(37,99,235,0.15)',
+        'button-blue': '0 4px 20px rgba(37,99,235,0.35)',
+        'button-gold': '0 4px 20px rgba(245,158,11,0.3)',
         'inner-glow':  'inset 0 1px 0 rgba(255,255,255,0.06)',
       },
       borderRadius: {

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
+import { ReferralCookieHandler } from '@/components/affiliate/ReferralCookieHandler'
 
 export const viewport: Viewport = {
   themeColor: '#070B14',
@@ -97,6 +99,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-background antialiased">
+        <Suspense fallback={null}>
+          <ReferralCookieHandler />
+        </Suspense>
         {children}
       </body>
     </html>

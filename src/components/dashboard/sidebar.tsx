@@ -21,6 +21,7 @@ import {
   WifiOff,
   X,
   Zap,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -44,6 +45,7 @@ const NAV_AI = [
 ];
 
 const NAV_BOTTOM = [
+  { href: "/dashboard/affiliate", label: "برنامج الإحالة", icon: Share2 },
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];

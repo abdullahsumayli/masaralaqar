@@ -24,6 +24,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/connect-whatsapp":     "ربط الواتساب",
   "/dashboard/subscription":         "الاشتراك والباقات",
   "/dashboard/subscription/checkout": "إتمام الاشتراك",
+  "/dashboard/affiliate":           "برنامج الإحالة",
 };
 
 function getTitle(pathname: string): string {

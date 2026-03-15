@@ -10,6 +10,7 @@
 import { fetchPayment } from "@/lib/moyasar";
 import { captureError } from "@/lib/sentry";
 import { supabaseAdmin } from "@/lib/supabase";
+import { processPaymentCommission } from "@/services/commission.service";
 import { METRIC, MetricsService } from "@/services/metrics.service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -71,15 +72,35 @@ export async function GET(request: NextRequest) {
       const endsAt = new Date();
       endsAt.setMonth(endsAt.getMonth() + 1);
 
-      await supabaseAdmin.from("user_subscriptions").insert({
-        user_id: userId,
-        plan_id: planId || null,
-        plan_name: planName,
-        status: "active",
-        started_at: new Date().toISOString(),
-        ends_at: endsAt.toISOString(),
-        renewal_date: endsAt.toISOString(),
-      });
+      const { data: newSub } = await supabaseAdmin
+        .from("user_subscriptions")
+        .insert({
+          user_id: userId,
+          plan_id: planId || null,
+          plan_name: planName,
+          status: "active",
+          started_at: new Date().toISOString(),
+          ends_at: endsAt.toISOString(),
+          renewal_date: endsAt.toISOString(),
+        })
+        .select("id")
+        .single();
+
+      if (newSub?.id) {
+        const { data: planRow } = await supabaseAdmin
+          .from("subscription_plans")
+          .select("price_sar")
+          .eq("name", planName)
+          .single();
+        const amountSar = Number(planRow?.price_sar ?? 0);
+        if (amountSar > 0) {
+          try {
+            await processPaymentCommission(userId, amountSar, newSub.id);
+          } catch (e) {
+            captureError(e, { module: "PaymentCallback", action: "processPaymentCommission" });
+          }
+        }
+      }
 
       MetricsService.track(METRIC.PAYMENT_SUCCESS, 1, { planName });
 

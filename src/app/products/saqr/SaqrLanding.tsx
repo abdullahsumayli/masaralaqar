@@ -1,27 +1,28 @@
 "use client";
 
-import SaqrFeatures from "./components/Features";
-import SaqrCTA from "./components/FinalCTA";
-import SaqrHero from "./components/Hero";
-import SaqrJourney from "./components/Journey";
-import SaqrProblem from "./components/Problem";
-import SaqrResults from "./components/Results";
-import SaqrSolution from "./components/Solution";
-import StickyWhatsApp from "./components/StickyWhatsApp";
-import SaqrTrust from "./components/Trust";
+import { ProductPageLayout } from "@/components/product/ProductPageLayout";
+import { ProductHero } from "@/components/product/landing/ProductHero";
+import { ProblemSection } from "@/components/product/landing/ProblemSection";
+import { SolutionSection } from "@/components/product/landing/SolutionSection";
+import { FeaturesSection } from "@/components/product/landing/FeaturesSection";
+import { HowItWorks } from "@/components/product/landing/HowItWorks";
+import { BenefitsSection } from "@/components/product/landing/BenefitsSection";
+import { ProductDemo } from "@/components/product/landing/ProductDemo";
+import { PricingCTA } from "@/components/product/landing/PricingCTA";
+import { FinalCTA } from "@/components/product/landing/FinalCTA";
 
 export default function SaqrLanding() {
   return (
-    <div className="min-h-screen bg-white font-ibm-arabic">
-      <SaqrHero />
-      <SaqrProblem />
-      <SaqrSolution />
-      <SaqrFeatures />
-      <SaqrJourney />
-      <SaqrResults />
-      <SaqrTrust />
-      <SaqrCTA />
-      <StickyWhatsApp />
-    </div>
+    <ProductPageLayout>
+      <ProductHero />
+      <ProblemSection />
+      <SolutionSection />
+      <FeaturesSection />
+      <HowItWorks />
+      <BenefitsSection />
+      <ProductDemo />
+      <PricingCTA />
+      <FinalCTA />
+    </ProductPageLayout>
   );
 }

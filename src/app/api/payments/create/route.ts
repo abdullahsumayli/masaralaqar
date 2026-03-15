@@ -88,7 +88,18 @@ export async function POST(request: NextRequest) {
 
     // If payment is immediately successful (rare for card)
     if (payment.status === "paid") {
-      await activateSubscription(user.id, planName, plan.id);
+      const newSubId = await activateSubscription(user.id, planName, plan.id);
+      if (newSubId) {
+        const amountSar = Number(plan.price_sar) || 0;
+        if (amountSar > 0) {
+          const { processPaymentCommission } = await import("@/services/commission.service");
+          try {
+            await processPaymentCommission(user.id, amountSar, newSubId);
+          } catch {
+            // non-blocking
+          }
+        }
+      }
       MetricsService.track(METRIC.PAYMENT_SUCCESS, 1, { planName });
     }
 
@@ -111,8 +122,8 @@ export async function POST(request: NextRequest) {
 async function activateSubscription(
   userId: string,
   planName: string,
-  planId: string,
-) {
+  planId: string
+): Promise<string | null> {
   // Check if an active subscription already exists (idempotency guard)
   const { data: existing } = await supabaseAdmin
     .from("user_subscriptions")
@@ -123,7 +134,7 @@ async function activateSubscription(
     .limit(1);
 
   if (existing && existing.length > 0) {
-    return; // Already activated — prevent duplicate
+    return null;
   }
 
   // Deactivate current subscription
@@ -133,17 +144,22 @@ async function activateSubscription(
     .eq("user_id", userId)
     .eq("status", "active");
 
-  // Create new active subscription
   const endsAt = new Date();
-  endsAt.setMonth(endsAt.getMonth() + 1); // Monthly
+  endsAt.setMonth(endsAt.getMonth() + 1);
 
-  await supabaseAdmin.from("user_subscriptions").insert({
-    user_id: userId,
-    plan_id: planId,
-    plan_name: planName,
-    status: "active",
-    started_at: new Date().toISOString(),
-    ends_at: endsAt.toISOString(),
-    renewal_date: endsAt.toISOString(),
-  });
+  const { data: newSub } = await supabaseAdmin
+    .from("user_subscriptions")
+    .insert({
+      user_id: userId,
+      plan_id: planId,
+      plan_name: planName,
+      status: "active",
+      started_at: new Date().toISOString(),
+      ends_at: endsAt.toISOString(),
+      renewal_date: endsAt.toISOString(),
+    })
+    .select("id")
+    .single();
+
+  return newSub?.id ?? null;
 }
