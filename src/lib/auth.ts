@@ -117,16 +117,12 @@ export async function getUserProfile(userId: string): Promise<User | null> {
 // Update user profile
 export async function updateUserProfile(userId: string, updates: Partial<User>) {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('users')
       .update(updates)
       .eq('id', userId)
-      .select()
-      .single()
-
     if (error) throw error
-
-    return { data, error: null }
+    return { data: null, error: null }
   } catch (error: any) {
     return { data: null, error: error.message }
   }
