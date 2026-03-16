@@ -41,11 +41,12 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
-    const office = await OfficeService.getOfficeByUserId(user.id);
+    // Auto-create office if user doesn't have one
+    const office = await OfficeService.ensureUserOffice(user.id);
     if (!office)
       return NextResponse.json(
-        { error: "لا يوجد مكتب مرتبط" },
-        { status: 404 },
+        { error: "فشل في إنشاء المكتب — تواصل مع الدعم الفني" },
+        { status: 500 },
       );
 
     const session = await WhatsAppSessionService.getSessionByOffice(office.id);
@@ -77,11 +78,12 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
-    const office = await OfficeService.getOfficeByUserId(user.id);
+    // Auto-create office if user doesn't have one
+    const office = await OfficeService.ensureUserOffice(user.id);
     if (!office)
       return NextResponse.json(
-        { error: "لا يوجد مكتب مرتبط" },
-        { status: 404 },
+        { error: "فشل في إنشاء المكتب — تواصل مع الدعم الفني" },
+        { status: 500 },
       );
 
     const body = await request.json().catch(() => ({}));
@@ -157,11 +159,11 @@ export async function DELETE() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
-    const office = await OfficeService.getOfficeByUserId(user.id);
+    const office = await OfficeService.ensureUserOffice(user.id);
     if (!office)
       return NextResponse.json(
-        { error: "لا يوجد مكتب مرتبط" },
-        { status: 404 },
+        { error: "فشل في إنشاء المكتب" },
+        { status: 500 },
       );
 
     // Delete Evolution instance

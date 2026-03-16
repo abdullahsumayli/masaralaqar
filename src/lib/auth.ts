@@ -11,7 +11,7 @@ export interface User {
   created_at?: string
 }
 
-// Sign up new user
+// Sign up new user — also auto-creates an office
 export async function signUp(email: string, password: string, name: string, company: string) {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -27,8 +27,8 @@ export async function signUp(email: string, password: string, name: string, comp
 
     if (error) throw error
 
-    // Create user profile in database
     if (data.user) {
+      // Create user profile
       await supabase.from('users').insert({
         id: data.user.id,
         email: data.user.email,
@@ -37,6 +37,14 @@ export async function signUp(email: string, password: string, name: string, comp
         role: 'user',
         created_at: new Date().toISOString(),
       })
+
+      // Auto-create office so WhatsApp connect works immediately
+      try {
+        const { OfficeService } = await import('@/services/office.service')
+        await OfficeService.ensureUserOffice(data.user.id)
+      } catch (officeErr) {
+        console.error('[signUp] auto-create office failed (non-blocking):', officeErr)
+      }
     }
 
     return { user: data.user, error: null }
@@ -114,14 +122,37 @@ export async function getUserProfile(userId: string): Promise<User | null> {
   }
 }
 
-// Update user profile
+// Update user profile — tries all fields first, falls back to name-only if columns are missing
 export async function updateUserProfile(userId: string, updates: Partial<User>) {
   try {
+    // Only include fields with actual values to avoid sending undefined
+    const safeUpdates: Record<string, string> = {};
+    if (updates.name !== undefined) safeUpdates.name = updates.name;
+    if (updates.company !== undefined) safeUpdates.company = updates.company;
+    if (updates.phone !== undefined) safeUpdates.phone = updates.phone;
+
     const { error } = await supabase
       .from('users')
-      .update(updates)
+      .update(safeUpdates)
       .eq('id', userId)
-    if (error) throw error
+
+    if (error) {
+      // If a column doesn't exist in schema cache, retry without it
+      const missingCol = error.message?.match(/column '(\w+)'/)?.[1]
+        || error.message?.match(/'(\w+)' column/)?.[1];
+      if (missingCol && safeUpdates[missingCol] !== undefined) {
+        console.warn(`[updateUserProfile] column '${missingCol}' missing, retrying without it`);
+        delete safeUpdates[missingCol];
+        const { error: retryError } = await supabase
+          .from('users')
+          .update(safeUpdates)
+          .eq('id', userId)
+        if (retryError) throw retryError;
+        return { data: null, error: null };
+      }
+      throw error;
+    }
+
     return { data: null, error: null }
   } catch (error: any) {
     return { data: null, error: error.message }

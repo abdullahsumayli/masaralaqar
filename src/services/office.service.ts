@@ -77,14 +77,24 @@ export class OfficeService {
 
   /** Get office by user's office_id (from users table) */
   static async getOfficeByUserId(userId: string): Promise<Office | null> {
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("users")
       .select("office_id")
       .eq("id", userId)
       .single();
 
+    if (error) {
+      console.error("[OfficeService] getOfficeByUserId query error:", error.message);
+      return null;
+    }
+
     if (!data?.office_id) return null;
-    return OfficeRepository.getById(data.office_id);
+
+    const office = await OfficeRepository.getById(data.office_id);
+    if (!office) {
+      console.error("[OfficeService] office_id exists but office not found:", data.office_id);
+    }
+    return office;
   }
 
   /** Link a user to an office */
@@ -97,7 +107,56 @@ export class OfficeService {
       .update({ office_id: officeId })
       .eq("id", userId);
 
+    if (error) {
+      console.error("[OfficeService] linkUserToOffice error:", error.message);
+    }
     return !error;
+  }
+
+  /**
+   * Ensure user has an office — create one automatically if missing.
+   * Resolves the "لم يتم إعداد مكتبك بعد" issue for new or orphaned users.
+   */
+  static async ensureUserOffice(userId: string): Promise<Office | null> {
+    const existing = await this.getOfficeByUserId(userId);
+    if (existing) return existing;
+
+    // Fetch user info to name the office
+    const { data: userRow } = await supabaseAdmin
+      .from("users")
+      .select("name, company, email, office_id")
+      .eq("id", userId)
+      .single();
+
+    // If office_id is set but the office row is missing, clear the stale reference
+    if (userRow?.office_id) {
+      await supabaseAdmin
+        .from("users")
+        .update({ office_id: null })
+        .eq("id", userId);
+    }
+
+    const officeName =
+      userRow?.company?.trim() ||
+      (userRow?.name ? `${userRow.name} - مكتب` : "مكتب جديد");
+
+    const office = await OfficeRepository.create({
+      officeName,
+      email: userRow?.email || null,
+    } as OfficeCreateInput);
+
+    if (!office) {
+      console.error("[OfficeService] ensureUserOffice: failed to create office for user", userId);
+      return null;
+    }
+
+    const linked = await this.linkUserToOffice(userId, office.id);
+    if (!linked) {
+      console.error("[OfficeService] ensureUserOffice: failed to link office", office.id, "to user", userId);
+    }
+
+    console.log("[OfficeService] auto-created office", office.id, "for user", userId);
+    return office;
   }
 
   /** Get platform-wide stats for admin */
