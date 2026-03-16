@@ -100,18 +100,13 @@ export async function getEvolutionQR(_officeId?: string, phoneNumber?: string) {
 
 /** Get live connection state of the saqr instance */
 export async function getEvolutionStatus(_officeId?: string) {
-  const res = await fetch(`${EVO_URL}/instance/fetchInstances`, {
+    const res = await fetch(`${EVO_URL}/instance/connectionState/${EVO_INSTANCE}`, {
     headers: evoHeaders(),
   });
   if (!res.ok) return null;
 
   const data = await res.json();
-  const list = Array.isArray(data) ? data : [];
-  return list.find(
-    (i: Record<string, any>) =>
-      i.instance?.instanceName === EVO_INSTANCE ||
-      i.instanceName === EVO_INSTANCE,
-  ) || null;
+  return data;
 }
 
 /** Delete the saqr instance */
