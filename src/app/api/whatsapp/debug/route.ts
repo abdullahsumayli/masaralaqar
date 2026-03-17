@@ -17,7 +17,85 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+async function fixSession() {
+  try {
+    const { data: recentUser } = await supabaseAdmin
+      .from("users")
+      .select("office_id, email, name")
+      .not("office_id", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!recentUser?.office_id) {
+      return NextResponse.json({ success: false, error: "No office found" }, { status: 404 });
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from("whatsapp_sessions")
+      .select("id")
+      .eq("office_id", recentUser.office_id)
+      .limit(1)
+      .single();
+
+    if (existing) {
+      const { data: updated } = await supabaseAdmin
+        .from("whatsapp_sessions")
+        .update({
+          instance_id: "saqr",
+          session_status: "connected",
+          last_connected_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      return NextResponse.json({ success: true, action: "updated", session: updated });
+    }
+
+    const { data: newSession, error } = await supabaseAdmin
+      .from("whatsapp_sessions")
+      .insert({
+        office_id: recentUser.office_id,
+        phone_number: "auto-created",
+        instance_id: "saqr",
+        session_status: "connected",
+        last_connected_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      action: "created",
+      session: newSession,
+      office: recentUser.office_id,
+      user: recentUser.email,
+    });
+  } catch (err) {
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  }
+}
+
 export async function GET(request: NextRequest) {
+  // Quick fix actions via GET for easy browser access
+  const fix = request.nextUrl.searchParams.get("fix");
+  if (fix === "session") {
+    return fixSession();
+  }
+  if (fix === "webhook") {
+    try {
+      const result = await setEvolutionWebhook();
+      return NextResponse.json({ success: true, message: "Webhook set", result });
+    } catch (err) {
+      return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+    }
+  }
+
   const results: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     checks: {} as Record<string, unknown>,
