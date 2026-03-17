@@ -86,19 +86,20 @@ export async function POST(request: NextRequest) {
     // ── Evolution API Format ──────────────────────────────────────
     if (payload?.instance && payload?.event) {
       const instanceName = payload.instance as string;
+      console.log(`[Webhook] event=${payload.event} instance=${instanceName}`);
 
       // Handle connection status updates
       if (payload.event === "connection.update") {
         const isOpen = payload.data?.state === "open";
+        console.log(`[Webhook] connection.update state=${payload.data?.state} isOpen=${isOpen}`);
 
-        // روتينج بـ instance_id (saqr) — يجد الجلسة المرتبطة
         const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
         if (session) {
           await WhatsAppSessionRepository.updateStatus(
             session.id,
             isOpen ? "connected" : "disconnected",
           );
-          console.log(`[Webhook] connection.update → office ${session.officeId}: ${isOpen ? "connected" : "disconnected"}`);
+          console.log(`[Webhook] connection.update → office ${session.officeId} (session ${session.id}): ${isOpen ? "connected" : "disconnected"}`);
         } else {
           // fallback: حاول عبر officeId القديم إن وُجد
           const legacyOfficeId = instanceName.replace("office_", "");
@@ -108,6 +109,9 @@ export async function POST(request: NextRequest) {
               legacySession.id,
               isOpen ? "connected" : "disconnected",
             );
+            console.log(`[Webhook] connection.update (legacy) → office ${legacyOfficeId}: ${isOpen ? "connected" : "disconnected"}`);
+          } else {
+            console.error(`[Webhook] connection.update: NO session found for instance=${instanceName}`);
           }
         }
         return NextResponse.json({ ok: true });
@@ -157,14 +161,16 @@ export async function POST(request: NextRequest) {
         }
 
         if (!officeId) {
-          console.error(`[Webhook] No office found for instance: ${instanceName}`);
+          console.error(`[Webhook] DROPPED: No office found for instance=${instanceName}. Check whatsapp_sessions table has a row with instance_id="${instanceName}".`);
           return NextResponse.json({ ok: true });
         }
 
         if (!businessPhone) {
-          console.error(`[Webhook] No phone found for office: ${officeId}`);
+          console.error(`[Webhook] DROPPED: No phone for office=${officeId}. Check whatsapp_sessions.phone_number.`);
           return NextResponse.json({ ok: true });
         }
+
+        console.log(`[Webhook] messages.upsert from=${from} office=${officeId} phone=${businessPhone}`);
 
         // Track incoming message metric
         MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {

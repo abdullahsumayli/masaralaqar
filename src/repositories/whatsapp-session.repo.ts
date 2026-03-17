@@ -39,11 +39,16 @@ export class WhatsAppSessionRepository {
     return this.formatSession(data);
   }
 
-  /** Get session by instance_id (used for single-instance routing like saqr) */
+  /**
+   * Get session by instance_id.
+   * Prefers connected sessions, but falls back to pending/disconnected
+   * so connection.update events can actually mark them as connected.
+   */
   static async getByInstanceId(
     instanceId: string,
   ): Promise<WhatsAppSession | null> {
-    const { data, error } = await supabaseAdmin
+    // Try connected first (most common for message routing)
+    const { data: connected } = await supabaseAdmin
       .from("whatsapp_sessions")
       .select("*")
       .eq("instance_id", instanceId)
@@ -52,8 +57,21 @@ export class WhatsAppSessionRepository {
       .limit(1)
       .single();
 
-    if (error || !data) return null;
-    return this.formatSession(data);
+    if (connected) return this.formatSession(connected);
+
+    // Fallback: any session with this instance_id (pending, disconnected)
+    // This is critical for connection.update events to work
+    const { data: any } = await supabaseAdmin
+      .from("whatsapp_sessions")
+      .select("*")
+      .eq("instance_id", instanceId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (any) return this.formatSession(any);
+
+    return null;
   }
 
   static async getByPhone(phone: string): Promise<WhatsAppSession | null> {

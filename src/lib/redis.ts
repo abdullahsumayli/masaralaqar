@@ -20,7 +20,7 @@ import type { ConnectionOptions } from "bullmq";
  * or a plain { host, port, password, ... } object.
  */
 export function getRedisConnectionOptions(): ConnectionOptions {
-  const redisUrl = process.env.REDIS_URL || "";
+  const redisUrl = process.env.REDIS_URL || process.env.REDIS_URI || "";
 
   if (redisUrl) {
     try {
