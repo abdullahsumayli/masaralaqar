@@ -139,8 +139,8 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/whatsapp/debug?fix=webhook
- * Manually fix the webhook configuration
+ * POST /api/whatsapp/debug?fix=webhook|session
+ * Manually fix common issues
  */
 export async function POST(request: NextRequest) {
   const fix = request.nextUrl.searchParams.get("fix");
@@ -154,12 +154,77 @@ export async function POST(request: NextRequest) {
         result,
       });
     } catch (err) {
-      return NextResponse.json({
-        success: false,
-        error: String(err),
-      }, { status: 500 });
+      return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
     }
   }
 
-  return NextResponse.json({ error: "Unknown fix parameter. Use ?fix=webhook" }, { status: 400 });
+  if (fix === "session") {
+    try {
+      // Find the most recent office
+      const { data: recentUser } = await supabaseAdmin
+        .from("users")
+        .select("office_id, email, name")
+        .not("office_id", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!recentUser?.office_id) {
+        return NextResponse.json({ success: false, error: "No office found in users table" }, { status: 404 });
+      }
+
+      // Check if session already exists
+      const { data: existing } = await supabaseAdmin
+        .from("whatsapp_sessions")
+        .select("id")
+        .eq("office_id", recentUser.office_id)
+        .limit(1)
+        .single();
+
+      if (existing) {
+        // Update existing session to connected
+        const { data: updated } = await supabaseAdmin
+          .from("whatsapp_sessions")
+          .update({
+            instance_id: "saqr",
+            session_status: "connected",
+            last_connected_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+        return NextResponse.json({ success: true, action: "updated", session: updated });
+      }
+
+      // Create new session
+      const { data: newSession, error } = await supabaseAdmin
+        .from("whatsapp_sessions")
+        .insert({
+          office_id: recentUser.office_id,
+          phone_number: "auto-created",
+          instance_id: "saqr",
+          session_status: "connected",
+          last_connected_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        action: "created",
+        session: newSession,
+        office: recentUser.office_id,
+        user: recentUser.email,
+      });
+    } catch (err) {
+      return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ error: "Use ?fix=webhook or ?fix=session" }, { status: 400 });
 }
