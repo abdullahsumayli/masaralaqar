@@ -17,6 +17,8 @@ function headers() {
 
 /** Create / ensure the saqr instance exists (with webhook) */
 export async function createInstance(_userId?: string) {
+  const webhookUrl = `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
+
   const res = await fetch(`${EVO_URL}/instance/create`, {
     method: "POST",
     headers: headers(),
@@ -25,7 +27,7 @@ export async function createInstance(_userId?: string) {
       integration: "WHATSAPP-BAILEYS",
       qrcode: true,
       webhook: {
-        url: `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`,
+        url: webhookUrl,
         byEvents: true,
         events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
       },
@@ -34,9 +36,12 @@ export async function createInstance(_userId?: string) {
 
   if (!res.ok) {
     const text = await res.text();
-    // 400 / 409 "already exists" → fine, continue
+    // 400 / 409 "already exists" → set webhook anyway, then return
     if ((res.status === 400 || res.status === 409) && text.toLowerCase().includes("exist")) {
-      console.log(`[evolution] instance "${EVO_INSTANCE}" already exists`);
+      console.log(`[evolution] instance "${EVO_INSTANCE}" already exists — setting webhook`);
+      await setWebhook(webhookUrl).catch((e) =>
+        console.error("[evolution] setWebhook after existing:", e),
+      );
       return { instance: { instanceName: EVO_INSTANCE, status: "existing" } };
     }
     console.error(`[evolution] createInstance failed (${res.status}):`, text);
@@ -44,6 +49,26 @@ export async function createInstance(_userId?: string) {
   }
 
   return res.json();
+}
+
+/** Set/update webhook on the saqr instance */
+export async function setWebhook(webhookUrl?: string) {
+  const url = webhookUrl || `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
+  const res = await fetch(`${EVO_URL}/webhook/set/${EVO_INSTANCE}`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      url,
+      webhook_by_events: true,
+      webhook_base64: false,
+      events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Evolution setWebhook ${res.status}: ${text}`);
+  }
+  return res.json().catch(() => ({}));
 }
 
 /** Get QR code / connection link for the saqr instance */

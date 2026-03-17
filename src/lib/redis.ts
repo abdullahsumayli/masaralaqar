@@ -25,18 +25,24 @@ export function getRedisConnectionOptions(): ConnectionOptions {
   if (redisUrl) {
     try {
       const url = new URL(redisUrl);
+      // Extract DB number from pathname (e.g. redis://host:6379/6 → db=6)
+      const dbMatch = url.pathname.match(/^\/(\d+)$/);
+      const db = dbMatch ? parseInt(dbMatch[1], 10) : undefined;
+
       return {
         host: url.hostname,
         port: parseInt(url.port || "6379", 10),
         password: url.password || undefined,
         username: url.username || undefined,
-        maxRetriesPerRequest: null, // Required by BullMQ
+        db,
+        maxRetriesPerRequest: null,
         enableReadyCheck: false,
       };
     } catch {
-      // If URL parsing fails, try passing as-is via host
+      console.error("[Redis] Failed to parse URL, using as host:", redisUrl);
       return {
-        host: redisUrl,
+        host: "127.0.0.1",
+        port: 6379,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
       };

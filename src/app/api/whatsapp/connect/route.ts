@@ -7,6 +7,7 @@ import {
     deleteEvolutionInstance,
     getEvolutionQR,
     getEvolutionStatus,
+    setEvolutionWebhook,
 } from "@/integrations/whatsapp";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -101,7 +102,15 @@ export async function POST(request: NextRequest) {
       await createEvolutionInstance(office.id);
     } catch (err) {
       console.error("Evolution instance creation error:", err);
-      // May already exist — continue to QR
+    }
+
+    // ALWAYS set webhook — createInstance only sets it during first creation,
+    // not when instance already exists. This ensures the webhook URL is correct.
+    try {
+      await setEvolutionWebhook();
+      console.log("[WhatsApp Connect] Webhook configured successfully");
+    } catch (err) {
+      console.error("Evolution webhook setup error:", err);
     }
 
     // Normalize phone if provided (for DB and optional Evolution query)

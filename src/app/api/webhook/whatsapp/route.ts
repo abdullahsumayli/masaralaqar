@@ -8,6 +8,7 @@ import { WhatsAppService } from "@/integrations/whatsapp";
 import { captureError } from "@/lib/sentry";
 import { enqueueMessage } from "@/queues/message.queue";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
+import { InlineProcessor } from "@/services/inline-processor.service";
 import { METRIC, MetricsService } from "@/services/metrics.service";
 import { TenantService } from "@/services/tenant.service";
 import { NextRequest, NextResponse } from "next/server";
@@ -168,6 +169,7 @@ export async function POST(request: NextRequest) {
           route: "evolution",
         });
 
+        // Try queue first; fall back to inline processing if Redis is unavailable
         try {
           await enqueueMessage({
             messageId,
@@ -178,16 +180,32 @@ export async function POST(request: NextRequest) {
             timestamp: new Date().toISOString(),
             route: "evolution",
           });
+          console.log(`[Webhook] Enqueued message ${messageId} for office ${officeId}`);
         } catch (enqueueError) {
+          console.warn(`[Webhook] Queue unavailable, processing inline. Error:`, enqueueError);
           captureError(enqueueError, {
             module: "Webhook",
             action: "enqueueEvolution",
             officeId,
           });
-          return NextResponse.json(
-            { error: "Failed to enqueue" },
-            { status: 500 },
-          );
+
+          // FALLBACK: process directly without queue
+          try {
+            await InlineProcessor.process({
+              messageId,
+              phone: from,
+              message: text,
+              officeId,
+              businessPhone,
+            });
+          } catch (inlineError) {
+            console.error(`[Webhook] Inline processing also failed:`, inlineError);
+            captureError(inlineError, {
+              module: "Webhook",
+              action: "inlineFallback",
+              officeId,
+            });
+          }
         }
 
         return NextResponse.json({ ok: true });

@@ -98,6 +98,51 @@ export async function getEvolutionQR(_officeId?: string, phoneNumber?: string) {
   return { base64: null, pairingCode: null, code: null };
 }
 
+/**
+ * Set/update webhook URL on an existing Evolution instance.
+ * CRITICAL: createEvolutionInstance only sets webhook during CREATE —
+ * if the instance already exists (409), webhook is NOT configured.
+ * This function explicitly sets it via the webhook/set endpoint.
+ */
+export async function setEvolutionWebhook(webhookUrl?: string) {
+  const url = webhookUrl || `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
+
+  const res = await fetch(`${EVO_URL}/webhook/set/${EVO_INSTANCE}`, {
+    method: "POST",
+    headers: evoHeaders(),
+    body: JSON.stringify({
+      url,
+      webhook_by_events: true,
+      webhook_base64: false,
+      events: [
+        "MESSAGES_UPSERT",
+        "CONNECTION_UPDATE",
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    console.error(`[Evolution] setWebhook failed (${res.status}):`, text);
+    throw new Error(`Evolution setWebhook ${res.status}: ${text}`);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  console.log(`[Evolution] Webhook set to: ${url}`, data);
+  return data;
+}
+
+/**
+ * Get current webhook configuration for the saqr instance.
+ */
+export async function getEvolutionWebhook() {
+  const res = await fetch(`${EVO_URL}/webhook/find/${EVO_INSTANCE}`, {
+    headers: evoHeaders(),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 /** Get live connection state of the saqr instance */
 export async function getEvolutionStatus(_officeId?: string) {
     const res = await fetch(`${EVO_URL}/instance/connectionState/${EVO_INSTANCE}`, {
