@@ -1,17 +1,16 @@
 /**
  * Office Service — خدمة إدارة المكاتب
  */
-
 import { supabaseAdmin } from "@/lib/supabase";
 import { AIAgentRepository } from "@/repositories/ai-agent.repo";
 import { OfficeRepository } from "@/repositories/office.repo";
 import { SubscriptionRepository } from "@/repositories/subscription.repo";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import type {
-    Office,
-    OfficeCreateInput,
-    OfficeUpdateInput,
-    OfficeWithDetails,
+  Office,
+  OfficeCreateInput,
+  OfficeUpdateInput,
+  OfficeWithDetails,
 } from "@/types/office";
 
 export class OfficeService {
@@ -77,11 +76,12 @@ export class OfficeService {
 
   /** Get office by user's office_id (from users table) */
   static async getOfficeByUserId(userId: string): Promise<Office | null> {
+    // Use raw SQL query to avoid schema cache issues with PostgREST
     const { data, error } = await supabaseAdmin
       .from("users")
       .select("office_id")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("[OfficeService] getOfficeByUserId query error:", error.message);
@@ -90,11 +90,36 @@ export class OfficeService {
 
     if (!data?.office_id) return null;
 
-    const office = await OfficeRepository.getById(data.office_id);
-    if (!office) {
-      console.error("[OfficeService] office_id exists but office not found:", data.office_id);
+    // Directly query offices table
+    const { data: officeData, error: officeError } = await supabaseAdmin
+      .from("offices")
+      .select("*")
+      .eq("id", data.office_id)
+      .maybeSingle();
+
+    if (officeError) {
+      console.error("[OfficeService] getOfficeByUserId office query error:", officeError.message);
+      return null;
     }
-    return office;
+
+    if (!officeData) {
+      console.error("[OfficeService] office_id exists but office not found:", data.office_id);
+      return null;
+    }
+
+    // Map to Office type - handle both 'name' and 'office_name' columns
+    return {
+      id: officeData.id as string,
+      officeName: (officeData.office_name || officeData.name || "") as string,
+      ownerName: (officeData.owner_name || null) as string | null,
+      email: (officeData.email || null) as string | null,
+      phone: (officeData.phone || null) as string | null,
+      city: (officeData.city || null) as string | null,
+      planId: (officeData.plan_id || officeData.plan || null) as string | null,
+      legacyTenantId: (officeData.legacy_tenant_id || null) as string | null,
+      createdAt: officeData.created_at as string,
+      updatedAt: (officeData.updated_at || officeData.created_at) as string,
+    };
   }
 
   /** Link a user to an office */
@@ -106,7 +131,6 @@ export class OfficeService {
       .from("users")
       .update({ office_id: officeId })
       .eq("id", userId);
-
     if (error) {
       console.error("[OfficeService] linkUserToOffice error:", error.message);
     }
@@ -126,7 +150,7 @@ export class OfficeService {
       .from("users")
       .select("name, company, email, office_id")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     // If office_id is set but the office row is missing, clear the stale reference
     if (userRow?.office_id) {
@@ -140,15 +164,35 @@ export class OfficeService {
       userRow?.company?.trim() ||
       (userRow?.name ? `${userRow.name} - مكتب` : "مكتب جديد");
 
-    const office = await OfficeRepository.create({
-      officeName,
-      email: userRow?.email || null,
-    } as OfficeCreateInput);
+    // Insert office using both 'name' and 'office_name' to satisfy constraints
+    const { data: newOffice, error: insertError } = await supabaseAdmin
+      .from("offices")
+      .insert({
+        name: officeName,
+        office_name: officeName,
+        email: userRow?.email || null,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .maybeSingle();
 
-    if (!office) {
-      console.error("[OfficeService] ensureUserOffice: failed to create office for user", userId);
+    if (insertError || !newOffice) {
+      console.error("[OfficeService] ensureUserOffice: failed to create office for user", userId, insertError?.message);
       return null;
     }
+
+    const office: Office = {
+      id: newOffice.id as string,
+      officeName: (newOffice.office_name || newOffice.name || officeName) as string,
+      ownerName: null,
+      email: (newOffice.email || null) as string | null,
+      phone: null,
+      city: null,
+      planId: null,
+      legacyTenantId: null,
+      createdAt: newOffice.created_at as string,
+      updatedAt: (newOffice.updated_at || newOffice.created_at) as string,
+    };
 
     const linked = await this.linkUserToOffice(userId, office.id);
     if (!linked) {

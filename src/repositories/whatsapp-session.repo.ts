@@ -4,8 +4,8 @@
 
 import { supabaseAdmin } from "@/lib/supabase";
 import type {
-    WhatsAppSession,
-    WhatsAppSessionCreateInput,
+  WhatsAppSession,
+  WhatsAppSessionCreateInput,
 } from "@/types/whatsapp-session";
 
 export class WhatsAppSessionRepository {
@@ -60,8 +60,8 @@ export class WhatsAppSessionRepository {
     if (connected) return this.formatSession(connected);
 
     // Fallback: any session with this instance_id (pending, disconnected)
-    // This is critical for connection.update events to work
-    const { data: any } = await supabaseAdmin
+    // Critical for connection.update events to work
+    const { data: anySession } = await supabaseAdmin
       .from("whatsapp_sessions")
       .select("*")
       .eq("instance_id", instanceId)
@@ -69,9 +69,16 @@ export class WhatsAppSessionRepository {
       .limit(1)
       .single();
 
-    if (any) return this.formatSession(any);
+    if (anySession) return this.formatSession(anySession);
 
     return null;
+  }
+
+  /** Alias — kept for backward compatibility */
+  static async getByInstanceIdAny(
+    instanceId: string,
+  ): Promise<WhatsAppSession | null> {
+    return this.getByInstanceId(instanceId);
   }
 
   static async getByPhone(phone: string): Promise<WhatsAppSession | null> {

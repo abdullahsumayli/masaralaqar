@@ -13,6 +13,7 @@ import { TenantService } from "@/services/tenant.service";
 import { NextRequest, NextResponse } from "next/server";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+
 if (!WEBHOOK_SECRET) {
   console.error("WEBHOOK_SECRET environment variable is not set");
 }
@@ -21,10 +22,8 @@ if (!WEBHOOK_SECRET) {
 const processedMessages = new Set<string>();
 const MAX_CACHE_SIZE = 1000;
 
-// Clean old messages from cache periodically
 function addToProcessedCache(messageId: string) {
   if (processedMessages.size >= MAX_CACHE_SIZE) {
-    // Remove oldest entries (first 100)
     const iterator = processedMessages.values();
     for (let i = 0; i < 100; i++) {
       const value = iterator.next().value;
@@ -41,12 +40,10 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const secret = searchParams.get("secret");
 
-  // Simple secret verification
   if (WEBHOOK_SECRET && secret === WEBHOOK_SECRET) {
     return NextResponse.json({ status: "ok", message: "Webhook verified" });
   }
 
-  // WhatsApp Cloud API verification (fallback)
   const mode = searchParams.get("hub.mode");
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
@@ -63,14 +60,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body
     const bodyText = await request.text();
-
     let payload: any;
+
     try {
       payload = JSON.parse(bodyText);
     } catch {
-      // Webhook may send form-urlencoded data
       const formData = new URLSearchParams(bodyText);
       payload = {
         data: {
@@ -93,6 +88,7 @@ export async function POST(request: NextRequest) {
         const isOpen = payload.data?.state === "open";
         console.log(`[Webhook] connection.update state=${payload.data?.state} isOpen=${isOpen}`);
 
+        // getByInstanceId now falls back to pending/disconnected sessions
         const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
         if (session) {
           await WhatsAppSessionRepository.updateStatus(
@@ -101,7 +97,6 @@ export async function POST(request: NextRequest) {
           );
           console.log(`[Webhook] connection.update → office ${session.officeId} (session ${session.id}): ${isOpen ? "connected" : "disconnected"}`);
         } else {
-          // fallback: حاول عبر officeId القديم إن وُجد
           const legacyOfficeId = instanceName.replace("office_", "");
           const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
           if (legacySession) {
@@ -135,14 +130,11 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ ok: true });
         }
 
-        // Deduplicate
         if (processedMessages.has(messageId)) {
           return NextResponse.json({ ok: true });
         }
         addToProcessedCache(messageId);
 
-        // ── حل office_id عبر instance_id (saqr) ──────────────────
-        // instance واحد يخدم مكتب واحد (أو أول مكتب متصل)
         let officeId = "";
         let businessPhone = "";
 
@@ -151,7 +143,6 @@ export async function POST(request: NextRequest) {
           officeId = instanceSession.officeId;
           businessPhone = instanceSession.phoneNumber;
         } else {
-          // fallback لدعم الـ naming القديم office_xxx
           const legacyOfficeId = instanceName.replace("office_", "");
           const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
           if (legacySession) {
@@ -172,13 +163,11 @@ export async function POST(request: NextRequest) {
 
         console.log(`[Webhook] messages.upsert from=${from} office=${officeId} phone=${businessPhone}`);
 
-        // Track incoming message metric
         MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
           officeId,
           route: "evolution",
         });
 
-        // Enqueue for async processing by the worker
         try {
           await enqueueMessage({
             messageId,
@@ -195,7 +184,6 @@ export async function POST(request: NextRequest) {
             action: "enqueueEvolution",
             officeId,
           });
-          // Return 500 so Evolution API retries
           return NextResponse.json(
             { error: "Failed to enqueue" },
             { status: 500 },
@@ -205,30 +193,29 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      // Other Evolution events — acknowledge
+      // Other Evolution events
       return NextResponse.json({ ok: true });
     }
 
-    // ── Fallback: unknown format ─────────────────────────
+    // ── Fallback: Legacy format ─────────────────────────────────────
     const searchParams = request.nextUrl.searchParams;
     const secret = searchParams.get("secret");
 
-    // Verify webhook secret
     if (secret !== WEBHOOK_SECRET) {
       return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
     }
 
-    // Skip outgoing messages early (before parsing)
-    if (payload?.data?.fromMe === true || payload?.data?.fromMe === "true") {
+    if (
+      payload?.data?.fromMe === true ||
+      payload?.data?.fromMe === "true"
+    ) {
       return NextResponse.json({
         success: true,
         message: "Outgoing message ignored",
       });
     }
 
-    // Parse incoming message
     const message = WhatsAppService.parseIncomingMessage(payload);
-
     if (!message) {
       return NextResponse.json({
         success: true,
@@ -236,28 +223,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if message was already processed (prevent duplicates)
     if (processedMessages.has(message.id)) {
       return NextResponse.json({ success: true, message: "Duplicate ignored" });
     }
-
-    // Add to processed cache
     addToProcessedCache(message.id);
 
-    // Lookup tenant by webhook secret for multi-tenant routing
     const tenant = await TenantService.getTenantByWebhook(secret!);
-
     if (!tenant) {
-      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Tenant not found" },
+        { status: 404 },
+      );
     }
 
-    // Track incoming message metric
     MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
       officeId: tenant.id,
       route: "legacy",
     });
 
-    // Enqueue for async processing by the worker
     try {
       await enqueueMessage({
         messageId: message.id,
@@ -275,7 +258,10 @@ export async function POST(request: NextRequest) {
         action: "enqueueLegacy",
         officeId: tenant.id,
       });
-      return NextResponse.json({ error: "Failed to enqueue" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to enqueue" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ success: true });
