@@ -95,6 +95,7 @@ export class WhatsAppSessionRepository {
   static async create(
     input: WhatsAppSessionCreateInput,
   ): Promise<WhatsAppSession | null> {
+    // Try upserting on office_id first (one session per office)
     const { data, error } = await supabaseAdmin
       .from("whatsapp_sessions")
       .upsert(
@@ -104,13 +105,38 @@ export class WhatsAppSessionRepository {
           instance_id: input.instanceId || null,
           api_token: input.apiToken || null,
           session_status: "pending",
+          updated_at: new Date().toISOString(),
         },
-        { onConflict: "phone_number" },
+        { onConflict: "office_id" },
       )
       .select()
       .single();
 
-    if (error || !data) return null;
+    if (error) {
+      // Fallback: try with phone_number conflict
+      const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+        .from("whatsapp_sessions")
+        .upsert(
+          {
+            office_id: input.officeId,
+            phone_number: input.phoneNumber,
+            instance_id: input.instanceId || null,
+            api_token: input.apiToken || null,
+            session_status: "pending",
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "phone_number" },
+        )
+        .select()
+        .single();
+
+      if (fallbackError || !fallbackData) {
+        console.error("[WhatsAppSession] create failed:", error, fallbackError);
+        return null;
+      }
+      return this.formatSession(fallbackData);
+    }
+
     return this.formatSession(data);
   }
 

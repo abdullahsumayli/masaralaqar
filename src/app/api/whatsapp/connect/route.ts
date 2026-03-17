@@ -134,14 +134,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert session in DB
-    if (normalized) {
-      await WhatsAppSessionService.connectPhone({
-        officeId: office.id,
-        phoneNumber: normalized,
-        instanceId: "saqr",
-      });
-    }
+    // ALWAYS create a session — even without phone number.
+    // Without a session row, the webhook can't route incoming messages.
+    await WhatsAppSessionService.connectPhone({
+      officeId: office.id,
+      phoneNumber: normalized || "pending",
+      instanceId: "saqr",
+    });
 
     // Return QR image and/or pairing code (Evolution v2 may return only pairingCode)
     return NextResponse.json({

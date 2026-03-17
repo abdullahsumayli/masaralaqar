@@ -6,6 +6,7 @@
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { captureError } from "@/lib/sentry";
+import { supabaseAdmin } from "@/lib/supabase";
 import { enqueueMessage } from "@/queues/message.queue";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { InlineProcessor } from "@/services/inline-processor.service";
@@ -17,6 +18,53 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
 if (!WEBHOOK_SECRET) {
   console.error("WEBHOOK_SECRET environment variable is not set");
+}
+
+/**
+ * Auto-create a session for instance "saqr" if none exists.
+ * Finds the most recent office and links it to the instance.
+ * This handles the case where the user connected via QR without
+ * creating a proper session row in the database.
+ */
+async function autoCreateSessionForInstance(instanceName: string, phoneFromMessage?: string) {
+  // Find the most recent office that has a user
+  const { data: recentOffice } = await supabaseAdmin
+    .from("users")
+    .select("office_id")
+    .not("office_id", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!recentOffice?.office_id) {
+    console.error("[Webhook] autoCreateSession: No office found in users table");
+    return null;
+  }
+
+  const officeId = recentOffice.office_id;
+
+  const { data, error } = await supabaseAdmin
+    .from("whatsapp_sessions")
+    .upsert(
+      {
+        office_id: officeId,
+        phone_number: phoneFromMessage || "auto-detected",
+        instance_id: instanceName,
+        session_status: "connected",
+        last_connected_at: new Date().toISOString(),
+      },
+      { onConflict: "office_id" },
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[Webhook] autoCreateSession error:", error);
+    return null;
+  }
+
+  console.log(`[Webhook] Auto-created session for office=${officeId} instance=${instanceName}`);
+  return WhatsAppSessionRepository.formatSession(data);
 }
 
 // Simple in-memory cache to prevent duplicate message processing
@@ -89,8 +137,14 @@ export async function POST(request: NextRequest) {
         const isOpen = payload.data?.state === "open";
         console.log(`[Webhook] connection.update state=${payload.data?.state} isOpen=${isOpen}`);
 
-        // getByInstanceId now falls back to pending/disconnected sessions
-        const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
+        let session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
+
+        // Auto-create session if none exists and instance is connecting
+        if (!session && isOpen) {
+          console.log(`[Webhook] No session for instance=${instanceName} — auto-creating`);
+          session = await autoCreateSessionForInstance(instanceName);
+        }
+
         if (session) {
           await WhatsAppSessionRepository.updateStatus(
             session.id,
@@ -98,17 +152,7 @@ export async function POST(request: NextRequest) {
           );
           console.log(`[Webhook] connection.update → office ${session.officeId} (session ${session.id}): ${isOpen ? "connected" : "disconnected"}`);
         } else {
-          const legacyOfficeId = instanceName.replace("office_", "");
-          const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
-          if (legacySession) {
-            await WhatsAppSessionRepository.updateStatus(
-              legacySession.id,
-              isOpen ? "connected" : "disconnected",
-            );
-            console.log(`[Webhook] connection.update (legacy) → office ${legacyOfficeId}: ${isOpen ? "connected" : "disconnected"}`);
-          } else {
-            console.error(`[Webhook] connection.update: NO session found for instance=${instanceName}`);
-          }
+          console.error(`[Webhook] connection.update: NO session found for instance=${instanceName}`);
         }
         return NextResponse.json({ ok: true });
       }
@@ -139,26 +183,26 @@ export async function POST(request: NextRequest) {
         let officeId = "";
         let businessPhone = "";
 
-        const instanceSession = await WhatsAppSessionRepository.getByInstanceId(instanceName);
+        let instanceSession = await WhatsAppSessionRepository.getByInstanceId(instanceName);
+
+        // Auto-create session if none exists (user connected via QR without session row)
+        if (!instanceSession) {
+          console.warn(`[Webhook] No session for instance=${instanceName} — auto-creating for message routing`);
+          instanceSession = await autoCreateSessionForInstance(instanceName, from);
+        }
+
         if (instanceSession) {
           officeId = instanceSession.officeId;
           businessPhone = instanceSession.phoneNumber;
-        } else {
-          const legacyOfficeId = instanceName.replace("office_", "");
-          const legacySession = await WhatsAppSessionRepository.getByOfficeId(legacyOfficeId);
-          if (legacySession) {
-            officeId = legacySession.officeId;
-            businessPhone = legacySession.phoneNumber;
+
+          // Update phone if session had placeholder
+          if (businessPhone === "pending" || businessPhone === "auto-detected") {
+            businessPhone = from;
           }
         }
 
         if (!officeId) {
-          console.error(`[Webhook] DROPPED: No office found for instance=${instanceName}. Check whatsapp_sessions table has a row with instance_id="${instanceName}".`);
-          return NextResponse.json({ ok: true });
-        }
-
-        if (!businessPhone) {
-          console.error(`[Webhook] DROPPED: No phone for office=${officeId}. Check whatsapp_sessions.phone_number.`);
+          console.error(`[Webhook] DROPPED: No office found for instance=${instanceName} even after auto-create.`);
           return NextResponse.json({ ok: true });
         }
 
