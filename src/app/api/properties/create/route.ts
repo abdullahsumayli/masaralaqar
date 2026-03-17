@@ -95,8 +95,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use user's tenant if not specified
-    const tenantId = tenant_id || userRow?.tenant_id || "default";
+    const tenantId = tenant_id || userRow?.tenant_id || null;
+    if (!tenantId && !office?.id) {
+      return NextResponse.json(
+        { error: "لا يوجد مكتب مرتبط. يرجى إعداد المكتب أولاً." },
+        { status: 400 },
+      );
+    }
 
     const office = await OfficeService.getOfficeByUserId(user.id);
 
@@ -106,7 +111,7 @@ export async function POST(request: NextRequest) {
       .insert([
         {
           office_id: office?.id || null,
-          tenant_id: tenantId,
+          tenant_id: tenantId || null,
           title,
           description: description || "",
           price,

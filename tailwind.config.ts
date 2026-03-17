@@ -30,6 +30,12 @@ const config: Config = {
           muted:     '#6B7280',
           background: '#F9FAFB',
         },
+        // Secondary (alias for accent — used by product pages)
+        secondary: {
+          DEFAULT: '#F59E0B',
+          dark:    '#D97706',
+          light:   '#FBBF24',
+        },
         // Legacy gold (alias for accent where used)
         gold: {
           DEFAULT: '#F59E0B',

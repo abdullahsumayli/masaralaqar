@@ -7,7 +7,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export interface ConversationMessage {
   id: string;
-  tenant_id: string;
+  tenant_id: string | null;
+  office_id?: string | null;
   lead_id: string;
   role: "user" | "assistant";
   message: string;
@@ -23,11 +24,16 @@ export class ConversationRepository {
     leadId: string,
     role: "user" | "assistant",
     message: string,
+    officeId?: string,
   ): Promise<ConversationMessage | null> {
     try {
+      const insertData: Record<string, unknown> = { lead_id: leadId, role, message };
+      if (officeId) insertData.office_id = officeId;
+      if (tenantId && tenantId !== officeId) insertData.tenant_id = tenantId;
+
       const { data, error } = await supabaseAdmin
         .from("conversation_messages")
-        .insert({ tenant_id: tenantId, lead_id: leadId, role, message })
+        .insert(insertData)
         .select()
         .single();
 

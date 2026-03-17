@@ -9,25 +9,29 @@ export type OpenAIMessage = { role: "user" | "assistant"; content: string };
 
 export class ConversationService {
   /**
-   * Save a user message to the conversation log
+   * Save a user message to the conversation log.
+   * For evolution path, pass officeId (tenantId may be empty).
    */
   static async saveUserMessage(
     tenantId: string,
     leadId: string,
     message: string,
+    officeId?: string,
   ): Promise<void> {
-    await ConversationRepository.saveMessage(tenantId, leadId, "user", message);
+    await ConversationRepository.saveMessage(tenantId, leadId, "user", message, officeId);
   }
 
   /**
-   * Save an assistant (bot) reply to the conversation log
+   * Save an assistant (bot) reply to the conversation log.
+   * For evolution path, pass officeId (tenantId may be empty).
    */
   static async saveAssistantMessage(
     tenantId: string,
     leadId: string,
     message: string,
+    officeId?: string,
   ): Promise<void> {
-    await ConversationRepository.saveMessage(tenantId, leadId, "assistant", message);
+    await ConversationRepository.saveMessage(tenantId, leadId, "assistant", message, officeId);
   }
 
   /**

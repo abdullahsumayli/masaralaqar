@@ -102,6 +102,12 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Update user's subscription field for quick dashboard checks
+      await supabaseAdmin
+        .from("users")
+        .update({ subscription: planName })
+        .eq("id", userId);
+
       MetricsService.track(METRIC.PAYMENT_SUCCESS, 1, { planName });
 
       return NextResponse.redirect(

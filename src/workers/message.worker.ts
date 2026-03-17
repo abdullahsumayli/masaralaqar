@@ -151,17 +151,19 @@ async function processEvolutionMessage(
 ): Promise<void> {
   const { phone, message, officeId, businessPhone, messageId } = data;
 
-  // 1. Create or update lead
+  // 1. Create or update lead (evolution path: officeId, not tenantId)
   const lead = await LeadService.createLeadFromMessage(
-    officeId,
+    officeId,  // used as tenantId fallback
     phone,
     data.senderName || "",
     message,
+    "whatsapp",
+    officeId,  // explicit officeId for office_id column
   );
 
   // 2. Save incoming message
   if (lead) {
-    await ConversationService.saveUserMessage(officeId, lead.id, message);
+    await ConversationService.saveUserMessage(officeId, lead.id, message, officeId);
   }
 
   // 3. Get conversation history for AI context
@@ -199,6 +201,7 @@ async function processEvolutionMessage(
       officeId,
       lead.id,
       engineResult.reply,
+      officeId,
     );
   }
 

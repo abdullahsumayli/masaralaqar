@@ -50,15 +50,23 @@ export function useAuth() {
 
     getUser()
 
-    // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (isMounted) {
-        setUser(session?.user || null)
-        if (!session?.user) {
-          setProfile(null)
-        }
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
+      setUser(session?.user || null)
+      if (!session?.user) {
+        setProfile(null)
+        return
+      }
+      // Refetch profile on sign-in so dashboard has fresh data immediately
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        if (isMounted && data) setProfile(data)
       }
     })
 

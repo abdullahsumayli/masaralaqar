@@ -17,9 +17,10 @@ export class LeadService {
     name: string,
     message: string,
     source: string = "whatsapp",
+    officeId?: string,
   ): Promise<Lead | null> {
     try {
-      const existing = await LeadRepository.findLeadByPhone(tenantId, phone);
+      const existing = await LeadRepository.findLeadByPhone(tenantId, phone, officeId);
 
       const newMessage: ConversationMessage = {
         id: crypto.randomUUID(),
@@ -29,7 +30,6 @@ export class LeadService {
       };
 
       if (existing) {
-        // Append incoming message to conversation history and update last contact
         const history: ConversationMessage[] = Array.isArray(existing.conversation_history)
           ? existing.conversation_history
           : [];
@@ -48,7 +48,7 @@ export class LeadService {
         status: "new" as any,
         conversation_history: [newMessage],
         last_contacted_at: new Date().toISOString(),
-      });
+      }, officeId);
     } catch (error) {
       console.error("LeadService.createLeadFromMessage error:", error);
       return null;

@@ -13,19 +13,28 @@ export class LeadRepository {
   static async createLead(
     tenantId: string,
     leadData: Partial<Lead>,
+    officeId?: string,
   ): Promise<Lead | null> {
     try {
+      const insertData: Record<string, unknown> = {
+        ...leadData,
+        source: leadData.source || "whatsapp",
+        status: leadData.status || "new",
+        created_at: new Date().toISOString(),
+      };
+
+      // Evolution path passes officeId; legacy passes tenantId (UUID from tenants table)
+      if (officeId) {
+        insertData.office_id = officeId;
+        // Only set tenant_id if it's a valid tenant reference (not an office UUID)
+        insertData.tenant_id = tenantId !== officeId ? tenantId : null;
+      } else {
+        insertData.tenant_id = tenantId;
+      }
+
       const { data, error } = await supabaseAdmin
         .from("leads")
-        .insert([
-          {
-            tenant_id: tenantId,
-            ...leadData,
-            source: leadData.source || "whatsapp",
-            status: leadData.status || "new",
-            created_at: new Date().toISOString(),
-          },
-        ])
+        .insert([insertData])
         .select()
         .single();
 
@@ -47,16 +56,24 @@ export class LeadRepository {
   static async findLeadByPhone(
     tenantId: string,
     phone: string,
+    officeId?: string,
   ): Promise<Lead | null> {
     try {
-      const { data, error } = await supabaseAdmin
+      let query = supabaseAdmin
         .from("leads")
         .select("*")
-        .eq("tenant_id", tenantId)
         .eq("phone", phone)
         .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
+
+      // Search by office_id first (evolution path), fallback to tenant_id
+      if (officeId) {
+        query = query.or(`office_id.eq.${officeId},tenant_id.eq.${tenantId}`);
+      } else {
+        query = query.eq("tenant_id", tenantId);
+      }
+
+      const { data, error } = await query.single();
 
       if (error && error.code !== "PGRST116") {
         console.error("Lead fetch error:", error);

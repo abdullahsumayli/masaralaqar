@@ -15,7 +15,7 @@ function headers() {
   return { "Content-Type": "application/json", apikey: EVO_KEY };
 }
 
-/** Create / ensure the saqr instance exists */
+/** Create / ensure the saqr instance exists (with webhook) */
 export async function createInstance(_userId?: string) {
   const res = await fetch(`${EVO_URL}/instance/create`, {
     method: "POST",
@@ -24,6 +24,11 @@ export async function createInstance(_userId?: string) {
       instanceName: EVO_INSTANCE,
       integration: "WHATSAPP-BAILEYS",
       qrcode: true,
+      webhook: {
+        url: `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`,
+        byEvents: true,
+        events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
+      },
     }),
   });
 

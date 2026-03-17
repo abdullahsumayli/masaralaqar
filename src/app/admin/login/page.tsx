@@ -39,9 +39,14 @@ export default function AdminLoginPage() {
         return
       }
       
-      // Check if email is in admin list
-      if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(email.toLowerCase())) {
-        setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة. أضف بريدك في NEXT_PUBLIC_ADMIN_EMAILS.')
+      // Always enforce admin email check — deny if env is not configured
+      if (ADMIN_EMAILS.length === 0) {
+        setError('إعدادات لوحة الإدارة غير مكتملة — NEXT_PUBLIC_ADMIN_EMAILS غير معرّف.')
+        setIsLoading(false)
+        return
+      }
+      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+        setError('أنت لا تملك صلاحيات الوصول إلى لوحة الإدارة.')
         setIsLoading(false)
         return
       }
