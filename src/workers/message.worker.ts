@@ -166,9 +166,9 @@ async function processEvolutionMessage(
     await ConversationService.saveUserMessage(officeId, lead.id, message, officeId);
   }
 
-  // 3. Get conversation history for AI context
+  // 3. Get conversation history for AI context (8 turns max to keep prompt lean)
   const conversationHistory = lead
-    ? await ConversationService.getConversationHistory(lead.id, 12)
+    ? await ConversationService.getConversationHistory(lead.id, 8)
     : [];
 
   // 4. Process via AI Engine (with latency tracking)
@@ -177,10 +177,15 @@ async function processEvolutionMessage(
     businessPhone,
     { phone, text: message, messageId },
     conversationHistory,
-    officeId, // pass directly to skip phone lookup
-  );
-  MetricsService.trackTiming(METRIC.AI_RESPONSE_TIME, Date.now() - aiStart, {
     officeId,
+  );
+  const aiDuration = Date.now() - aiStart;
+  MetricsService.trackTiming(METRIC.AI_RESPONSE_TIME, aiDuration, {
+    officeId,
+  });
+  logger.info(MODULE, `AI responded in ${aiDuration}ms`, {
+    officeId,
+    messageId,
   });
 
   if (!engineResult) {

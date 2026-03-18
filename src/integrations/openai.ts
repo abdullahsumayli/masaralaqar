@@ -22,7 +22,7 @@ export class OpenAIService {
    */
   private static async callOpenAI(
     messages: Array<{ role: string; content: string }>,
-    maxTokens: number = 500,
+    maxTokens: number = 300,
   ): Promise<string | null> {
     try {
       if (!this.apiKey) {
@@ -39,7 +39,7 @@ export class OpenAIService {
           model: "gpt-4o-mini",
           messages,
           max_tokens: maxTokens,
-          temperature: 0.7,
+          temperature: 0.6,
         }),
       });
 
@@ -67,41 +67,33 @@ export class OpenAIService {
       conversationHistory?: Array<{ role: "user" | "assistant"; content: string }>;
     } = {},
   ): Promise<string> {
-    const systemPrompt = `أنت مساعد ذكي متخصص في العقارات في السعودية. اسمك "${context.agentName || "مساعد مسار العقار"}".
+    const propsBlock =
+      context.availableProperties && context.availableProperties.length > 0
+        ? `العقارات المتاحة:\n${context.availableProperties
+            .slice(0, 5)
+            .map(
+              (p) =>
+                `- ${p.title}: ${p.price?.toLocaleString()} ريال، ${p.location || p.city}`,
+            )
+            .join("\n")}`
+        : "لا توجد عقارات محددة حالياً";
 
-مهامك:
-1. الرد على استفسارات العملاء بشكل ودود ومهني
-2. فهم احتياجات العميل (نوع العقار، المدينة، الميزانية، عدد الغرف)
-3. تذكّر ما ذكره العميل في الرسائل السابقة ولا تسأل عن معلومات أعطاها من قبل
-4. عرض العقارات المتاحة إن وجدت
-5. جدولة الزيارات والمواعيد
-6. الرد باللغة العربية دائماً
-
-${
-  context.availableProperties && context.availableProperties.length > 0
-    ? `العقارات المتاحة:\n${context.availableProperties
-        .map(
-          (p) =>
-            `- ${p.title}: ${p.price?.toLocaleString()} ريال، ${p.location}`,
-        )
-        .join("\n")}`
-    : "لا توجد عقارات محددة حالياً"
-}
-
-كن موجزاً ومفيداً. لا تكتب أكثر من 3-4 جمل.`;
+    const systemPrompt = `أنت "${context.agentName || "مساعد مسار العقار"}"، مساعد عقاري ذكي في السعودية.
+تذكّر المحادثة السابقة. رد بالعربية فقط.
+${propsBlock}
+مهم: أجب بـ 2-4 أسطر كحد أقصى. كن مختصراً ومفيداً.`;
 
     const messages: Array<{ role: string; content: string }> = [
       { role: "system", content: systemPrompt },
     ];
 
-    // Inject full conversation history so GPT remembers previous turns (already limited to 12)
     if (context.conversationHistory && context.conversationHistory.length > 0) {
-      messages.push(...context.conversationHistory);
+      messages.push(...context.conversationHistory.slice(-8));
     }
 
     messages.push({ role: "user", content: userMessage });
 
-    const reply = await this.callOpenAI(messages, 400);
+    const reply = await this.callOpenAI(messages, 300);
 
     if (reply) {
       return reply;

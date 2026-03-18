@@ -144,8 +144,8 @@ export class AIEngine {
       },
     };
 
-    // Build enriched property context with knowledge + AI listings
-    const propertyIds = recommendation.properties.map((p) => p.id);
+    // Build enriched property context with knowledge + AI listings (top 3 only)
+    const propertyIds = recommendation.properties.slice(0, 3).map((p) => p.id);
     const aiListingsMap = new Map<string, string>();
     try {
       for (const pid of propertyIds) {
@@ -153,7 +153,7 @@ export class AIEngine {
         if (listing) aiListingsMap.set(pid, listing.marketingDescription);
       }
     } catch {
-      // ai_listings table may not exist yet — continue without
+      // ai_listings table may not exist yet
     }
 
     const propertyContext = recommendation.properties.map((p) => ({
@@ -180,7 +180,7 @@ export class AIEngine {
       matchReasons: p.matchReasons,
     }));
 
-    // ── Load office knowledge base from answered questions ──
+    // ── Load office knowledge base (limited to 5 most relevant) ──
     const knowledgeQA = await UnansweredQuestionsRepo.getAnsweredQuestions(
       officeId,
     );
@@ -194,12 +194,14 @@ export class AIEngine {
 
     const knowledgeBlock =
       knowledgeQA.length > 0
-        ? "\n\nمعلومات إضافية من المكتب:\n" +
+        ? "\n\nمعلومات المكتب:\n" +
           knowledgeQA
+            .slice(0, 5)
             .map((q) => `س: ${q.question}\nج: ${q.answer}`)
             .join("\n")
         : "";
 
+    const aiStart = Date.now();
     const response = await this.generateReply(
       message.text,
       systemPrompt + knowledgeBlock,
@@ -207,6 +209,7 @@ export class AIEngine {
       tenantContext,
       conversationHistory,
     );
+    console.log(`[AIEngine] generateReply took ${Date.now() - aiStart}ms`);
 
     // ── Auto-save unanswered questions when AI indicates low knowledge ──
     try {
@@ -454,19 +457,14 @@ export class AIEngine {
       });
     }
 
-    // Add contextual reply template as guidance
     if (contextualReply) {
-      prompt += `\n\n── قالب الرد المقترح ──\n${contextualReply}`;
-      prompt +=
-        "\n\nاستخدم هذا القالب كأساس لردك مع تحسينه بأسلوبك الخاص. قدّم رداً تحليلياً وليس مجرد قائمة.";
+      prompt += `\n\nقالب مقترح:\n${contextualReply}`;
     }
 
     prompt +=
-      "\n\nمهم: قدّم رداً تحليلياً مخصصاً، وليس مجرد قائمة عقارات. اربط التوصيات بمعايير العميل واحتياجاته.";
-
-    // Add viewing booking awareness
+      "\n\nمهم جداً: أجب بـ 2-4 أسطر كحد أقصى. كن مختصراً ومفيداً. قدّم رداً تحليلياً وليس مجرد قائمة.";
     prompt +=
-      '\n\nإذا طلب العميل معاينة أو زيارة للعقار (مثل "أبغى أشوف العقار" أو "ممكن زيارة" أو "متى المعاينة")، رتّب له موعد معاينة. اقترح 3 مواعيد قريبة واسأله أي موعد يناسبه. مثال:\n"يمكننا ترتيب معاينة للعقار 🏠\n\nالمواعيد المتاحة:\n• الأحد 6 مساءً\n• الاثنين 5 مساءً\n• الثلاثاء 7 مساءً\n\nأي موعد يناسبك؟"';
+      '\nإذا طلب العميل معاينة، اقترح 3 مواعيد قريبة واسأله أي موعد يناسبه.';
 
     return prompt;
   }

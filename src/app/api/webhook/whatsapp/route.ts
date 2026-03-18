@@ -1,7 +1,14 @@
 /**
  * WhatsApp Webhook Handler
- * Receives messages from Evolution API
- * Integrated with AI Engine for multi-tenant office routing
+ *
+ * Pipeline:
+ *   Evolution API → POST /api/webhook/whatsapp
+ *     1. Parse & deduplicate
+ *     2. Resolve office from WhatsApp session
+ *     3. Send instant acknowledgment to customer
+ *     4. Enqueue to Redis (1s timeout) — primary async path
+ *     5. If Redis fails → InlineProcessor fallback
+ *     6. Return < 2s in primary path
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
@@ -14,20 +21,23 @@ import { METRIC, MetricsService } from "@/services/metrics.service";
 import { TenantService } from "@/services/tenant.service";
 import { NextRequest, NextResponse } from "next/server";
 
+// ── Constants ────────────────────────────────────────────────
+
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const ENQUEUE_TIMEOUT_MS = 1000;
+const ACK_TIMEOUT_MS = 1500;
+const ACK_MESSAGE = "⏳ تم استلام رسالتك، جاري البحث الآن...";
 
 if (!WEBHOOK_SECRET) {
   console.error("WEBHOOK_SECRET environment variable is not set");
 }
 
-/**
- * Auto-create a session for instance "saqr" if none exists.
- * Finds the most recent office and links it to the instance.
- * This handles the case where the user connected via QR without
- * creating a proper session row in the database.
- */
-async function autoCreateSessionForInstance(instanceName: string, phoneFromMessage?: string) {
-  // Find the most recent office that has a user
+// ── Helpers ──────────────────────────────────────────────────
+
+async function autoCreateSessionForInstance(
+  instanceName: string,
+  phoneFromMessage?: string,
+) {
   const { data: recentOffice } = await supabaseAdmin
     .from("users")
     .select("office_id")
@@ -37,12 +47,11 @@ async function autoCreateSessionForInstance(instanceName: string, phoneFromMessa
     .single();
 
   if (!recentOffice?.office_id) {
-    console.error("[Webhook] autoCreateSession: No office found in users table");
+    console.error("[Webhook] autoCreateSession: No office found");
     return null;
   }
 
   const officeId = recentOffice.office_id;
-
   const { data, error } = await supabaseAdmin
     .from("whatsapp_sessions")
     .upsert(
@@ -63,28 +72,34 @@ async function autoCreateSessionForInstance(instanceName: string, phoneFromMessa
     return null;
   }
 
-  console.log(`[Webhook] Auto-created session for office=${officeId} instance=${instanceName}`);
+  console.log(
+    `[Webhook] Auto-created session office=${officeId} instance=${instanceName}`,
+  );
   return WhatsAppSessionRepository.formatSession(data);
 }
 
-// Simple in-memory cache to prevent duplicate message processing
 const processedMessages = new Set<string>();
 const MAX_CACHE_SIZE = 1000;
 
-function addToProcessedCache(messageId: string) {
+function isDuplicate(messageId: string): boolean {
+  if (processedMessages.has(messageId)) return true;
   if (processedMessages.size >= MAX_CACHE_SIZE) {
-    const iterator = processedMessages.values();
+    const iter = processedMessages.values();
     for (let i = 0; i < 100; i++) {
-      const value = iterator.next().value;
-      if (value) processedMessages.delete(value);
+      const v = iter.next().value;
+      if (v) processedMessages.delete(v);
     }
   }
   processedMessages.add(messageId);
+  return false;
 }
 
-/**
- * GET: Webhook verification
- */
+function elapsed(start: number): number {
+  return Date.now() - start;
+}
+
+// ── GET: Webhook verification ────────────────────────────────
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const secret = searchParams.get("secret");
@@ -104,10 +119,11 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ error: "Verification failed" }, { status: 403 });
 }
 
-/**
- * POST: Handle incoming messages from Evolution API
- */
+// ── POST: Handle incoming messages ───────────────────────────
+
 export async function POST(request: NextRequest) {
+  const webhookStart = Date.now();
+
   try {
     const bodyText = await request.text();
     let payload: any;
@@ -127,21 +143,20 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // ── Evolution API Format ──────────────────────────────────────
+    // ── Evolution API Format ────────────────────────────────
     if (payload?.instance && payload?.event) {
       const instanceName = payload.instance as string;
-      console.log(`[Webhook] event=${payload.event} instance=${instanceName}`);
+      console.log(
+        `[Webhook] ← event=${payload.event} instance=${instanceName} +${elapsed(webhookStart)}ms`,
+      );
 
-      // Handle connection status updates
+      // ── connection.update ─────────────────────────────────
       if (payload.event === "connection.update") {
         const isOpen = payload.data?.state === "open";
-        console.log(`[Webhook] connection.update state=${payload.data?.state} isOpen=${isOpen}`);
 
-        let session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
-
-        // Auto-create session if none exists and instance is connecting
+        let session =
+          await WhatsAppSessionRepository.getByInstanceId(instanceName);
         if (!session && isOpen) {
-          console.log(`[Webhook] No session for instance=${instanceName} — auto-creating`);
           session = await autoCreateSessionForInstance(instanceName);
         }
 
@@ -150,21 +165,26 @@ export async function POST(request: NextRequest) {
             session.id,
             isOpen ? "connected" : "disconnected",
           );
-          console.log(`[Webhook] connection.update → office ${session.officeId} (session ${session.id}): ${isOpen ? "connected" : "disconnected"}`);
+          console.log(
+            `[Webhook] connection.update → office=${session.officeId} status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
+          );
         } else {
-          console.error(`[Webhook] connection.update: NO session found for instance=${instanceName}`);
+          console.error(
+            `[Webhook] connection.update: no session for instance=${instanceName}`,
+          );
         }
         return NextResponse.json({ ok: true });
       }
 
-      // Handle incoming messages
+      // ── messages.upsert ───────────────────────────────────
       if (payload.event === "messages.upsert") {
         const msg = payload.data?.messages?.[0];
         if (!msg || msg.key?.fromMe) {
           return NextResponse.json({ ok: true });
         }
 
-        const from = msg.key?.remoteJid?.replace("@s.whatsapp.net", "") ?? "";
+        const from =
+          msg.key?.remoteJid?.replace("@s.whatsapp.net", "") ?? "";
         const text =
           msg.message?.conversation ||
           msg.message?.extendedTextMessage?.text ||
@@ -175,45 +195,67 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ ok: true });
         }
 
-        if (processedMessages.has(messageId)) {
+        if (isDuplicate(messageId)) {
+          console.log(`[Webhook] duplicate ${messageId} — skipped`);
           return NextResponse.json({ ok: true });
         }
-        addToProcessedCache(messageId);
 
+        // Resolve office
         let officeId = "";
         let businessPhone = "";
 
-        let instanceSession = await WhatsAppSessionRepository.getByInstanceId(instanceName);
-
-        // Auto-create session if none exists (user connected via QR without session row)
-        if (!instanceSession) {
-          console.warn(`[Webhook] No session for instance=${instanceName} — auto-creating for message routing`);
-          instanceSession = await autoCreateSessionForInstance(instanceName, from);
+        let session =
+          await WhatsAppSessionRepository.getByInstanceId(instanceName);
+        if (!session) {
+          console.warn(
+            `[Webhook] No session for instance=${instanceName} — auto-creating`,
+          );
+          session = await autoCreateSessionForInstance(instanceName, from);
         }
 
-        if (instanceSession) {
-          officeId = instanceSession.officeId;
-          businessPhone = instanceSession.phoneNumber;
-
-          // Update phone if session had placeholder
-          if (businessPhone === "pending" || businessPhone === "auto-detected") {
+        if (session) {
+          officeId = session.officeId;
+          businessPhone = session.phoneNumber;
+          if (
+            businessPhone === "pending" ||
+            businessPhone === "auto-detected"
+          ) {
             businessPhone = from;
           }
         }
 
         if (!officeId) {
-          console.error(`[Webhook] DROPPED: No office found for instance=${instanceName} even after auto-create.`);
+          console.error(
+            `[Webhook] DROPPED: no office for instance=${instanceName} +${elapsed(webhookStart)}ms`,
+          );
           return NextResponse.json({ ok: true });
         }
 
-        console.log(`[Webhook] messages.upsert from=${from} office=${officeId} phone=${businessPhone}`);
+        console.log(
+          `[Webhook] ← message from=${from} office=${officeId} +${elapsed(webhookStart)}ms`,
+        );
 
         MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
           officeId,
           route: "evolution",
         });
 
-        // Try queue first (with 5s timeout); fall back to inline processing
+        // ── Step 1: Send instant acknowledgment (non-blocking) ──
+        const ackPromise = WhatsAppService.sendMessage(
+          from,
+          ACK_MESSAGE,
+          officeId,
+        )
+          .then(() =>
+            console.log(
+              `[Webhook] ✓ ack sent to ${from} +${elapsed(webhookStart)}ms`,
+            ),
+          )
+          .catch((err: unknown) =>
+            console.warn(`[Webhook] ✗ ack failed:`, err),
+          );
+
+        // ── Step 2: Try Redis enqueue (1s timeout) ──────────
         let queued = false;
         try {
           await Promise.race([
@@ -227,13 +269,23 @@ export async function POST(request: NextRequest) {
               route: "evolution",
             }),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Redis enqueue timeout (5s)")), 5000),
+              setTimeout(
+                () => reject(new Error("Redis enqueue timeout")),
+                ENQUEUE_TIMEOUT_MS,
+              ),
             ),
           ]);
           queued = true;
-          console.log(`[Webhook] Enqueued message ${messageId} for office ${officeId}`);
+          console.log(
+            `[Webhook] ✓ enqueued ${messageId} +${elapsed(webhookStart)}ms`,
+          );
         } catch (enqueueError) {
-          console.warn(`[Webhook] Queue unavailable, processing inline. Error:`, enqueueError);
+          console.warn(
+            `[Webhook] ✗ enqueue failed +${elapsed(webhookStart)}ms:`,
+            enqueueError instanceof Error
+              ? enqueueError.message
+              : enqueueError,
+          );
           captureError(enqueueError, {
             module: "Webhook",
             action: "enqueueEvolution",
@@ -241,33 +293,58 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (!queued) {
-          try {
-            await InlineProcessor.process({
-              messageId,
-              phone: from,
-              message: text,
-              officeId,
-              businessPhone,
-            });
-          } catch (inlineError) {
-            console.error(`[Webhook] Inline processing also failed:`, inlineError);
-            captureError(inlineError, {
-              module: "Webhook",
-              action: "inlineFallback",
-              officeId,
-            });
-          }
+        // ── Step 3a: Redis succeeded → wait for ack, return fast ──
+        if (queued) {
+          const remaining = Math.max(
+            0,
+            ACK_TIMEOUT_MS - elapsed(webhookStart),
+          );
+          await Promise.race([
+            ackPromise,
+            new Promise((r) => setTimeout(r, remaining)),
+          ]);
+          console.log(
+            `[Webhook] → done (queued) total=${elapsed(webhookStart)}ms`,
+          );
+          return NextResponse.json({ ok: true, queued: true });
         }
 
-        return NextResponse.json({ ok: true });
+        // ── Step 3b: Redis failed → fallback to inline ──────
+        console.log(
+          `[Webhook] ↓ fallback to inline processing +${elapsed(webhookStart)}ms`,
+        );
+        try {
+          await InlineProcessor.process({
+            messageId,
+            phone: from,
+            message: text,
+            officeId,
+            businessPhone,
+            ackSent: true,
+          });
+        } catch (inlineError) {
+          console.error(
+            `[Webhook] ✗ inline failed +${elapsed(webhookStart)}ms:`,
+            inlineError,
+          );
+          captureError(inlineError, {
+            module: "Webhook",
+            action: "inlineFallback",
+            officeId,
+          });
+        }
+
+        console.log(
+          `[Webhook] → done (inline) total=${elapsed(webhookStart)}ms`,
+        );
+        return NextResponse.json({ ok: true, queued: false });
       }
 
       // Other Evolution events
       return NextResponse.json({ ok: true });
     }
 
-    // ── Fallback: Legacy format ─────────────────────────────────────
+    // ── Fallback: Legacy format ─────────────────────────────
     const searchParams = request.nextUrl.searchParams;
     const secret = searchParams.get("secret");
 
@@ -293,10 +370,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (processedMessages.has(message.id)) {
-      return NextResponse.json({ success: true, message: "Duplicate ignored" });
+    if (isDuplicate(message.id)) {
+      return NextResponse.json({
+        success: true,
+        message: "Duplicate ignored",
+      });
     }
-    addToProcessedCache(message.id);
 
     const tenant = await TenantService.getTenantByWebhook(secret!);
     if (!tenant) {
@@ -311,6 +390,13 @@ export async function POST(request: NextRequest) {
       route: "legacy",
     });
 
+    // Legacy: ack + enqueue with 1s timeout
+    const legacyAck = WhatsAppService.sendMessage(
+      message.phone,
+      ACK_MESSAGE,
+      tenant.id,
+    ).catch(() => {});
+
     try {
       await Promise.race([
         enqueueMessage({
@@ -324,26 +410,41 @@ export async function POST(request: NextRequest) {
           tenantId: tenant.id,
         }),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Redis enqueue timeout (5s)")), 5000),
+          setTimeout(
+            () => reject(new Error("Redis enqueue timeout")),
+            ENQUEUE_TIMEOUT_MS,
+          ),
         ),
       ]);
+      await Promise.race([
+        legacyAck,
+        new Promise((r) => setTimeout(r, ACK_TIMEOUT_MS)),
+      ]);
+      console.log(
+        `[Webhook] ✓ legacy enqueued total=${elapsed(webhookStart)}ms`,
+      );
+      return NextResponse.json({ success: true });
     } catch (enqueueError) {
       captureError(enqueueError, {
         module: "Webhook",
         action: "enqueueLegacy",
         officeId: tenant.id,
       });
+      console.warn(
+        `[Webhook] ✗ legacy enqueue failed total=${elapsed(webhookStart)}ms`,
+      );
       return NextResponse.json(
         { error: "Failed to enqueue" },
         { status: 500 },
       );
     }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     captureError(error, { module: "Webhook", action: "POST" });
     MetricsService.track(METRIC.WEBHOOK_ERROR, 1);
-    console.error("Webhook handler error:", error);
+    console.error(
+      `[Webhook] ✗ handler error total=${elapsed(webhookStart)}ms:`,
+      error,
+    );
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -37,8 +37,8 @@ export function getRedisConnectionOptions(): ConnectionOptions {
         db,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
-        connectTimeout: 5000,
-        retryStrategy: (times: number) => (times > 2 ? null : Math.min(times * 500, 2000)),
+        connectTimeout: 3000,
+        retryStrategy: (times: number) => (times > 1 ? null : 500),
       };
     } catch {
       console.error("[Redis] Failed to parse URL, using as host:", redisUrl);
@@ -47,8 +47,8 @@ export function getRedisConnectionOptions(): ConnectionOptions {
         port: 6379,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
-        connectTimeout: 5000,
-        retryStrategy: (times: number) => (times > 2 ? null : Math.min(times * 500, 2000)),
+        connectTimeout: 3000,
+        retryStrategy: (times: number) => (times > 1 ? null : 500),
       };
     }
   }
@@ -59,7 +59,7 @@ export function getRedisConnectionOptions(): ConnectionOptions {
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
-    connectTimeout: 5000,
-    retryStrategy: (times: number) => (times > 2 ? null : Math.min(times * 500, 2000)),
+    connectTimeout: 3000,
+    retryStrategy: (times: number) => (times > 1 ? null : 500),
   };
 }
