@@ -6,6 +6,7 @@
  * → Load Client Context → Recommendation Engine → Generate AI Response → Send WhatsApp
  */
 
+import { AIResponseCache } from "@/lib/ai-cache";
 import { AIAgentRepository } from "@/repositories/ai-agent.repo";
 import { AIListingRepository } from "@/repositories/ai-listing.repo";
 import { ClientContextRepository } from "@/repositories/client-context.repo";
@@ -82,6 +83,18 @@ export class AIEngine {
           "عذراً، تم استنفاد حد الرسائل المتاح في باقتك الحالية. يرجى ترقية الباقة للاستمرار.",
         properties: [],
         suggestions: ["تواصل مع الدعم لترقية باقتك"],
+        officeId,
+      };
+    }
+
+    // ── Step 3b: Check response cache ──
+    const cached = await AIResponseCache.get(officeId, message.text);
+    if (cached) {
+      await SubscriptionRepository.incrementUsage(officeId, "ai_message");
+      return {
+        reply: cached.reply,
+        properties: cached.properties,
+        suggestions: cached.suggestions,
         officeId,
       };
     }
@@ -230,8 +243,14 @@ export class AIEngine {
       console.error("[AIEngine] Failed to save unanswered question:", error);
     }
 
-    // ── Step 7: Track usage ──
+    // ── Step 7: Track usage + cache result ──
     await SubscriptionRepository.incrementUsage(officeId, "ai_message");
+
+    await AIResponseCache.set(officeId, message.text, {
+      reply: response.reply,
+      properties: response.properties,
+      suggestions: response.suggestions,
+    });
 
     return {
       reply: response.reply,
@@ -272,6 +291,17 @@ export class AIEngine {
     };
 
     const activeAgent = agent || defaultAgent;
+
+    // ── Check response cache ──
+    const cached = await AIResponseCache.get(tenantId, message.text);
+    if (cached) {
+      return {
+        reply: cached.reply,
+        properties: cached.properties,
+        suggestions: cached.suggestions,
+        officeId: tenantId,
+      };
+    }
 
     const tenantContext = {
       tenantId,
@@ -388,6 +418,12 @@ export class AIEngine {
       tenantContext,
       conversationHistory,
     );
+
+    await AIResponseCache.set(tenantId, message.text, {
+      reply: response.reply,
+      properties: response.properties,
+      suggestions: response.suggestions,
+    });
 
     return {
       reply: response.reply,
