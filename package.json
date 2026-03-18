@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "worker": "tsx src/workers/message.worker.ts"
+    "worker": "tsx --require dotenv/config src/workers/message.worker.ts"
   },
   "dependencies": {
     "@bull-board/api": "^6.20.5",
