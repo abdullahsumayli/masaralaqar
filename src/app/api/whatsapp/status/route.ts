@@ -1,9 +1,11 @@
 /**
- * GET /api/whatsapp/status — Check WhatsApp connection state (multi-tenant)
+ * GET /api/whatsapp/status — WhatsApp connection status (multi-tenant)
+ *
+ * Returns:
+ *   { status: "connecting" | "connected" | "disconnected", phoneNumber?: string }
  */
 
-import { getConnectionState } from "@/lib/evolution";
-import { instanceNameForOffice } from "@/lib/evolution";
+import { getConnectionState, instanceNameForOffice } from "@/lib/evolution";
 import { getServerUser } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
@@ -26,28 +28,65 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!profile?.office_id) {
-      return NextResponse.json(
-        { error: "لا يوجد مكتب مرتبط" },
-        { status: 404 },
-      );
+      return NextResponse.json({
+        status: "disconnected" as const,
+        phoneNumber: null,
+      });
     }
 
-    // Resolve instance name from session or derive it
+    // Check DB session
     const session = await WhatsAppSessionRepository.getByOfficeId(
       profile.office_id,
     );
+
+    if (!session) {
+      return NextResponse.json({
+        status: "disconnected" as const,
+        phoneNumber: null,
+      });
+    }
+
+    // Resolve instance name from session or derive it
     const instanceName =
-      session?.instanceId || instanceNameForOffice(profile.office_id);
+      session.instanceId || instanceNameForOffice(profile.office_id);
 
-    const result = await getConnectionState(instanceName);
-    console.log(
-      "[whatsapp/status] state for",
+    // Check live Evolution status
+    let evoState: string = "unknown";
+    try {
+      const result = await getConnectionState(instanceName);
+      evoState =
+        result?.instance?.state || result?.state || "unknown";
+    } catch {
+      // Evolution API unreachable — rely on DB status
+    }
+
+    const phone =
+      session.phoneNumber !== "pending" &&
+      session.phoneNumber !== "auto-detected"
+        ? session.phoneNumber
+        : null;
+
+    if (evoState === "open" || session.sessionStatus === "connected") {
+      return NextResponse.json({
+        status: "connected" as const,
+        phoneNumber: phone,
+        instanceName,
+      });
+    }
+
+    if (session.sessionStatus === "pending") {
+      return NextResponse.json({
+        status: "connecting" as const,
+        phoneNumber: phone,
+        instanceName,
+      });
+    }
+
+    return NextResponse.json({
+      status: "disconnected" as const,
+      phoneNumber: phone,
       instanceName,
-      ":",
-      result,
-    );
-
-    return NextResponse.json({ success: true, data: result, instanceName });
+    });
   } catch (err: unknown) {
     console.error("[whatsapp/status] error:", err);
     return NextResponse.json(

@@ -119,6 +119,9 @@ export async function POST(request: NextRequest) {
           await WhatsAppSessionRepository.getByInstanceId(instanceName);
 
         if (session) {
+          const wasPreviouslyConnected =
+            session.sessionStatus === "connected";
+
           await WhatsAppSessionRepository.updateStatus(
             session.id,
             isOpen ? "connected" : "disconnected",
@@ -126,6 +129,23 @@ export async function POST(request: NextRequest) {
           console.log(
             `[Webhook] connection.update → office=${session.officeId} instance=${instanceName} status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
           );
+
+          // Send confirmation message on first connection
+          if (
+            isOpen &&
+            !wasPreviouslyConnected &&
+            session.phoneNumber &&
+            session.phoneNumber !== "pending" &&
+            session.phoneNumber !== "auto-detected"
+          ) {
+            WhatsAppService.sendMessage(
+              session.phoneNumber,
+              "تم ربط حسابك بنجاح مع نظام صقر ✅\n\nالرد الآلي الذكي جاهز لاستقبال رسائل عملائك.",
+              session.officeId,
+            ).catch((err) =>
+              console.warn("[Webhook] test message failed:", err),
+            );
+          }
         } else {
           console.warn(
             `[Webhook] connection.update: no session for instance=${instanceName} — office must connect first`,

@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { WhatsAppGuard } from "@/components/dashboard/whatsapp-guard";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -76,7 +77,7 @@ export default function DashboardLayout({
 
         {/* Page content — flex-1 + overflow-auto so pages control their own scroll/height */}
         <main className="flex-1 overflow-auto flex flex-col">
-          {children}
+          <WhatsAppGuard>{children}</WhatsAppGuard>
         </main>
       </div>
     </div>
