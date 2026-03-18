@@ -46,6 +46,8 @@ export interface WhatsAppJobPayload {
   tenantId?: string;
   /** Sender name if available */
   senderName?: string;
+  /** Evolution instance name (e.g. office_{officeId}) for multi-tenant routing */
+  instanceName?: string;
 }
 
 // ── Queue Configuration ─────────────────────────────────────

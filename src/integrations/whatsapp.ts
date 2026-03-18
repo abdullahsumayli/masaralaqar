@@ -1,8 +1,13 @@
 /**
- * WhatsApp Integration — Evolution API v2
- * Base URL: https://evo.masaralaqar.com (via Traefik). Instance: saqr (مشترك).
+ * WhatsApp Integration — Evolution API v2 (multi-tenant)
+ *
+ * Each office has its own Evolution instance (office_{officeId}).
+ * Instance name is resolved from the whatsapp_sessions table via officeId,
+ * with an in-memory cache to avoid repeated DB lookups.
  */
 
+import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
+import { instanceNameForOffice } from "@/lib/evolution";
 import { WhatsAppMessage } from "@/types/message";
 
 const EVO_URL =
@@ -10,7 +15,6 @@ const EVO_URL =
   process.env.EVOLUTION_URL ||
   "https://evo.masaralaqar.com";
 const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
-const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || "saqr";
 
 function evoHeaders() {
   return { "Content-Type": "application/json", apikey: EVO_KEY };
@@ -19,17 +23,89 @@ function evoHeaders() {
 function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, "");
   if (cleaned.startsWith("0")) cleaned = "966" + cleaned.substring(1);
-  if (!cleaned.startsWith("966") && cleaned.length === 9) cleaned = "966" + cleaned;
+  if (!cleaned.startsWith("966") && cleaned.length === 9)
+    cleaned = "966" + cleaned;
   return cleaned;
 }
 
-/** Create / ensure the saqr instance exists */
-export async function createEvolutionInstance(_officeId?: string) {
+// ── Instance Resolution Cache ────────────────────────────────
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+interface CachedInstance {
+  instanceName: string;
+  ts: number;
+}
+
+const instanceCache = new Map<string, CachedInstance>();
+
+/**
+ * Resolve the Evolution instance name for a given officeId.
+ * Checks in-memory cache first, then falls back to DB lookup.
+ * If no session exists, derives the default name from the officeId.
+ */
+async function resolveInstanceName(officeId: string): Promise<string> {
+  const cached = instanceCache.get(officeId);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return cached.instanceName;
+  }
+
+  try {
+    const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
+    const instanceName =
+      session?.instanceId || instanceNameForOffice(officeId);
+    instanceCache.set(officeId, {
+      instanceName,
+      ts: Date.now(),
+    });
+    return instanceName;
+  } catch {
+    return instanceNameForOffice(officeId);
+  }
+}
+
+/** Invalidate cached instance name when sessions change */
+export function invalidateInstanceCache(officeId: string): void {
+  instanceCache.delete(officeId);
+}
+
+// ── Evolution Instance Management ────────────────────────────
+
+const QR_RETRY_ATTEMPTS = 4;
+const QR_RETRY_DELAY_MS = 2500;
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function normalizeQRResponse(data: Record<string, unknown>): {
+  base64: string | null;
+  pairingCode: string | null;
+} {
+  const base64 =
+    (typeof data.base64 === "string" && data.base64 ? data.base64 : null) ||
+    (typeof data.qrcode === "object" &&
+    data.qrcode &&
+    typeof (data.qrcode as Record<string, unknown>).base64 === "string"
+      ? (data.qrcode as Record<string, unknown>).base64 as string
+      : null) ||
+    (typeof data.code === "string" && data.code.startsWith("data:")
+      ? data.code
+      : null);
+  const pairingCode =
+    typeof data.pairingCode === "string" && data.pairingCode
+      ? data.pairingCode
+      : null;
+  return { base64, pairingCode };
+}
+
+/** Create / ensure an Evolution instance exists for an office */
+export async function createEvolutionInstance(instanceName: string) {
   const res = await fetch(`${EVO_URL}/instance/create`, {
     method: "POST",
     headers: evoHeaders(),
     body: JSON.stringify({
-      instanceName: EVO_INSTANCE,
+      instanceName,
       qrcode: true,
       integration: "WHATSAPP-BAILEYS",
       webhook: {
@@ -42,48 +118,43 @@ export async function createEvolutionInstance(_officeId?: string) {
 
   const text = await res.text();
   if (!res.ok) {
-    if ((res.status === 400 || res.status === 409) && text.toLowerCase().includes("exist")) {
-      return { instance: { instanceName: EVO_INSTANCE, status: "existing" } };
+    if (
+      (res.status === 400 || res.status === 409) &&
+      text.toLowerCase().includes("exist")
+    ) {
+      return { instance: { instanceName, status: "existing" } };
     }
     throw new Error(`Evolution createInstance ${res.status}: ${text}`);
   }
 
-  try { return JSON.parse(text); } catch { return {}; }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
 }
 
-/** Evolution API v2 may return base64, code (data URL), or only pairingCode; sometimes count:0 at first — retry */
-const QR_RETRY_ATTEMPTS = 4;
-const QR_RETRY_DELAY_MS = 2500;
-
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-/** Normalize Evolution connect response to { base64, pairingCode } for UI */
-function normalizeQRResponse(data: Record<string, unknown>): { base64: string | null; pairingCode: string | null } {
-  const base64 =
-    (typeof data.base64 === "string" && data.base64 ? data.base64 : null) ||
-    (typeof data.qrcode === "object" && data.qrcode && typeof (data.qrcode as any).base64 === "string"
-      ? (data.qrcode as any).base64
-      : null) ||
-    (typeof data.code === "string" && data.code.startsWith("data:")
-      ? data.code
-      : null);
-  const pairingCode =
-    typeof data.pairingCode === "string" && data.pairingCode ? data.pairingCode : null;
-  return { base64, pairingCode };
-}
-
-/** Get QR code for connecting the saqr instance (with retry — Evolution may return count:0 at first) */
-export async function getEvolutionQR(_officeId?: string, phoneNumber?: string) {
-  const query = phoneNumber ? `?number=${encodeURIComponent(phoneNumber)}` : "";
-  const url = `${EVO_URL}/instance/connect/${EVO_INSTANCE}${query}`;
+/** Get QR code for connecting a specific instance (with retry) */
+export async function getEvolutionQR(
+  instanceName: string,
+  phoneNumber?: string,
+) {
+  const query = phoneNumber
+    ? `?number=${encodeURIComponent(phoneNumber)}`
+    : "";
+  const url = `${EVO_URL}/instance/connect/${instanceName}${query}`;
 
   for (let attempt = 1; attempt <= QR_RETRY_ATTEMPTS; attempt++) {
     const res = await fetch(url, { headers: evoHeaders() });
-    if (!res.ok) throw new Error(`Evolution QR ${res.status}: ${await res.text().catch(() => "")}`);
+    if (!res.ok)
+      throw new Error(
+        `Evolution QR ${res.status}: ${await res.text().catch(() => "")}`,
+      );
 
-    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const data = (await res.json().catch(() => ({}))) as Record<
+      string,
+      unknown
+    >;
     const { base64, pairingCode } = normalizeQRResponse(data);
 
     if (base64 || pairingCode) {
@@ -98,32 +169,32 @@ export async function getEvolutionQR(_officeId?: string, phoneNumber?: string) {
   return { base64: null, pairingCode: null, code: null };
 }
 
-/**
- * Set/update webhook URL on an existing Evolution instance.
- * CRITICAL: createEvolutionInstance only sets webhook during CREATE —
- * if the instance already exists (409), webhook is NOT configured.
- * This function explicitly sets it via the webhook/set endpoint.
- */
-export async function setEvolutionWebhook(webhookUrl?: string) {
-  const url = webhookUrl || `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
+/** Set/update webhook URL on a specific instance */
+export async function setEvolutionWebhook(
+  instanceName: string,
+  webhookUrl?: string,
+) {
+  const url =
+    webhookUrl ||
+    `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
 
-  const res = await fetch(`${EVO_URL}/webhook/set/${EVO_INSTANCE}`, {
+  const res = await fetch(`${EVO_URL}/webhook/set/${instanceName}`, {
     method: "POST",
     headers: evoHeaders(),
     body: JSON.stringify({
       url,
       webhook_by_events: true,
       webhook_base64: false,
-      events: [
-        "MESSAGES_UPSERT",
-        "CONNECTION_UPDATE",
-      ],
+      events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
     }),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    console.error(`[Evolution] setWebhook failed (${res.status}):`, text);
+    console.error(
+      `[Evolution] setWebhook failed (${res.status}):`,
+      text,
+    );
     throw new Error(`Evolution setWebhook ${res.status}: ${text}`);
   }
 
@@ -132,31 +203,31 @@ export async function setEvolutionWebhook(webhookUrl?: string) {
   return data;
 }
 
-/**
- * Get current webhook configuration for the saqr instance.
- */
-export async function getEvolutionWebhook() {
-  const res = await fetch(`${EVO_URL}/webhook/find/${EVO_INSTANCE}`, {
+/** Get current webhook configuration for an instance */
+export async function getEvolutionWebhook(instanceName: string) {
+  const res = await fetch(`${EVO_URL}/webhook/find/${instanceName}`, {
     headers: evoHeaders(),
   });
   if (!res.ok) return null;
   return res.json();
 }
 
-/** Get live connection state of the saqr instance */
-export async function getEvolutionStatus(_officeId?: string) {
-    const res = await fetch(`${EVO_URL}/instance/connectionState/${EVO_INSTANCE}`, {
-    headers: evoHeaders(),
-  });
+/** Get live connection state of an instance */
+export async function getEvolutionStatus(instanceName: string) {
+  const res = await fetch(
+    `${EVO_URL}/instance/connectionState/${instanceName}`,
+    {
+      headers: evoHeaders(),
+    },
+  );
   if (!res.ok) return null;
 
-  const data = await res.json();
-  return data;
+  return res.json();
 }
 
-/** Delete the saqr instance */
-export async function deleteEvolutionInstance(_officeId?: string) {
-  const res = await fetch(`${EVO_URL}/instance/delete/${EVO_INSTANCE}`, {
+/** Delete an instance */
+export async function deleteEvolutionInstance(instanceName: string) {
+  const res = await fetch(`${EVO_URL}/instance/delete/${instanceName}`, {
     method: "DELETE",
     headers: evoHeaders(),
   });
@@ -165,22 +236,26 @@ export async function deleteEvolutionInstance(_officeId?: string) {
 }
 
 /**
- * WhatsAppService — static class used across the codebase
+ * WhatsAppService — static class used across the codebase.
+ *
+ * All methods resolve the Evolution instance from officeId automatically.
+ * The third parameter (officeId) is REQUIRED for multi-tenant routing.
  */
 export class WhatsAppService {
   static formatPhoneNumber = formatPhoneNumber;
 
-  /** Send a WhatsApp text message via the saqr instance */
+  /** Send a WhatsApp text message via the office's Evolution instance */
   static async sendMessage(
     recipientPhone: string,
     message: string,
-    _tenantOrOfficeId?: string, // kept for backward compat — no longer used
+    officeId: string,
   ): Promise<boolean> {
     try {
+      const instanceName = await resolveInstanceName(officeId);
       const formattedPhone = formatPhoneNumber(recipientPhone);
 
       const response = await fetch(
-        `${EVO_URL}/message/sendText/${EVO_INSTANCE}`,
+        `${EVO_URL}/message/sendText/${instanceName}`,
         {
           method: "POST",
           headers: evoHeaders(),
@@ -190,7 +265,7 @@ export class WhatsAppService {
 
       if (!response.ok) {
         console.error(
-          "[WhatsApp] sendMessage error:",
+          `[WhatsApp] sendMessage error (instance=${instanceName}):`,
           response.status,
           await response.text().catch(() => ""),
         );
@@ -204,18 +279,19 @@ export class WhatsAppService {
     }
   }
 
-  /** Send an image/media message via the saqr instance */
+  /** Send an image/media message via the office's Evolution instance */
   static async sendMediaMessage(
     recipientPhone: string,
     mediaUrl: string,
     caption: string,
-    _tenantOrOfficeId?: string,
+    officeId: string,
   ): Promise<boolean> {
     try {
+      const instanceName = await resolveInstanceName(officeId);
       const formattedPhone = formatPhoneNumber(recipientPhone);
 
       const response = await fetch(
-        `${EVO_URL}/message/sendMedia/${EVO_INSTANCE}`,
+        `${EVO_URL}/message/sendMedia/${instanceName}`,
         {
           method: "POST",
           headers: evoHeaders(),
@@ -230,7 +306,7 @@ export class WhatsAppService {
 
       if (!response.ok) {
         console.error(
-          "[WhatsApp] sendMedia error:",
+          `[WhatsApp] sendMedia error (instance=${instanceName}):`,
           await response.text().catch(() => ""),
         );
         return false;
@@ -244,22 +320,40 @@ export class WhatsAppService {
   }
 
   /** Parse incoming Evolution API webhook payload into WhatsAppMessage */
-  static parseIncomingMessage(payload: any): WhatsAppMessage | null {
+  static parseIncomingMessage(
+    payload: Record<string, unknown>,
+  ): WhatsAppMessage | null {
     try {
-      if (payload?.event === "messages.upsert" && payload?.data?.messages) {
-        const msg = payload.data.messages[0];
-        if (!msg || msg.key?.fromMe) return null;
+      const data = payload?.data as Record<string, unknown> | undefined;
+      if (
+        payload?.event === "messages.upsert" &&
+        data?.messages
+      ) {
+        const messages = data.messages as Record<string, unknown>[];
+        const msg = messages[0];
+        if (!msg) return null;
+        const key = msg.key as Record<string, unknown> | undefined;
+        if (key?.fromMe) return null;
 
-        const phone = msg.key?.remoteJid?.replace("@s.whatsapp.net", "") || "";
+        const phone =
+          (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") || "";
+        const msgBody = msg.message as Record<string, unknown> | undefined;
         const text =
-          msg.message?.conversation ||
-          msg.message?.extendedTextMessage?.text ||
+          (msgBody?.conversation as string) ||
+          ((msgBody?.extendedTextMessage as Record<string, unknown>)
+            ?.text as string) ||
           "";
-        const id = msg.key?.id || `msg_${Date.now()}`;
+        const id = (key?.id as string) || `msg_${Date.now()}`;
 
         if (!phone || !text) return null;
 
-        return { id, phone, text, timestamp: new Date().toISOString(), media: undefined };
+        return {
+          id,
+          phone,
+          text,
+          timestamp: new Date().toISOString(),
+          media: undefined,
+        };
       }
       return null;
     } catch (error) {

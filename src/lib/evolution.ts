@@ -1,6 +1,9 @@
 /**
  * Evolution API v2.x — Connection helpers
- * Instance: سقر (saqr) — instance واحد مشترك لكل المنصة
+ *
+ * Multi-tenant: each office has its own instance named office_{officeId}.
+ * All functions require an explicit instanceName — no global default.
+ *
  * Base URL: https://evo.masaralaqar.com (via Traefik, no direct IP)
  */
 
@@ -9,21 +12,25 @@ const EVO_URL =
   process.env.EVOLUTION_URL ||
   "https://evo.masaralaqar.com";
 const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
-export const EVO_INSTANCE = process.env.EVOLUTION_INSTANCE || "saqr";
 
 function headers() {
   return { "Content-Type": "application/json", apikey: EVO_KEY };
 }
 
-/** Create / ensure the saqr instance exists (with webhook) */
-export async function createInstance(_userId?: string) {
+/** Derive a deterministic Evolution instance name from an office UUID */
+export function instanceNameForOffice(officeId: string): string {
+  return `office_${officeId}`;
+}
+
+/** Create a new Evolution instance with webhook pre-configured */
+export async function createInstance(instanceName: string) {
   const webhookUrl = `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
 
   const res = await fetch(`${EVO_URL}/instance/create`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify({
-      instanceName: EVO_INSTANCE,
+      instanceName,
       integration: "WHATSAPP-BAILEYS",
       qrcode: true,
       webhook: {
@@ -36,25 +43,34 @@ export async function createInstance(_userId?: string) {
 
   if (!res.ok) {
     const text = await res.text();
-    // 400 / 409 "already exists" → set webhook anyway, then return
-    if ((res.status === 400 || res.status === 409) && text.toLowerCase().includes("exist")) {
-      console.log(`[evolution] instance "${EVO_INSTANCE}" already exists — setting webhook`);
-      await setWebhook(webhookUrl).catch((e) =>
+    if (
+      (res.status === 400 || res.status === 409) &&
+      text.toLowerCase().includes("exist")
+    ) {
+      console.log(
+        `[evolution] instance "${instanceName}" already exists — setting webhook`,
+      );
+      await setWebhook(instanceName, webhookUrl).catch((e) =>
         console.error("[evolution] setWebhook after existing:", e),
       );
-      return { instance: { instanceName: EVO_INSTANCE, status: "existing" } };
+      return { instance: { instanceName, status: "existing" } };
     }
-    console.error(`[evolution] createInstance failed (${res.status}):`, text);
+    console.error(
+      `[evolution] createInstance failed (${res.status}):`,
+      text,
+    );
     throw new Error(`Evolution API error ${res.status}: ${text}`);
   }
 
   return res.json();
 }
 
-/** Set/update webhook on the saqr instance */
-export async function setWebhook(webhookUrl?: string) {
-  const url = webhookUrl || `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
-  const res = await fetch(`${EVO_URL}/webhook/set/${EVO_INSTANCE}`, {
+/** Set/update webhook on an instance */
+export async function setWebhook(instanceName: string, webhookUrl?: string) {
+  const url =
+    webhookUrl ||
+    `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`;
+  const res = await fetch(`${EVO_URL}/webhook/set/${instanceName}`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify({
@@ -71,31 +87,37 @@ export async function setWebhook(webhookUrl?: string) {
   return res.json().catch(() => ({}));
 }
 
-/** Get QR code / connection link for the saqr instance */
-export async function getQRCode(_userId?: string) {
-  const res = await fetch(`${EVO_URL}/instance/connect/${EVO_INSTANCE}`, {
+/** Get QR code / connection link for a specific instance */
+export async function getQRCode(instanceName: string) {
+  const res = await fetch(`${EVO_URL}/instance/connect/${instanceName}`, {
     headers: headers(),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    console.error(`[evolution] getQRCode failed (${res.status}):`, text);
+    console.error(
+      `[evolution] getQRCode failed (${res.status}):`,
+      text,
+    );
     throw new Error(`Evolution API error ${res.status}: ${text}`);
   }
 
-  return res.json(); // { base64: 'data:image/png;base64,...', pairingCode?: '...' }
+  return res.json();
 }
 
-/** Get connection state for the saqr instance */
-export async function getConnectionState(_userId?: string) {
+/** Get connection state for a specific instance */
+export async function getConnectionState(instanceName: string) {
   const res = await fetch(
-    `${EVO_URL}/instance/connectionState/${EVO_INSTANCE}`,
+    `${EVO_URL}/instance/connectionState/${instanceName}`,
     { headers: headers() },
   );
 
   if (!res.ok) {
     const text = await res.text();
-    console.error(`[evolution] connectionState failed (${res.status}):`, text);
+    console.error(
+      `[evolution] connectionState failed (${res.status}):`,
+      text,
+    );
     throw new Error(`Evolution API error ${res.status}: ${text}`);
   }
 
@@ -112,13 +134,14 @@ export async function fetchInstances() {
   return res.json();
 }
 
-/** Delete the saqr instance (or any named instance) */
-export async function deleteInstance(instanceName = EVO_INSTANCE) {
+/** Delete a specific instance */
+export async function deleteInstance(instanceName: string) {
   const res = await fetch(`${EVO_URL}/instance/delete/${instanceName}`, {
     method: "DELETE",
     headers: headers(),
   });
 
-  if (!res.ok) throw new Error(`Evolution deleteInstance error ${res.status}`);
+  if (!res.ok)
+    throw new Error(`Evolution deleteInstance error ${res.status}`);
   return res.json();
 }

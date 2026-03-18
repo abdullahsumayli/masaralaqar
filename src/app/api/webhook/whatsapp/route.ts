@@ -1,19 +1,23 @@
 /**
- * WhatsApp Webhook Handler
+ * WhatsApp Webhook Handler (multi-tenant)
  *
  * Pipeline:
  *   Evolution API → POST /api/webhook/whatsapp
  *     1. Parse & deduplicate
- *     2. Resolve office from WhatsApp session
- *     3. Send instant acknowledgment to customer
+ *     2. Extract instance name from payload → resolve office via session
+ *     3. Send instant acknowledgment to customer (via the correct instance)
  *     4. Enqueue to Redis (1s timeout) — primary async path
  *     5. If Redis fails → InlineProcessor fallback
  *     6. Return < 2s in primary path
+ *
+ * Instance routing:
+ *   Each office has its own Evolution instance (office_{officeId}).
+ *   The webhook extracts the instance name from the payload and looks up
+ *   the corresponding office in the whatsapp_sessions table.
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { captureError } from "@/lib/sentry";
-import { supabaseAdmin } from "@/lib/supabase";
 import { enqueueMessage } from "@/queues/message.queue";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { InlineProcessor } from "@/services/inline-processor.service";
@@ -33,50 +37,6 @@ if (!WEBHOOK_SECRET) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
-
-async function autoCreateSessionForInstance(
-  instanceName: string,
-  phoneFromMessage?: string,
-) {
-  const { data: recentOffice } = await supabaseAdmin
-    .from("users")
-    .select("office_id")
-    .not("office_id", "is", null)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (!recentOffice?.office_id) {
-    console.error("[Webhook] autoCreateSession: No office found");
-    return null;
-  }
-
-  const officeId = recentOffice.office_id;
-  const { data, error } = await supabaseAdmin
-    .from("whatsapp_sessions")
-    .upsert(
-      {
-        office_id: officeId,
-        phone_number: phoneFromMessage || "auto-detected",
-        instance_id: instanceName,
-        session_status: "connected",
-        last_connected_at: new Date().toISOString(),
-      },
-      { onConflict: "office_id" },
-    )
-    .select()
-    .single();
-
-  if (error) {
-    console.error("[Webhook] autoCreateSession error:", error);
-    return null;
-  }
-
-  console.log(
-    `[Webhook] Auto-created session office=${officeId} instance=${instanceName}`,
-  );
-  return WhatsAppSessionRepository.formatSession(data);
-}
 
 const processedMessages = new Set<string>();
 const MAX_CACHE_SIZE = 1000;
@@ -126,7 +86,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const bodyText = await request.text();
-    let payload: any;
+    let payload: Record<string, unknown>;
 
     try {
       payload = JSON.parse(bodyText);
@@ -152,13 +112,11 @@ export async function POST(request: NextRequest) {
 
       // ── connection.update ─────────────────────────────────
       if (payload.event === "connection.update") {
-        const isOpen = payload.data?.state === "open";
+        const data = payload.data as Record<string, unknown> | undefined;
+        const isOpen = data?.state === "open";
 
-        let session =
+        const session =
           await WhatsAppSessionRepository.getByInstanceId(instanceName);
-        if (!session && isOpen) {
-          session = await autoCreateSessionForInstance(instanceName);
-        }
 
         if (session) {
           await WhatsAppSessionRepository.updateStatus(
@@ -166,11 +124,11 @@ export async function POST(request: NextRequest) {
             isOpen ? "connected" : "disconnected",
           );
           console.log(
-            `[Webhook] connection.update → office=${session.officeId} status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
+            `[Webhook] connection.update → office=${session.officeId} instance=${instanceName} status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
           );
         } else {
-          console.error(
-            `[Webhook] connection.update: no session for instance=${instanceName}`,
+          console.warn(
+            `[Webhook] connection.update: no session for instance=${instanceName} — office must connect first`,
           );
         }
         return NextResponse.json({ ok: true });
@@ -178,18 +136,23 @@ export async function POST(request: NextRequest) {
 
       // ── messages.upsert ───────────────────────────────────
       if (payload.event === "messages.upsert") {
-        const msg = payload.data?.messages?.[0];
-        if (!msg || msg.key?.fromMe) {
+        const data = payload.data as Record<string, unknown> | undefined;
+        const messages = data?.messages as Record<string, unknown>[] | undefined;
+        const msg = messages?.[0];
+        const key = msg?.key as Record<string, unknown> | undefined;
+        if (!msg || key?.fromMe) {
           return NextResponse.json({ ok: true });
         }
 
         const from =
-          msg.key?.remoteJid?.replace("@s.whatsapp.net", "") ?? "";
+          (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") ?? "";
+        const msgBody = msg.message as Record<string, unknown> | undefined;
         const text =
-          msg.message?.conversation ||
-          msg.message?.extendedTextMessage?.text ||
+          (msgBody?.conversation as string) ||
+          ((msgBody?.extendedTextMessage as Record<string, unknown>)
+            ?.text as string) ||
           "";
-        const messageId = msg.key?.id || `evo_${Date.now()}`;
+        const messageId = (key?.id as string) || `evo_${Date.now()}`;
 
         if (!from || !text) {
           return NextResponse.json({ ok: true });
@@ -200,39 +163,28 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ ok: true });
         }
 
-        // Resolve office
-        let officeId = "";
-        let businessPhone = "";
-
-        let session =
+        // Resolve office from the instance name
+        const session =
           await WhatsAppSessionRepository.getByInstanceId(instanceName);
+
         if (!session) {
-          console.warn(
-            `[Webhook] No session for instance=${instanceName} — auto-creating`,
-          );
-          session = await autoCreateSessionForInstance(instanceName, from);
-        }
-
-        if (session) {
-          officeId = session.officeId;
-          businessPhone = session.phoneNumber;
-          if (
-            businessPhone === "pending" ||
-            businessPhone === "auto-detected"
-          ) {
-            businessPhone = from;
-          }
-        }
-
-        if (!officeId) {
           console.error(
-            `[Webhook] DROPPED: no office for instance=${instanceName} +${elapsed(webhookStart)}ms`,
+            `[Webhook] DROPPED: no session for instance=${instanceName} — office must connect first +${elapsed(webhookStart)}ms`,
           );
           return NextResponse.json({ ok: true });
         }
 
+        const officeId = session.officeId;
+        let businessPhone = session.phoneNumber;
+        if (
+          businessPhone === "pending" ||
+          businessPhone === "auto-detected"
+        ) {
+          businessPhone = from;
+        }
+
         console.log(
-          `[Webhook] ← message from=${from} office=${officeId} +${elapsed(webhookStart)}ms`,
+          `[Webhook] ← message from=${from} office=${officeId} instance=${instanceName} +${elapsed(webhookStart)}ms`,
         );
 
         MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, {
@@ -267,6 +219,7 @@ export async function POST(request: NextRequest) {
               businessPhone,
               timestamp: new Date().toISOString(),
               route: "evolution",
+              instanceName,
             }),
             new Promise((_, reject) =>
               setTimeout(
@@ -353,8 +306,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (
-      payload?.data?.fromMe === true ||
-      payload?.data?.fromMe === "true"
+      (payload?.data as Record<string, unknown>)?.fromMe === true ||
+      (payload?.data as Record<string, unknown>)?.fromMe === "true"
     ) {
       return NextResponse.json({
         success: true,
