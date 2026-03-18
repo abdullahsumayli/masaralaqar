@@ -22,6 +22,8 @@
  * ╚══════════════════════════════════════════════════════════════╝
  */
 
+import http from "node:http";
+
 import { logger } from "@/lib/logger";
 import { getRedisConnectionOptions } from "@/lib/redis";
 import { captureError, initSentry } from "@/lib/sentry";
@@ -523,6 +525,7 @@ worker.on("stalled", (jobId) => {
 
 async function shutdown(signal: string) {
   logger.info(MODULE, `${WORKER_ID} received ${signal}, draining...`);
+  healthServer?.close();
   await worker.close();
   logger.info(MODULE, `${WORKER_ID} stopped`);
   process.exit(0);
@@ -531,10 +534,37 @@ async function shutdown(signal: string) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
+// ── Health Check HTTP Server (for Coolify / container orchestrators) ──
+
+const HEALTH_PORT = parseInt(process.env.HEALTH_PORT || "3001", 10);
+const workerStartedAt = Date.now();
+
+const healthServer = http.createServer((_req, res) => {
+  const isRunning = worker.isRunning();
+  const status = isRunning ? 200 : 503;
+
+  res.writeHead(status, { "Content-Type": "application/json" });
+  res.end(
+    JSON.stringify({
+      status: isRunning ? "ok" : "degraded",
+      worker: WORKER_ID,
+      queue: QUEUE_NAME,
+      uptime: Math.floor((Date.now() - workerStartedAt) / 1000),
+      concurrency: WORKER_CONCURRENCY,
+      pid: process.pid,
+    }),
+  );
+});
+
+healthServer.listen(HEALTH_PORT, "0.0.0.0", () => {
+  logger.info(MODULE, `Health check listening on :${HEALTH_PORT}/health`);
+});
+
 logger.info(MODULE, `${WORKER_ID} running — queue "${QUEUE_NAME}"`, {
   concurrency: WORKER_CONCURRENCY,
   rateLimitMax: WORKER_RATE_MAX,
   rateLimitDuration: "1000ms",
   retryAttempts: 3,
   pid: process.pid,
+  healthPort: HEALTH_PORT,
 });

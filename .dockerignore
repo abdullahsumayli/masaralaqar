@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+logs/
+*.log
+.vercel
+.turbo
+.cursor
+agent-transcripts
+terminals
+coverage
+.nyc_output
+dist
+out

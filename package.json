@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "worker": "tsx --require dotenv/config src/workers/message.worker.ts"
+    "worker": "tsx --require dotenv/config src/workers/message.worker.ts",
+    "worker:prod": "tsx src/workers/message.worker.ts"
   },
   "dependencies": {
     "@bull-board/api": "^6.20.5",
@@ -52,6 +53,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -67,7 +69,6 @@
     "eslint-config-next": "^16.0.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }

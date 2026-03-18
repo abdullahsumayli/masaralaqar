@@ -1,0 +1,49 @@
+# ── WhatsApp Worker — Coolify / Docker deployment ─────────────
+#
+# Builds a lightweight container that runs the BullMQ worker process.
+# The worker dequeues jobs from Upstash Redis and processes them through
+# the AI engine, sending replies via Evolution API.
+#
+# Build:   docker build -f Dockerfile.worker -t masaralaqar-worker .
+# Run:     docker run --env-file .env -p 3001:3001 masaralaqar-worker
+#
+# Coolify: set Dockerfile Path → Dockerfile.worker
+# ──────────────────────────────────────────────────────────────
+
+# ── Stage 1: Install production dependencies ──────────────────
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# ── Stage 2: Runtime ──────────────────────────────────────────
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Non-root user for security
+RUN addgroup --system --gid 1001 worker && \
+    adduser --system --uid 1001 worker
+
+# Copy only what the worker needs
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json tsconfig.json ./
+COPY src/ ./src/
+
+# Logs directory (writable by worker user)
+RUN mkdir -p /app/logs && chown worker:worker /app/logs
+
+USER worker
+
+# Health check port
+EXPOSE 3001
+
+ENV NODE_ENV=production
+ENV HEALTH_PORT=3001
+
+# Coolify/Docker health check — restarts container if worker is unhealthy
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/ || exit 1
+
+CMD ["npx", "tsx", "src/workers/message.worker.ts"]
