@@ -213,17 +213,24 @@ export async function POST(request: NextRequest) {
           route: "evolution",
         });
 
-        // Try queue first; fall back to inline processing if Redis is unavailable
+        // Try queue first (with 5s timeout); fall back to inline processing
+        let queued = false;
         try {
-          await enqueueMessage({
-            messageId,
-            phone: from,
-            message: text,
-            officeId,
-            businessPhone,
-            timestamp: new Date().toISOString(),
-            route: "evolution",
-          });
+          await Promise.race([
+            enqueueMessage({
+              messageId,
+              phone: from,
+              message: text,
+              officeId,
+              businessPhone,
+              timestamp: new Date().toISOString(),
+              route: "evolution",
+            }),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Redis enqueue timeout (5s)")), 5000),
+            ),
+          ]);
+          queued = true;
           console.log(`[Webhook] Enqueued message ${messageId} for office ${officeId}`);
         } catch (enqueueError) {
           console.warn(`[Webhook] Queue unavailable, processing inline. Error:`, enqueueError);
@@ -232,8 +239,9 @@ export async function POST(request: NextRequest) {
             action: "enqueueEvolution",
             officeId,
           });
+        }
 
-          // FALLBACK: process directly without queue
+        if (!queued) {
           try {
             await InlineProcessor.process({
               messageId,
@@ -304,16 +312,21 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      await enqueueMessage({
-        messageId: message.id,
-        phone: message.phone,
-        message: message.text,
-        officeId: tenant.id,
-        businessPhone: tenant.whatsappNumber || "",
-        timestamp: new Date().toISOString(),
-        route: "legacy",
-        tenantId: tenant.id,
-      });
+      await Promise.race([
+        enqueueMessage({
+          messageId: message.id,
+          phone: message.phone,
+          message: message.text,
+          officeId: tenant.id,
+          businessPhone: tenant.whatsappNumber || "",
+          timestamp: new Date().toISOString(),
+          route: "legacy",
+          tenantId: tenant.id,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Redis enqueue timeout (5s)")), 5000),
+        ),
+      ]);
     } catch (enqueueError) {
       captureError(enqueueError, {
         module: "Webhook",
