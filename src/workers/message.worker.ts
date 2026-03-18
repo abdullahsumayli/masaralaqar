@@ -456,26 +456,35 @@ async function handleFailedJob(
   }
 }
 
+// ── Worker Configuration ─────────────────────────────────────
+
+const WORKER_CONCURRENCY = parseInt(
+  process.env.WORKER_CONCURRENCY || "5",
+  10,
+);
+const WORKER_RATE_MAX = parseInt(process.env.WORKER_RATE_MAX || "10", 10);
+const WORKER_ID = process.env.WORKER_ID || `w-${process.pid}`;
+
 // ── Worker Startup ──────────────────────────────────────────
 
-logger.info(MODULE, "Starting WhatsApp message worker...");
+logger.info(MODULE, `Starting worker ${WORKER_ID}...`);
 
 const worker = new Worker<WhatsAppJobPayload>(QUEUE_NAME, processJob, {
   connection: getRedisConnectionOptions(),
-  // Rate control: process up to 5 jobs per second
   limiter: {
-    max: 5,
+    max: WORKER_RATE_MAX,
     duration: 1000,
   },
-  // Process one job at a time per worker instance
-  // Scale horizontally by running multiple worker processes
-  concurrency: 3,
+  concurrency: WORKER_CONCURRENCY,
+  stalledInterval: 30_000,
+  lockDuration: 60_000,
 });
 
 // ── Event Listeners (monitoring) ────────────────────────────
 
 worker.on("completed", (job) => {
   logger.info(MODULE, `✓ Job completed`, {
+    worker: WORKER_ID,
     jobId: job.id,
     messageId: job.data.messageId,
     officeId: job.data.officeId,
@@ -487,17 +496,16 @@ worker.on("failed", (job, error) => {
   if (!job) return;
 
   if (job.attemptsMade < (job.opts.attempts || 3)) {
-    // Will be retried
     logger.warn(
       MODULE,
       `Job ${job.id} failed (attempt ${job.attemptsMade}), will retry`,
       {
+        worker: WORKER_ID,
         messageId: job.data.messageId,
         error: error.message,
       },
     );
   } else {
-    // Final failure → dead letter
     handleFailedJob(job, error);
   }
 });
@@ -514,18 +522,19 @@ worker.on("stalled", (jobId) => {
 // ── Graceful Shutdown ───────────────────────────────────────
 
 async function shutdown(signal: string) {
-  logger.info(MODULE, `Received ${signal}, shutting down gracefully...`);
+  logger.info(MODULE, `${WORKER_ID} received ${signal}, draining...`);
   await worker.close();
-  logger.info(MODULE, "Worker stopped");
+  logger.info(MODULE, `${WORKER_ID} stopped`);
   process.exit(0);
 }
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-logger.info(MODULE, `Worker running — listening to queue "${QUEUE_NAME}"`, {
-  concurrency: 3,
-  rateLimitMax: 5,
+logger.info(MODULE, `${WORKER_ID} running — queue "${QUEUE_NAME}"`, {
+  concurrency: WORKER_CONCURRENCY,
+  rateLimitMax: WORKER_RATE_MAX,
   rateLimitDuration: "1000ms",
   retryAttempts: 3,
+  pid: process.pid,
 });

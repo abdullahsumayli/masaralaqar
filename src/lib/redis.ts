@@ -1,56 +1,72 @@
 /**
- * Redis Connection Config for BullMQ
+ * Redis Connection Layer
  *
- * BullMQ accepts plain connection options (no need to instantiate IORedis).
- * This avoids version conflicts between standalone ioredis and BullMQ's bundled copy.
+ * Supports standard Redis (redis://) and Upstash/TLS (rediss://).
+ * Exports:
+ *   getRedisConnectionOptions() — plain object for BullMQ Queue/Worker
+ *   getRedisClient()            — lazy ioredis singleton for direct use (cache, etc.)
  *
- * Configuration:
- *   REDIS_URL — full Redis connection string (redis://...)
- *   Falls back to REDIS_HOST + REDIS_PORT for split config.
- *
- * BullMQ needs a standard Redis instance (not Upstash REST API).
- * Use Redis 7+ or any managed Redis (Railway, Render, Aiven, etc.)
+ * Priority: REDIS_URL > REDIS_URI > UPSTASH_REDIS_URL > REDIS_HOST+PORT
  */
 
+import IORedis from "ioredis";
 import type { ConnectionOptions } from "bullmq";
 
-/**
- * Parse REDIS_URL into host/port/password components for BullMQ.
- * BullMQ's ConnectionOptions accepts either an IORedis instance
- * or a plain { host, port, password, ... } object.
- */
+// ── URL Resolution ───────────────────────────────────────────
+
+function resolveRedisUrl(): string {
+  return (
+    process.env.REDIS_URL ||
+    process.env.REDIS_URI ||
+    process.env.UPSTASH_REDIS_URL ||
+    ""
+  );
+}
+
+interface ParsedRedis {
+  host: string;
+  port: number;
+  password: string | undefined;
+  username: string | undefined;
+  db: number | undefined;
+  tls: Record<string, never> | undefined;
+}
+
+function parseRedisUrl(raw: string): ParsedRedis | null {
+  try {
+    const url = new URL(raw);
+    const isTLS = url.protocol === "rediss:";
+    const dbMatch = url.pathname.match(/^\/(\d+)$/);
+
+    return {
+      host: url.hostname,
+      port: parseInt(url.port || "6379", 10),
+      password: url.password || undefined,
+      username: url.username || undefined,
+      db: dbMatch ? parseInt(dbMatch[1], 10) : undefined,
+      tls: isTLS ? {} : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── BullMQ Connection Options ────────────────────────────────
+
 export function getRedisConnectionOptions(): ConnectionOptions {
-  const redisUrl = process.env.REDIS_URL || process.env.REDIS_URI || "";
+  const raw = resolveRedisUrl();
 
-  if (redisUrl) {
-    try {
-      const url = new URL(redisUrl);
-      // Extract DB number from pathname (e.g. redis://host:6379/6 → db=6)
-      const dbMatch = url.pathname.match(/^\/(\d+)$/);
-      const db = dbMatch ? parseInt(dbMatch[1], 10) : undefined;
-
+  if (raw) {
+    const parsed = parseRedisUrl(raw);
+    if (parsed) {
       return {
-        host: url.hostname,
-        port: parseInt(url.port || "6379", 10),
-        password: url.password || undefined,
-        username: url.username || undefined,
-        db,
+        ...parsed,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
-        connectTimeout: 3000,
-        retryStrategy: (times: number) => (times > 1 ? null : 500),
-      };
-    } catch {
-      console.error("[Redis] Failed to parse URL, using as host:", redisUrl);
-      return {
-        host: "127.0.0.1",
-        port: 6379,
-        maxRetriesPerRequest: null,
-        enableReadyCheck: false,
-        connectTimeout: 3000,
-        retryStrategy: (times: number) => (times > 1 ? null : 500),
+        connectTimeout: 5000,
       };
     }
+    console.error("[Redis] Failed to parse URL:", raw);
   }
 
   return {
@@ -59,7 +75,61 @@ export function getRedisConnectionOptions(): ConnectionOptions {
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
-    connectTimeout: 3000,
-    retryStrategy: (times: number) => (times > 1 ? null : 500),
+    connectTimeout: 5000,
   };
+}
+
+// ── Shared Redis Client (singleton) ──────────────────────────
+
+let _client: IORedis | null = null;
+let _clientChecked = false;
+
+/**
+ * Lazy singleton ioredis client for direct Redis operations (cache, etc.).
+ * Connects once on first call; returns null if unreachable.
+ * Safe to call from serverless — does not block if Redis is down.
+ */
+export async function getRedisClient(): Promise<IORedis | null> {
+  if (_clientChecked) return _client;
+  _clientChecked = true;
+
+  const raw = resolveRedisUrl();
+  if (!raw) {
+    console.log("[Redis] No URL configured — client unavailable");
+    return null;
+  }
+
+  const parsed = parseRedisUrl(raw);
+  if (!parsed) {
+    console.log("[Redis] URL parse failed — client unavailable");
+    return null;
+  }
+
+  try {
+    const client = new IORedis({
+      ...parsed,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+      lazyConnect: true,
+      enableReadyCheck: false,
+    });
+
+    await Promise.race([
+      client.connect(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("connect timeout")), 3000),
+      ),
+    ]);
+
+    _client = client;
+    const label = parsed.tls ? `${parsed.host} (TLS)` : parsed.host;
+    console.log(`[Redis] Client connected → ${label}`);
+    return client;
+  } catch (err) {
+    console.log(
+      "[Redis] Client connect failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return null;
+  }
 }

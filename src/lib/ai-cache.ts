@@ -1,16 +1,14 @@
 /**
- * AI Response Cache — dual-layer (Redis L1 + in-memory L2)
+ * AI Response Cache — dual-layer (Redis + in-memory)
  *
  * Caches AI-generated replies keyed by (officeId, normalizedMessage).
  * Stores up to 50 entries per office with a 1-hour TTL.
  *
- * Redis is attempted lazily on first access. If unreachable
- * (e.g. Vercel → Docker-internal hostname), falls back to
- * in-memory cache which persists across requests within the
- * same serverless container.
+ * Uses the shared Redis client from redis.ts (Upstash-compatible, TLS-aware).
+ * In-memory layer persists across requests within the same serverless container.
  */
 
-import IORedis from "ioredis";
+import { getRedisClient } from "./redis";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -34,45 +32,6 @@ const REDIS_PREFIX = "ai_reply:";
 const mem = new Map<string, CachedAIResponse>();
 const officeKeyList = new Map<string, string[]>();
 
-// ── Redis client (lazy, connects once) ───────────────────────
-
-let _redis: IORedis | null = null;
-let _redisResolved = false;
-
-async function getRedis(): Promise<IORedis | null> {
-  if (_redisResolved) return _redis;
-  _redisResolved = true;
-
-  const url = process.env.REDIS_URL || process.env.REDIS_URI;
-  if (!url) {
-    console.log("[AICache] No REDIS_URL — memory-only mode");
-    return null;
-  }
-
-  try {
-    const client = new IORedis(url, {
-      connectTimeout: 2000,
-      maxRetriesPerRequest: 1,
-      lazyConnect: true,
-      enableReadyCheck: false,
-    });
-
-    await Promise.race([
-      client.connect(),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 2000),
-      ),
-    ]);
-
-    _redis = client;
-    console.log("[AICache] Redis connected for caching");
-    return client;
-  } catch {
-    console.log("[AICache] Redis unreachable — memory-only mode");
-    return null;
-  }
-}
-
 // ── Utilities ────────────────────────────────────────────────
 
 function normalize(text: string): string {
@@ -83,7 +42,6 @@ function makeMemKey(officeId: string, norm: string): string {
   return `${officeId}::${norm}`;
 }
 
-/** FNV-1a hash for compact Redis keys (avoids storing full Arabic text) */
 function fnv1a(str: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
@@ -96,10 +54,6 @@ function fnv1a(str: string): string {
 // ── Cache API ────────────────────────────────────────────────
 
 export class AIResponseCache {
-  /**
-   * Look up a cached AI response for the given office + message.
-   * Checks in-memory first (L1), then Redis (L2).
-   */
   static async get(
     officeId: string,
     rawMessage: string,
@@ -108,7 +62,7 @@ export class AIResponseCache {
     const mk = makeMemKey(officeId, norm);
     const now = Date.now();
 
-    // ── L1: in-memory ──
+    // L1: in-memory
     const memEntry = mem.get(mk);
     if (memEntry) {
       if (now - memEntry.ts < TTL_MS) {
@@ -119,9 +73,9 @@ export class AIResponseCache {
       removeFromTracker(officeId, mk);
     }
 
-    // ── L2: Redis ──
+    // L2: Redis (shared client from redis.ts)
     try {
-      const r = await getRedis();
+      const r = await getRedisClient();
       if (r) {
         const raw = await r.get(
           `${REDIS_PREFIX}${officeId}:${fnv1a(norm)}`,
@@ -143,10 +97,6 @@ export class AIResponseCache {
     return null;
   }
 
-  /**
-   * Store an AI response in both cache layers.
-   * In-memory write is synchronous; Redis is fire-and-forget.
-   */
   static async set(
     officeId: string,
     rawMessage: string,
@@ -165,12 +115,10 @@ export class AIResponseCache {
       ts: Date.now(),
     };
 
-    // L1: memory (always)
     writeMemory(officeId, mk, entry);
 
-    // L2: Redis (fire-and-forget)
     try {
-      const r = await getRedis();
+      const r = await getRedisClient();
       if (r) {
         r.setex(
           `${REDIS_PREFIX}${officeId}:${fnv1a(norm)}`,
@@ -179,7 +127,7 @@ export class AIResponseCache {
         ).catch(() => {});
       }
     } catch {
-      // Redis write failure — memory cache is still warm
+      // Redis write failure — memory layer still warm
     }
   }
 }
