@@ -53,6 +53,7 @@ export class InlineProcessor {
         businessPhone,
         { phone, text: message, messageId },
         conversationHistory,
+        officeId, // pass directly to skip phone lookup
       );
 
       if (!engineResult) {

@@ -177,6 +177,7 @@ async function processEvolutionMessage(
     businessPhone,
     { phone, text: message, messageId },
     conversationHistory,
+    officeId, // pass directly to skip phone lookup
   );
   MetricsService.trackTiming(METRIC.AI_RESPONSE_TIME, Date.now() - aiStart, {
     officeId,

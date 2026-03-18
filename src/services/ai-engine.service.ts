@@ -49,14 +49,20 @@ export class AIEngine {
     businessPhone: string,
     message: IncomingMessage,
     conversationHistory: Array<{ role: string; content: string }> = [],
+    directOfficeId?: string,
   ): Promise<AIEngineResult | null> {
     // ── Step 1: Identify Office ──
-    const session = await WhatsAppSessionRepository.getByPhone(businessPhone);
-    if (!session) {
-      console.error(`[AIEngine] No session found for phone: ${businessPhone}`);
-      return null;
+    // If officeId is passed directly (from webhook), skip the phone lookup
+    let officeId = directOfficeId || "";
+
+    if (!officeId) {
+      const session = await WhatsAppSessionRepository.getByPhone(businessPhone);
+      if (!session) {
+        console.error(`[AIEngine] No session found for phone: ${businessPhone}`);
+        return null;
+      }
+      officeId = session.officeId;
     }
-    const officeId = session.officeId;
 
     // ── Step 2: Load AI Agent ──
     const agent = await AIAgentRepository.getByOfficeId(officeId);
