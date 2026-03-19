@@ -19,7 +19,6 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
-    company: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -50,7 +49,7 @@ export default function SignUpPage() {
         formData.email,
         formData.password,
         formData.name,
-        formData.company
+        ''
       )
 
       if (signUpError) throw new Error(signUpError)
@@ -180,27 +179,6 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     placeholder="محمد أحمد"
                     autoComplete="name"
-                    className="w-full bg-[#161b22] border border-[#30363d] rounded-xl py-3 pr-10 pl-4 text-white placeholder-gray-600 focus:border-primary/60 focus:bg-[#1c2128] focus:outline-none transition-all text-sm"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              {/* Company */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  اسم الشركة / المكتب
-                  <span className="text-gray-500 font-normal mr-1">(اختياري)</span>
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    placeholder="مكتب العقار الذهبي"
-                    autoComplete="organization"
                     className="w-full bg-[#161b22] border border-[#30363d] rounded-xl py-3 pr-10 pl-4 text-white placeholder-gray-600 focus:border-primary/60 focus:bg-[#1c2128] focus:outline-none transition-all text-sm"
                     disabled={loading}
                   />
