@@ -9,6 +9,8 @@
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { instanceNameForOffice } from "@/lib/evolution";
 import { WhatsAppMessage } from "@/types/message";
+import { isCircuitOpen } from "@/lib/circuit-breaker";
+import { trackWhatsAppIncident } from "@/services/whatsapp-incident.service";
 
 const EVO_URL =
   process.env.EVOLUTION_API_URL ||
@@ -71,8 +73,9 @@ export function invalidateInstanceCache(officeId: string): void {
 
 // ── Evolution Instance Management ────────────────────────────
 
-const QR_RETRY_ATTEMPTS = 4;
-const QR_RETRY_DELAY_MS = 2500;
+const QR_RETRY_ATTEMPTS = 6;
+const QR_RETRY_DELAY_MS = 3500;
+const INSTANCE_READY_RETRY_MS = 5000; // extra wait when "not ready yet"
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -109,7 +112,7 @@ export async function createEvolutionInstance(instanceName: string) {
       qrcode: true,
       integration: "WHATSAPP-BAILEYS",
       webhook: {
-        url: `${process.env.NEXT_PUBLIC_URL}/api/webhook/whatsapp`,
+        url: `${process.env.NEXT_PUBLIC_URL || "https://masaralaqar.com"}/api/webhook/whatsapp`,
         byEvents: true,
         events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"],
       },
@@ -146,15 +149,36 @@ export async function getEvolutionQR(
 
   for (let attempt = 1; attempt <= QR_RETRY_ATTEMPTS; attempt++) {
     const res = await fetch(url, { headers: evoHeaders() });
-    if (!res.ok)
-      throw new Error(
-        `Evolution QR ${res.status}: ${await res.text().catch(() => "")}`,
-      );
+    const bodyText = await res.text().catch(() => "");
+    const isNotReady =
+      !res.ok &&
+      (bodyText.toLowerCase().includes("not ready") ||
+        bodyText.toLowerCase().includes("instance not ready"));
 
-    const data = (await res.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    if (!res.ok && !isNotReady) {
+      throw new Error(`Evolution QR ${res.status}: ${bodyText}`);
+    }
+
+    if (isNotReady && attempt < QR_RETRY_ATTEMPTS) {
+      console.log(
+        `[Evolution] instance not ready yet, retry ${attempt}/${QR_RETRY_ATTEMPTS} in ${INSTANCE_READY_RETRY_MS}ms`,
+      );
+      await sleep(INSTANCE_READY_RETRY_MS);
+      continue;
+    }
+
+    if (!res.ok) {
+      throw new Error(
+        "جاري تهيئة الاتصال — انتظر دقيقة ثم جرّب مرة أخرى",
+      );
+    }
+
+    let data: Record<string, unknown> = {};
+    try {
+      data = (JSON.parse(bodyText || "{}") || {}) as Record<string, unknown>;
+    } catch {
+      data = {};
+    }
     const { base64, pairingCode } = normalizeQRResponse(data);
 
     if (base64 || pairingCode) {
@@ -225,6 +249,80 @@ export async function getEvolutionStatus(instanceName: string) {
   return res.json();
 }
 
+/** Instance status result: state + raw instance data */
+export interface InstanceStatusResult {
+  state: string;
+  instance: Record<string, unknown>;
+  exists: true;
+}
+
+/**
+ * Check instance status via Evolution API.
+ * Returns { state, instance, exists } if instance exists, null if 404 (does not exist).
+ */
+export async function checkInstanceStatus(
+  instanceName: string,
+): Promise<InstanceStatusResult | null> {
+  try {
+    const data = (await getEvolutionStatus(instanceName)) as Record<
+      string,
+      unknown
+    > | null;
+    if (!data) return null;
+
+    const instance = data.instance as Record<string, unknown> | undefined;
+    const state = (instance?.state as string) ?? "close";
+    return { state: String(state).toLowerCase(), instance: instance ?? {}, exists: true };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ensure instance exists: create + set webhook if not.
+ * Returns true if instance is ready (created or already existed).
+ */
+export async function ensureInstanceExists(
+  instanceName: string,
+  logPrefix = "[Evolution]",
+): Promise<boolean> {
+  const status = await checkInstanceStatus(instanceName);
+  if (status) {
+    console.log(`${logPrefix} instance ${instanceName} exists, state=${status.state}`);
+    return true;
+  }
+
+  console.log(`${logPrefix} instance ${instanceName} does not exist — creating`);
+  try {
+    await createEvolutionInstance(instanceName);
+    await setEvolutionWebhook(instanceName);
+    await sleep(2000); // allow instance to initialize before QR fetch
+    console.log(`${logPrefix} instance ${instanceName} created, webhook set`);
+    return true;
+  } catch (err) {
+    console.error(`${logPrefix} ensureInstanceExists failed:`, err);
+    return false;
+  }
+}
+
+/**
+ * Get fresh QR for instance. Call when state is close/logged out.
+ * Logs QR generation.
+ */
+export async function getFreshQR(
+  instanceName: string,
+  phoneNumber?: string,
+  logPrefix = "[Evolution]",
+): Promise<{ base64: string | null; pairingCode: string | null; code: unknown }> {
+  console.log(`${logPrefix} generating fresh QR for ${instanceName}`);
+  const result = await getEvolutionQR(instanceName, phoneNumber);
+  const hasQr = !!(result.base64 || result.pairingCode);
+  console.log(
+    `${logPrefix} QR generated for ${instanceName}: ${hasQr ? "ok" : "empty"}`,
+  );
+  return result;
+}
+
 /** Delete an instance */
 export async function deleteEvolutionInstance(instanceName: string) {
   const res = await fetch(`${EVO_URL}/instance/delete/${instanceName}`, {
@@ -233,6 +331,97 @@ export async function deleteEvolutionInstance(instanceName: string) {
   });
   if (!res.ok) throw new Error(`Evolution deleteInstance ${res.status}`);
   return res.json();
+}
+
+/** Logout (force disconnect) an instance — keeps instance, allows re-scan QR */
+export async function logoutEvolutionInstance(instanceName: string) {
+  const res = await fetch(`${EVO_URL}/instance/logout/${instanceName}`, {
+    method: "DELETE",
+    headers: evoHeaders(),
+  });
+  if (!res.ok) throw new Error(`Evolution logout ${res.status}`);
+  return res.json();
+}
+
+// ── Auto-recovery helpers ─────────────────────────────────────
+
+const CONNECTION_ERROR_PATTERNS = [
+  "not connected",
+  "instance closed",
+  "unauthorized",
+  "401",
+  "connection",
+  "logged out",
+  "disconnected",
+];
+
+function isConnectionError(status: number, body: string): boolean {
+  if (status === 401) return true;
+  const lower = body.toLowerCase();
+  return CONNECTION_ERROR_PATTERNS.some((p) => lower.includes(p));
+}
+
+/** Trigger QR regeneration via GET /instance/connect (does not block on user scan) */
+async function triggerQRRegeneration(instanceName: string): Promise<void> {
+  try {
+    const res = await fetch(
+      `${EVO_URL}/instance/connect/${instanceName}`,
+      { headers: evoHeaders() },
+    );
+    if (res.ok) {
+      console.log(
+        `[WhatsApp] office_id=* instance_name=${instanceName} auto-reconnect triggered — QR regenerated`,
+      );
+    } else {
+      console.warn(
+        `[WhatsApp] office_id=* instance_name=${instanceName} QR regeneration failed (${res.status})`,
+      );
+    }
+  } catch (err) {
+    console.warn(
+      `[WhatsApp] office_id=* instance_name=${instanceName} QR regeneration error:`,
+      err,
+    );
+  }
+}
+
+/**
+ * Attempt recovery when send fails with connection error:
+ * Check status, trigger QR if not open, then caller can retry.
+ * Tracks auto_reconnect_triggered when QR is regenerated.
+ */
+async function attemptInstanceRecovery(
+  officeId: string,
+  instanceName: string,
+  logPrefix: string,
+): Promise<boolean> {
+  if (isCircuitOpen(instanceName)) {
+    console.log(
+      `[WhatsApp] office_id=${officeId} instance_name=${instanceName} circuit open — skip auto-retry, manual intervention required`,
+    );
+    return false;
+  }
+  const status = await checkInstanceStatus(instanceName);
+  if (!status) {
+    console.log(
+      `[WhatsApp] office_id=${officeId} instance_name=${instanceName} instance not found — no recovery possible`,
+    );
+    return false;
+  }
+  if (status.state === "open") {
+    console.log(
+      `[WhatsApp] office_id=${officeId} instance_name=${instanceName} instance already open — retrying send`,
+    );
+    return true;
+  }
+  console.log(
+    `[WhatsApp] office_id=${officeId} instance_name=${instanceName} auto-reconnect triggered — state=${status.state}`,
+  );
+  trackWhatsAppIncident(officeId, instanceName, "auto_reconnect_triggered", {
+    previousState: status.state,
+  });
+  await triggerQRRegeneration(instanceName);
+  return true;
 }
 
 /**
@@ -250,10 +439,11 @@ export class WhatsAppService {
     message: string,
     officeId: string,
   ): Promise<boolean> {
-    try {
-      const instanceName = await resolveInstanceName(officeId);
-      const formattedPhone = formatPhoneNumber(recipientPhone);
+    const instanceName = await resolveInstanceName(officeId);
+    const formattedPhone = formatPhoneNumber(recipientPhone);
+    const logPrefix = `[WhatsApp] office_id=${officeId} instance_name=${instanceName} sendMessage`;
 
+    const doSend = async (): Promise<{ ok: boolean; status: number; body: string }> => {
       const response = await fetch(
         `${EVO_URL}/message/sendText/${instanceName}`,
         {
@@ -262,19 +452,48 @@ export class WhatsAppService {
           body: JSON.stringify({ number: formattedPhone, text: message }),
         },
       );
+      const body = await response.text().catch(() => "");
+      return { ok: response.ok, status: response.status, body };
+    };
 
-      if (!response.ok) {
-        console.error(
-          `[WhatsApp] sendMessage error (instance=${instanceName}):`,
-          response.status,
-          await response.text().catch(() => ""),
+    try {
+      let result = await doSend();
+
+      if (result.ok) return true;
+
+      console.log(
+        `${logPrefix} send failed — status=${result.status} body=${result.body.slice(0, 200)}`,
+      );
+
+      if (isConnectionError(result.status, result.body)) {
+        const recovered = await attemptInstanceRecovery(
+          officeId,
+          instanceName,
+          logPrefix,
         );
-        return false;
+        if (recovered) {
+          result = await doSend();
+          if (result.ok) {
+            console.log(`${logPrefix} retry success`);
+            trackWhatsAppIncident(officeId, instanceName, "reconnect_success");
+            return true;
+          }
+          console.log(`${logPrefix} retry failure — status=${result.status}`);
+          trackWhatsAppIncident(officeId, instanceName, "reconnect_failed", {
+            status: result.status,
+            body: result.body.slice(0, 200),
+          });
+        }
       }
 
-      return true;
+      console.error(
+        `${logPrefix} send failed (no recovery or retry exhausted):`,
+        result.status,
+        result.body.slice(0, 300),
+      );
+      return false;
     } catch (error) {
-      console.error("[WhatsApp] sendMessage exception:", error);
+      console.error(`${logPrefix} exception:`, error);
       return false;
     }
   }
@@ -286,10 +505,11 @@ export class WhatsAppService {
     caption: string,
     officeId: string,
   ): Promise<boolean> {
-    try {
-      const instanceName = await resolveInstanceName(officeId);
-      const formattedPhone = formatPhoneNumber(recipientPhone);
+    const instanceName = await resolveInstanceName(officeId);
+    const formattedPhone = formatPhoneNumber(recipientPhone);
+    const logPrefix = `[WhatsApp] office_id=${officeId} instance_name=${instanceName} sendMedia`;
 
+    const doSend = async (): Promise<{ ok: boolean; status: number; body: string }> => {
       const response = await fetch(
         `${EVO_URL}/message/sendMedia/${instanceName}`,
         {
@@ -303,18 +523,48 @@ export class WhatsAppService {
           }),
         },
       );
+      const body = await response.text().catch(() => "");
+      return { ok: response.ok, status: response.status, body };
+    };
 
-      if (!response.ok) {
-        console.error(
-          `[WhatsApp] sendMedia error (instance=${instanceName}):`,
-          await response.text().catch(() => ""),
+    try {
+      let result = await doSend();
+
+      if (result.ok) return true;
+
+      console.log(
+        `${logPrefix} send failed — status=${result.status} body=${result.body.slice(0, 200)}`,
+      );
+
+      if (isConnectionError(result.status, result.body)) {
+        const recovered = await attemptInstanceRecovery(
+          officeId,
+          instanceName,
+          logPrefix,
         );
-        return false;
+        if (recovered) {
+          result = await doSend();
+          if (result.ok) {
+            console.log(`${logPrefix} retry success`);
+            trackWhatsAppIncident(officeId, instanceName, "reconnect_success");
+            return true;
+          }
+          console.log(`${logPrefix} retry failure — status=${result.status}`);
+          trackWhatsAppIncident(officeId, instanceName, "reconnect_failed", {
+            status: result.status,
+            body: result.body.slice(0, 200),
+          });
+        }
       }
 
-      return true;
+      console.error(
+        `${logPrefix} send failed (no recovery or retry exhausted):`,
+        result.status,
+        result.body.slice(0, 300),
+      );
+      return false;
     } catch (error) {
-      console.error("[WhatsApp] sendMediaMessage exception:", error);
+      console.error(`${logPrefix} exception:`, error);
       return false;
     }
   }

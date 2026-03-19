@@ -47,3 +47,98 @@ export const supabaseAdmin = (() => {
   }
   return _supabaseAdmin;
 })();
+
+// ── Blog Posts ───────────────────────────────────────────────
+
+export async function getAllBlogPosts(publishedOnly: boolean = true) {
+  let query = supabaseAdmin.from("blog_posts").select("*").order("created_at", { ascending: false });
+  if (publishedOnly) query = query.eq("published", true);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  const { data, error } = await supabaseAdmin
+    .from("blog_posts")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function createBlogPost(post: Record<string, unknown>) {
+  const { data, error } = await supabaseAdmin
+    .from("blog_posts")
+    .insert(post)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateBlogPost(id: string, updates: Record<string, unknown>) {
+  const { data, error } = await supabaseAdmin
+    .from("blog_posts")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteBlogPost(id: string) {
+  const { error } = await supabaseAdmin.from("blog_posts").delete().eq("id", id);
+  if (error) throw error;
+  return true;
+}
+
+// ── Library Resources ────────────────────────────────────────
+
+export async function getAllLibraryResources(publishedOnly: boolean = true) {
+  let query = supabaseAdmin.from("library_resources").select("*").order("created_at", { ascending: false });
+  if (publishedOnly) query = query.eq("published", true);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createLibraryResource(resource: Record<string, unknown>) {
+  const { data, error } = await supabaseAdmin
+    .from("library_resources")
+    .insert(resource)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateLibraryResource(id: string, updates: Record<string, unknown>) {
+  const { data, error } = await supabaseAdmin
+    .from("library_resources")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteLibraryResource(id: string) {
+  const { error } = await supabaseAdmin.from("library_resources").delete().eq("id", id);
+  if (error) throw error;
+  return true;
+}
+
+// ── Bot Subscriptions ────────────────────────────────────────
+
+export async function getBotSubscriptionByPhone(phone: string) {
+  const { data, error } = await supabaseAdmin
+    .from("bot_subscriptions")
+    .select("*")
+    .eq("phone", phone)
+    .single();
+  return { data, error };
+}
