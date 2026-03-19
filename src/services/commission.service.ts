@@ -6,6 +6,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase";
 import { AffiliateRepository } from "@/repositories/affiliate.repo";
+import { logReferralEvent } from "@/lib/referral-logger";
 
 const COMMISSION_YEARS = [
   { monthsMin: 0, monthsMax: 12, percentage: 30 },
@@ -55,6 +56,13 @@ export async function processPaymentCommission(
   const affiliate = await AffiliateRepository.getById(referral.affiliateId);
   if (!affiliate) return;
 
+  const { data: refUser } = await supabaseAdmin
+    .from("users")
+    .select("office_id")
+    .eq("id", referredUserId)
+    .single();
+  const officeId = (refUser as { office_id?: string } | null)?.office_id ?? null;
+
   const months = monthsSince(referral.createdAt);
   const pct1 = getCommissionPercentage(months);
   if (pct1 > 0) {
@@ -68,6 +76,19 @@ export async function processPaymentCommission(
         amount: amount1,
         percentage: pct1,
         tierLevel: 1,
+      });
+      logReferralEvent("referral_converted", {
+        affiliate_id: referral.affiliateId,
+        office_id: officeId,
+        referred_user_id: referredUserId,
+        referral_id: referral.id,
+      });
+      logReferralEvent("commission_added", {
+        affiliate_id: referral.affiliateId,
+        office_id: officeId,
+        amount: amount1,
+        percentage: pct1,
+        subscription_id: subscriptionId,
       });
     }
   }
@@ -84,6 +105,14 @@ export async function processPaymentCommission(
         amount: overrideAmount,
         percentage: TIER2_OVERRIDE_PERCENT,
         tierLevel: 2,
+      });
+      logReferralEvent("commission_added", {
+        affiliate_id: parentId,
+        office_id: officeId,
+        amount: overrideAmount,
+        percentage: TIER2_OVERRIDE_PERCENT,
+        subscription_id: subscriptionId,
+        tier_level: 2,
       });
     }
   }

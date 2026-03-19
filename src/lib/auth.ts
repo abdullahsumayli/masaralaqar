@@ -188,4 +188,41 @@ export async function updatePassword(newPassword: string) {
   }
 }
 
+/** Sign up partner (affiliate) — creates user with role=affiliate and affiliate record. No office. */
+export async function signUpPartner(email: string, password: string, name: string) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) throw error;
+    if (!data.user) return { user: null, error: "فشل إنشاء الحساب" };
+
+    await supabase.from("users").insert({
+      id: data.user.id,
+      email: data.user.email,
+      name,
+      role: "affiliate",
+      created_at: new Date().toISOString(),
+    });
+
+    const { AffiliateRepository } = await import("@/repositories/affiliate.repo");
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const existing = await AffiliateRepository.getByReferralCode(code);
+      if (!existing) break;
+      code = "";
+      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    }
+    await AffiliateRepository.createAffiliate(data.user.id, code, null);
+
+    return { user: data.user, error: null };
+  } catch (error: any) {
+    return { user: null, error: error.message };
+  }
+}
+
 // Export lead functions
