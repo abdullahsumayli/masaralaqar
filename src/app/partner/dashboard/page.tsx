@@ -37,7 +37,6 @@ interface DashboardData {
 
 interface ReferralItem {
   id: string;
-  officeName: string;
   status: "registered" | "subscribed";
   commissionEarned: number;
   createdAt: string;
@@ -265,7 +264,7 @@ export default function PartnerDashboardPage() {
 
         {/* Referrals table */}
         <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-gray-400 mb-4">المكاتب المُحالة</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-4">الإحالات</h2>
           {referrals.length === 0 ? (
             <p className="text-gray-500 text-sm">لا توجد إحالات بعد. شارك رابطك لبدء الكسب.</p>
           ) : (
@@ -273,7 +272,6 @@ export default function PartnerDashboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-right text-gray-400 border-b border-[#21262d]">
-                    <th className="py-3 px-2">المكتب</th>
                     <th className="py-3 px-2">الحالة</th>
                     <th className="py-3 px-2">العمولة</th>
                     <th className="py-3 px-2">التاريخ</th>
@@ -282,7 +280,6 @@ export default function PartnerDashboardPage() {
                 <tbody>
                   {referrals.map((r) => (
                     <tr key={r.id} className="border-b border-[#21262d] last:border-0">
-                      <td className="py-3 px-2 text-white">{r.officeName}</td>
                       <td className="py-3 px-2">
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${

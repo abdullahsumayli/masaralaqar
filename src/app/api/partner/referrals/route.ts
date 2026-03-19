@@ -1,6 +1,6 @@
 /**
  * GET /api/partner/referrals
- * List referred offices with status and commission earned.
+ * List referrals with status and commission earned.
  */
 
 import { AffiliateRepository } from "@/repositories/affiliate.repo";
@@ -24,26 +24,6 @@ export async function GET() {
     const commissions = await AffiliateRepository.getCommissionsByAffiliateId(affiliate.id);
 
     const referredUserIds = referrals.map((r) => r.referredUserId);
-    let usersData: { id: string; name?: string; email?: string; company?: string; office_id?: string }[] = [];
-    if (referredUserIds.length > 0) {
-      const { data } = await supabaseAdmin
-        .from("users")
-        .select("id, name, email, company, office_id")
-        .in("id", referredUserIds);
-      usersData = data ?? [];
-    }
-
-    const officeIds = usersData.map((u) => u.office_id).filter(Boolean) as string[];
-    let officesMap: Record<string, { name: string }> = {};
-    if (officeIds.length > 0) {
-      const { data } = await supabaseAdmin
-        .from("offices")
-        .select("id, name")
-        .in("id", officeIds);
-      if (data) {
-        officesMap = Object.fromEntries(data.map((o) => [o.id, { name: o.name || "—" }]));
-      }
-    }
 
     const commissionByReferral: Record<string, number> = {};
     for (const c of commissions) {
@@ -68,14 +48,11 @@ export async function GET() {
     }
 
     const items = referrals.map((r) => {
-      const u = usersData.find((x) => x.id === r.referredUserId);
-      const officeName = u?.office_id ? officesMap[u.office_id]?.name ?? u?.company ?? u?.name ?? "—" : u?.company ?? u?.name ?? "—";
       const commissionEarned = commissionByReferral[r.id] ?? 0;
       const status = hasActiveSub[r.referredUserId] ? "subscribed" : "registered";
 
       return {
         id: r.id,
-        officeName,
         referredUserId: r.referredUserId,
         status,
         commissionEarned,
