@@ -9,7 +9,9 @@ export interface Plan {
   maxProperties: number;
   maxAiMessages: number;
   maxWhatsappMessages: number;
+  maxInstances: number;
   price: number;
+  overagePricePerMessage: number;
   features: string[];
   isActive: boolean;
   sortOrder: number;
@@ -22,6 +24,7 @@ export interface PlanCreateInput {
   maxProperties?: number;
   maxAiMessages?: number;
   maxWhatsappMessages?: number;
+  maxInstances?: number;
   price?: number;
   features?: string[];
 }
@@ -32,6 +35,7 @@ export interface PlanUpdateInput {
   maxProperties?: number;
   maxAiMessages?: number;
   maxWhatsappMessages?: number;
+  maxInstances?: number;
   price?: number;
   features?: string[];
   isActive?: boolean;

@@ -18,6 +18,11 @@ export interface Subscription {
   endDate: string | null;
   aiMessagesUsed: number;
   whatsappMessagesUsed: number;
+  messageLimit: number | null;
+  overageMessages: number;
+  overageAmountSar: number;
+  billingCycleStart: string | null;
+  billingCycleEnd: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,7 +34,14 @@ export interface SubscriptionWithPlan extends Subscription {
 export interface UsageLog {
   id: string;
   officeId: string;
-  type: "ai_message" | "whatsapp_message" | "property_created";
-  metadata: Record<string, unknown>;
+  type:
+    | "ai_message"
+    | "whatsapp_message"
+    | "property_created"
+    | "ai_response"
+    | "lead_created"
+    | "message_sent";
+  count: number;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }

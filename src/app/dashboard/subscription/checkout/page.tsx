@@ -133,11 +133,25 @@ export default function CheckoutPage() {
     setError("");
     setSubmitting(true);
     try {
-      // Redirect to Moyasar hosted page or show form
-      // For now: show message that card payment needs Moyasar JS setup
-      setError(
-        "الدفع بالبطاقة سيكون متاحاً قريباً. يرجى استخدام التحويل البنكي حالياً.",
-      );
+      if (["starter", "growth", "pro"].includes(plan.name)) {
+        const res = await fetch("/api/payment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: plan.name }),
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          window.location.href = data.url;
+          return;
+        }
+        setError(data.error || "فشل في إنشاء عملية الدفع");
+      } else {
+        setError(
+          "الدفع بالبطاقة متاح للباقات: بداية، نمو، احترافي. استخدم التحويل البنكي للباقات الأخرى.",
+        );
+      }
+    } catch {
+      setError("حدث خطأ. حاول مجدداً.");
     } finally {
       setSubmitting(false);
     }

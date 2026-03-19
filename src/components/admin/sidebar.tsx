@@ -2,11 +2,13 @@
 
 import { cn } from "@/lib/utils";
 import {
+    Activity,
     BarChart3,
     BookOpen,
     Brain,
     ClipboardList,
     CreditCard,
+    DollarSign,
     FileText,
     FolderOpen,
     HeadphonesIcon,
@@ -28,11 +30,22 @@ const menuItems = [
   { title: "الرئيسية", href: "/admin", icon: LayoutDashboard },
   { title: "المشتركين", href: "/admin/subscribers", icon: Users },
   { title: "الباقات", href: "/admin/plans", icon: CreditCard },
+  { title: "الفوترة والاستخدام", href: "/admin/billing-usage", icon: DollarSign },
   { title: "استهلاك الذكاء الاصطناعي", href: "/admin/ai-usage", icon: Brain },
   {
     title: "جلسات الواتساب",
     href: "/admin/whatsapp-sessions",
     icon: Smartphone,
+  },
+  {
+    title: "مراقبة واتساب",
+    href: "/admin/whatsapp-monitor",
+    icon: Activity,
+  },
+  {
+    title: "عمليات واتساب",
+    href: "/admin/whatsapp-ops",
+    icon: Zap,
   },
   { title: "تحليلات النظام", href: "/admin/system-analytics", icon: BarChart3 },
   // ── المحتوى ──

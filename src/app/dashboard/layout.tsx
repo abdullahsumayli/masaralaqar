@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { UsageWarningBanner } from "@/components/dashboard/usage-warning-banner";
 import { WhatsAppGuard } from "@/components/dashboard/whatsapp-guard";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -25,6 +26,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/connect-whatsapp":     "ربط الواتساب",
   "/dashboard/subscription":         "الاشتراك والباقات",
   "/dashboard/subscription/checkout": "إتمام الاشتراك",
+  "/dashboard/billing":             "الفواتير",
   "/dashboard/affiliate":           "برنامج الإحالة",
 };
 
@@ -77,6 +79,7 @@ export default function DashboardLayout({
 
         {/* Page content — flex-1 + overflow-auto so pages control their own scroll/height */}
         <main className="flex-1 overflow-auto flex flex-col">
+          <UsageWarningBanner />
           <WhatsAppGuard>{children}</WhatsAppGuard>
         </main>
       </div>

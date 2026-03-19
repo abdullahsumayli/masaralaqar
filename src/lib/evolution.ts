@@ -14,7 +14,10 @@ const EVO_URL =
 const EVO_KEY = process.env.EVOLUTION_API_KEY || "";
 
 function headers() {
-  return { "Content-Type": "application/json", apikey: EVO_KEY };
+  const key = process.env.EVOLUTION_API_KEY?.trim() ?? "";
+  console.log("[Evolution] key exists:", !!key);
+  console.log("[Evolution] key length:", key.length);
+  return { "Content-Type": "application/json", apikey: key };
 }
 
 /** Derive a deterministic Evolution instance name from an office UUID */

@@ -5,15 +5,17 @@
  * Each office gets its own Evolution API instance, QR code, and webhook routing.
  */
 import {
-  createEvolutionInstance,
+  checkInstanceStatus,
   deleteEvolutionInstance,
-  getEvolutionQR,
+  ensureInstanceExists,
   getEvolutionStatus,
+  getFreshQR,
   invalidateInstanceCache,
   setEvolutionWebhook,
 } from "@/integrations/whatsapp";
 import { instanceNameForOffice } from "@/lib/evolution";
 import { OfficeService } from "@/services/office.service";
+import { trackWhatsAppOnboarding } from "@/services/whatsapp-onboarding-tracking.service";
 import { WhatsAppSessionService } from "@/services/whatsapp-session.service";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -98,33 +100,24 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
 
+    // Track connect_clicked (user started onboarding)
+    trackWhatsAppOnboarding(office.id, "whatsapp_connect_clicked");
+
     const body = await request.json().catch(() => ({}));
     const { phoneNumber } = body;
 
     if (!process.env.EVOLUTION_API_KEY?.trim()) {
+      trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
+        reason: "evolution_api_missing",
+      });
       return NextResponse.json(
         { error: "إعدادات Evolution API غير مكتملة (EVOLUTION_API_KEY)" },
         { status: 503 },
       );
     }
 
-    // STEP 1: Ensure instance exists
     const instanceName = instanceNameForOffice(office.id);
-    try {
-      await createEvolutionInstance(instanceName);
-    } catch (err) {
-      console.error("[WhatsApp Connect] createEvolutionInstance error:", err);
-      // Continue — instance may already exist
-    }
-
-    // STEP 2: Ensure webhook is set
-    try {
-      await setEvolutionWebhook(instanceName);
-      console.log(`[WhatsApp Connect] Webhook configured for instance ${instanceName}`);
-    } catch (err) {
-      console.error("[WhatsApp Connect] setEvolutionWebhook error:", err);
-      // Continue — webhook may already be set
-    }
+    const logPrefix = `[WhatsApp Connect] office=${office.id} instance=${instanceName}`;
 
     // Normalize phone if provided
     let normalized = "";
@@ -134,51 +127,106 @@ export async function POST(request: NextRequest) {
       if (!normalized.startsWith("966")) normalized = "966" + normalized;
     }
 
-    // STEP 3: Wait briefly for Evolution to initialize
-    await new Promise((r) => setTimeout(r, 1000));
+    // 1) Check instance status before generating QR
+    const status = await checkInstanceStatus(instanceName);
+    console.log(`${logPrefix} instance status: ${status ? status.state : "not_found"}`);
 
-    // STEP 4: Retry QR fetch (up to 3 attempts)
-    let qr = null;
-    for (let i = 0; i < 3; i++) {
-      try {
-        const res = await getEvolutionQR(instanceName, normalized || undefined);
-        console.log("[QR Attempt]", i + 1, res);
-        if (res?.base64) {
-          qr = res;
-          break;
-        }
-      } catch (err) {
-        console.error("[QR ERROR]", err);
+    // 2) If status is "open" → return connected immediately
+    if (status?.state === "open") {
+      let session = await WhatsAppSessionService.getSessionByOffice(office.id);
+      await WhatsAppSessionService.connectPhone({
+        officeId: office.id,
+        phoneNumber: normalized || session?.phoneNumber || "pending",
+        instanceId: instanceName,
+      });
+      session = await WhatsAppSessionService.getSessionByOffice(office.id);
+      if (session && session.sessionStatus !== "connected") {
+        await WhatsAppSessionService.markConnected(session.id);
+        session = await WhatsAppSessionService.getSessionByOffice(office.id);
       }
-      await new Promise((r) => setTimeout(r, 1000));
+      invalidateInstanceCache(office.id);
+
+      console.log(`${logPrefix} already connected — returning without QR`);
+      return NextResponse.json({
+        connected: true,
+        evolutionStatus: "connected",
+        instanceName,
+        session: session
+          ? {
+              officeId: session.officeId,
+              phoneNumber: session.phoneNumber,
+              sessionStatus: "connected" as const,
+              instanceId: session.instanceId,
+              lastConnectedAt: session.lastConnectedAt,
+            }
+          : {
+              officeId: office.id,
+              phoneNumber: normalized || "pending",
+              sessionStatus: "connected" as const,
+              instanceId: instanceName,
+              lastConnectedAt: new Date().toISOString(),
+            },
+      });
     }
 
-    // STEP 5: Handle failure
-    if (!qr) {
+    // 3) If instance does not exist → create + set webhook
+    if (!status) {
+      const ready = await ensureInstanceExists(instanceName, logPrefix);
+      if (!ready) {
+        trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
+          reason: "instance_creation_failed",
+        });
+        return NextResponse.json(
+          { error: "فشل في إنشاء الاتصال — تحقق من Evolution API" },
+          { status: 500 },
+        );
+      }
+    } else {
+      // 4) Instance exists but close/logged out → reinitialize (trigger fresh QR)
+      console.log(`${logPrefix} reconnect triggered — state=${status.state}`);
+      try {
+        await setEvolutionWebhook(instanceName);
+      } catch (err) {
+        console.warn(`${logPrefix} setWebhook on reconnect:`, err);
+      }
+    }
+
+    // 5) Get fresh QR
+    let qrData: { base64: string | null; pairingCode: string | null };
+    try {
+      const raw = await getFreshQR(
+        instanceName,
+        normalized || undefined,
+        logPrefix,
+      );
+      qrData = {
+        base64: raw.base64 ?? null,
+        pairingCode: raw.pairingCode ?? null,
+      };
+    } catch (err) {
+      console.error(`${logPrefix} QR fetch failed:`, err);
+      trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
+        reason: "qr_fetch_failed",
+      });
       return NextResponse.json(
-        {
-          success: false,
-          message: "Instance not ready yet",
-        },
+        { error: typeof err === "object" && err !== null && "message" in err ? (err as Error).message : "فشل في استرجاع رمز QR" },
         { status: 500 },
       );
     }
 
-    // Create/update session with the per-office instance name
+    trackWhatsAppOnboarding(office.id, "whatsapp_qr_shown");
+
     await WhatsAppSessionService.connectPhone({
       officeId: office.id,
       phoneNumber: normalized || "pending",
       instanceId: instanceName,
     });
-
-    // Invalidate instance cache so future lookups get the new instance
     invalidateInstanceCache(office.id);
 
-    // STEP 6: Return QR
     return NextResponse.json({
       success: true,
-      qr: qr.base64,
-      pairingCode: qr.pairingCode || null,
+      qr: qrData.base64,
+      pairingCode: qrData.pairingCode,
       instanceName,
       session: {
         officeId: office.id,
@@ -187,7 +235,8 @@ export async function POST(request: NextRequest) {
         instanceId: instanceName,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("WhatsApp Connect POST error:", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }

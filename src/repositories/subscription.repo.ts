@@ -17,6 +17,11 @@ export class SubscriptionRepository {
       endDate: row.end_date as string | null,
       aiMessagesUsed: (row.ai_messages_used as number) || 0,
       whatsappMessagesUsed: (row.whatsapp_messages_used as number) || 0,
+      messageLimit: (row.message_limit as number) ?? null,
+      overageMessages: (row.overage_messages as number) || 0,
+      overageAmountSar: Number(row.overage_amount_sar) || 0,
+      billingCycleStart: (row.billing_cycle_start as string) ?? null,
+      billingCycleEnd: (row.billing_cycle_end as string) ?? null,
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
     };
@@ -87,18 +92,42 @@ export class SubscriptionRepository {
       type === "ai_message" ? "ai_messages_used" : "whatsapp_messages_used";
     const currentVal =
       type === "ai_message" ? sub.aiMessagesUsed : sub.whatsappMessagesUsed;
+    const newVal = currentVal + 1;
+
+    const limit =
+      sub.messageLimit ?? sub.plan?.maxAiMessages ?? 300;
+    const pricePerMessage = sub.plan?.overagePricePerMessage ?? 0.5;
+
+    let overageMessages = sub.overageMessages;
+    let overageAmountSar = sub.overageAmountSar;
+
+    if (
+      type === "ai_message" &&
+      limit > 0 &&
+      newVal > limit
+    ) {
+      overageMessages += 1;
+      overageAmountSar += pricePerMessage;
+    }
+
+    const updates: Record<string, unknown> = {
+      [field]: newVal,
+      overage_messages: overageMessages,
+      overage_amount_sar: overageAmountSar,
+      updated_at: new Date().toISOString(),
+    };
 
     const { error } = await supabaseAdmin
       .from("subscriptions")
-      .update({ [field]: currentVal + 1, updated_at: new Date().toISOString() })
+      .update(updates)
       .eq("id", sub.id);
 
     if (error) return false;
 
-    // Log usage
     await supabaseAdmin.from("usage_logs").insert({
       office_id: officeId,
-      type,
+      type: type === "ai_message" ? "ai_response" : type,
+      count: 1,
     });
 
     return true;
@@ -121,7 +150,10 @@ export class SubscriptionRepository {
     switch (type) {
       case "ai_message":
         used = sub.aiMessagesUsed;
-        limit = sub.plan.maxAiMessages;
+        limit =
+          sub.messageLimit ??
+          sub.plan.maxAiMessages ??
+          300;
         break;
       case "whatsapp_message":
         used = sub.whatsappMessagesUsed;
@@ -153,5 +185,63 @@ export class SubscriptionRepository {
     const { data, error } = await query;
     if (error || !data) return [];
     return data.map((row) => this.formatSubscription(row));
+  }
+
+  /**
+   * Reset billing cycle: set messages_used=0, new cycle dates
+   */
+  static async resetBillingCycle(subscriptionId: string): Promise<boolean> {
+    const now = new Date();
+    const cycleEnd = new Date(now);
+    cycleEnd.setMonth(cycleEnd.getMonth() + 1);
+
+    const { error } = await supabaseAdmin
+      .from("subscriptions")
+      .update({
+        ai_messages_used: 0,
+        whatsapp_messages_used: 0,
+        overage_messages: 0,
+        overage_amount_sar: 0,
+        billing_cycle_start: now.toISOString(),
+        billing_cycle_end: cycleEnd.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq("id", subscriptionId);
+
+    return !error;
+  }
+
+  /**
+   * Upgrade plan: update plan_id, message_limit, optionally reset usage
+   */
+  static async upgrade(
+    subscriptionId: string,
+    newPlanId: string,
+    resetUsage = false,
+  ): Promise<Subscription | null> {
+    const plan = await PlanRepository.getById(newPlanId);
+    if (!plan) return null;
+
+    const updates: Record<string, unknown> = {
+      plan_id: newPlanId,
+      message_limit: plan.maxAiMessages,
+      updated_at: new Date().toISOString(),
+    };
+    if (resetUsage) {
+      updates.ai_messages_used = 0;
+      updates.whatsapp_messages_used = 0;
+      updates.overage_messages = 0;
+      updates.overage_amount_sar = 0;
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("subscriptions")
+      .update(updates)
+      .eq("id", subscriptionId)
+      .select()
+      .single();
+
+    if (error || !data) return null;
+    return this.formatSubscription(data);
   }
 }

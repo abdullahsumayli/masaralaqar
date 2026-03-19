@@ -72,20 +72,8 @@ export class AIEngine {
       return null;
     }
 
-    // ── Step 3: Check subscription limits ──
-    const aiLimit = await SubscriptionRepository.checkLimit(
-      officeId,
-      "ai_message",
-    );
-    if (!aiLimit.allowed) {
-      return {
-        reply:
-          "عذراً، تم استنفاد حد الرسائل المتاح في باقتك الحالية. يرجى ترقية الباقة للاستمرار.",
-        properties: [],
-        suggestions: ["تواصل مع الدعم لترقية باقتك"],
-        officeId,
-      };
-    }
+    // ── Step 3: Subscription check (overage allowed — AI continues when over limit) ──
+    await SubscriptionRepository.checkLimit(officeId, "ai_message");
 
     // ── Step 3b: Check response cache ──
     const cached = await AIResponseCache.get(officeId, message.text);

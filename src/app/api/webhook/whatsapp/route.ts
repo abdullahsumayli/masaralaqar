@@ -23,6 +23,8 @@ import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo"
 import { InlineProcessor } from "@/services/inline-processor.service";
 import { METRIC, MetricsService } from "@/services/metrics.service";
 import { TenantService } from "@/services/tenant.service";
+import { trackWhatsAppIncident } from "@/services/whatsapp-incident.service";
+import { trackWhatsAppOnboarding } from "@/services/whatsapp-onboarding-tracking.service";
 import { NextRequest, NextResponse } from "next/server";
 
 // ── Constants ────────────────────────────────────────────────
@@ -127,8 +129,22 @@ export async function POST(request: NextRequest) {
             isOpen ? "connected" : "disconnected",
           );
           console.log(
-            `[Webhook] connection.update → office=${session.officeId} instance=${instanceName} status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
+            `[Webhook] office_id=${session.officeId} instance_name=${instanceName} connection.update → status=${isOpen ? "connected" : "disconnected"} +${elapsed(webhookStart)}ms`,
           );
+
+          if (!isOpen) {
+            trackWhatsAppIncident(
+              session.officeId,
+              instanceName,
+              "instance_disconnected",
+              { wasConnected: wasPreviouslyConnected },
+            );
+          }
+
+          // Track successful connection (conversion)
+          if (isOpen && !wasPreviouslyConnected) {
+            trackWhatsAppOnboarding(session.officeId, "whatsapp_connected");
+          }
 
           // Send confirmation message on first connection
           if (

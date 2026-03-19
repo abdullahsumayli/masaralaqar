@@ -115,9 +115,21 @@ export default function SubscriptionPage() {
     if (!plan.price || paying) return;
     setPaying(plan.name);
     try {
-      // For now: redirect to bank transfer flow
-      // Future: integrate Moyasar JS form for card payments
-      router.push(`/dashboard/subscription/checkout?plan=${plan.name}`);
+      if (["starter", "growth", "pro"].includes(plan.name)) {
+        const res = await fetch("/api/payment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: plan.name }),
+        });
+        const json = await res.json();
+        if (json.success && json.url) {
+          window.location.href = json.url;
+          return;
+        }
+        setToast({ type: "error", text: json.error || "فشل في إنشاء عملية الدفع" });
+      } else {
+        router.push(`/dashboard/subscription/checkout?plan=${plan.name}`);
+      }
     } catch {
       setToast({ type: "error", text: "حدث خطأ. حاول مرة أخرى." });
     } finally {

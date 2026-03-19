@@ -50,6 +50,9 @@ export default function PartnerDashboardPage() {
   const [referrals, setReferrals] = useState<ReferralItem[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
+  const [joining, setJoining] = useState(false);
+  const [needsJoin, setNeedsJoin] = useState(false);
+
   const load = useCallback(async () => {
     if (!user) return;
     try {
@@ -57,10 +60,20 @@ export default function PartnerDashboardPage() {
         fetch("/api/partner/dashboard"),
         fetch("/api/partner/referrals"),
       ]);
-      if (resDashboard.ok) setData(await resDashboard.json());
+      if (resDashboard.ok) {
+        setData(await resDashboard.json());
+        setNeedsJoin(false);
+      } else if (resDashboard.status === 403) {
+        setNeedsJoin(true);
+        setData(null);
+      } else {
+        setData(null);
+      }
       if (resReferrals.ok) {
         const json = await resReferrals.json();
         setReferrals(json.referrals ?? []);
+      } else {
+        setReferrals([]);
       }
     } catch {
       setData(null);
@@ -70,16 +83,30 @@ export default function PartnerDashboardPage() {
     }
   }, [user]);
 
+  const handleJoin = async () => {
+    setJoining(true);
+    try {
+      const res = await fetch("/api/affiliate/join", { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setToast("تم الانضمام لبرنامج الإحالة!");
+        load();
+      } else {
+        setToast(json.error || "فشل الانضمام");
+      }
+    } catch {
+      setToast("حدث خطأ");
+    } finally {
+      setJoining(false);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/partner/login");
       return;
     }
-    if (!authLoading && user && profile?.role !== "affiliate") {
-      router.push("/dashboard");
-      return;
-    }
-  }, [user, profile, authLoading, router]);
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     load();
@@ -105,7 +132,7 @@ export default function PartnerDashboardPage() {
     );
   }
 
-  if (!data) {
+  if (!data && !needsJoin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-400">فشل تحميل البيانات</p>
@@ -113,7 +140,52 @@ export default function PartnerDashboardPage() {
     );
   }
 
-  const isFirstTime = data.totalSignups === 0;
+  if (needsJoin) {
+    return (
+      <div className="min-h-screen">
+        {toast && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg bg-primary/90 text-white text-sm shadow-lg">
+            {toast}
+          </div>
+        )}
+        <header className="border-b border-[#21262d] bg-[#0D1117]/80 backdrop-blur">
+          <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <Link href="/partner/dashboard" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                <Handshake className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-bold text-white">برنامج الشركاء</span>
+            </Link>
+          </div>
+        </header>
+        <main className="max-w-5xl mx-auto px-4 py-16">
+          <div className="max-w-lg mx-auto text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+              <Share2 className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">برنامج الإحالة</h1>
+            <p className="text-text-secondary mb-8">
+              انضم كشريك واحصل على عمولة عند إحالة عملاء جدد. السنة الأولى 30%، الثانية 20%، الثالثة 10%.
+            </p>
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="px-8 py-3 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold disabled:opacity-50 flex items-center justify-center gap-2 mx-auto"
+            >
+              {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : <Share2 className="w-5 h-5" />}
+              انضم الآن
+            </button>
+            {toast && <p className="mt-4 text-sm text-primary">{toast}</p>}
+            <Link href="/dashboard" className="mt-6 inline-block text-sm text-gray-400 hover:text-white transition-colors">
+              العودة للوحة التحكم
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const isFirstTime = data!.totalSignups === 0;
 
   return (
     <div className="min-h-screen">

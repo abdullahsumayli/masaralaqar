@@ -4,6 +4,7 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase";
+import { logUsage } from "@/services/usage.service";
 import { Lead, LeadFilter, LeadUpdatePayload } from "@/types/lead";
 
 export class LeadRepository {
@@ -42,6 +43,10 @@ export class LeadRepository {
         console.error("Lead creation error:", error);
         return null;
       }
+
+      // Track lead_created for usage billing
+      const officeIdForLog = (officeId || tenantId) as string;
+      logUsage(officeIdForLog, "lead_created").catch(() => {});
 
       return data as Lead;
     } catch (error) {

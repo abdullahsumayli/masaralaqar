@@ -45,14 +45,17 @@ const NAV_AI = [
 ];
 
 const NAV_BOTTOM = [
-  { href: "/dashboard/affiliate", label: "برنامج الإحالة", icon: Share2 },
+  { href: "/dashboard/billing", label: "الفواتير", icon: CreditCard },
+  { href: "/partner/dashboard", label: "برنامج الإحالة", icon: Share2 },
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 
 const SUB_LABELS: Record<string, string> = {
   free: "مجانية",
+  starter: "بداية",
   basic: "أساسية",
+  growth: "نمو",
   pro: "احترافية",
   enterprise: "مؤسسات",
 };
