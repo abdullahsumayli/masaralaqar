@@ -172,14 +172,11 @@ export default function BlogPage() {
             <div className="text-center py-16">
               <Building2 className="w-16 h-16 text-text-muted mx-auto mb-4" />
               <p className="text-text-secondary text-lg">
-                لا توجد مقالات تطابق بحثك
+                لا توجد مقالات حالياً
               </p>
-              <Link
-                href="/admin/blog"
-                className="text-primary hover:underline mt-2 inline-block"
-              >
-                أضف مقالاً جديداً
-              </Link>
+              <p className="text-text-muted text-sm mt-2">
+                نعمل على إضافة محتوى جديد قريباً — تابعنا!
+              </p>
             </div>
           ) : (
             <motion.div

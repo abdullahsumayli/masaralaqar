@@ -28,10 +28,10 @@ const stagger = {
 
 /* ─── Data ───────────────────────────────────────── */
 const stats = [
-  { value: '+500',   numeric: 500,   label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]', prefix: '+', suffix: '' },
-  { value: '+1,000', numeric: 1000,  label: 'صفقة ناجحة',    icon: TrendingUp,  color: 'text-[#E5B84A]', prefix: '+', suffix: '' },
-  { value: '+2,500', numeric: 2500,  label: 'متدرب محترف',   icon: Users,       color: 'text-[#34D399]', prefix: '+', suffix: '' },
-  { value: '5+',     numeric: 5,     label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]', prefix: '', suffix: '+' },
+  { value: '50+',    numeric: 50,    label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]', prefix: '', suffix: '+' },
+  { value: '+1,000', numeric: 1000,  label: 'محادثة يومية',   icon: TrendingUp,  color: 'text-[#E5B84A]', prefix: '+', suffix: '' },
+  { value: '+10,000', numeric: 10000, label: 'تفاعل عميل',   icon: Users,       color: 'text-[#34D399]', prefix: '+', suffix: '' },
+  { value: '10+',    numeric: 10,    label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]', prefix: '', suffix: '+' },
 ]
 
 const features = [
@@ -98,23 +98,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#070B14] text-[#F0F4FF] overflow-x-hidden">
       <Navbar />
-
-      {/* ════════════════════════════════════════════
-          Floating WhatsApp
-          ════════════════════════════════════════════ */}
-      <motion.a
-        href="https://wa.me/966545374069"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="تواصل عبر واتساب"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1.5, type: 'spring', stiffness: 180 }}
-        whileHover={{ scale: 1.1 }}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-2xl bg-[#25D366] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] border border-white/10"
-      >
-        <MessageSquare className="w-6 h-6 text-white fill-white" />
-      </motion.a>
 
       {/* ════════════════════════════════════════════
           HERO
@@ -446,7 +429,7 @@ export default function HomePage() {
                   <p className="text-[#94A3B8] text-sm mb-2">أتمتة واتساب بالذكاء الاصطناعي للعقار</p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34D399]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
-                    Active
+                    متاح الآن
                   </span>
                 </div>
                 <ArrowLeft className="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
@@ -461,7 +444,7 @@ export default function HomePage() {
                   <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">أدوات قادمة</h3>
                   <p className="text-[#94A3B8] text-sm mb-2">CRM، أتمتة تسويق، تحليلات — قريباً</p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280]">
-                    Coming Soon
+                    قريباً
                   </span>
                 </div>
               </div>
@@ -483,8 +466,11 @@ export default function HomePage() {
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
               مدونة <span className="gradient-text-gold">ومكتبة</span>
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-10">
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-4">
               مقالات، أدلة وموارد لمساعدتك في تطوير عملك العقاري
+            </motion.p>
+            <motion.p variants={fadeUp} className="text-[#E5B84A]/80 text-sm mb-10">
+              نعمل على إضافة محتوى جديد قريباً — تابعنا!
             </motion.p>
             <motion.div variants={stagger} className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
               <motion.div variants={fadeUp}>
@@ -692,7 +678,7 @@ export default function HomePage() {
         title="موثوق من فرق العقارات"
         stats={[
           { value: '+1,000', label: 'محادثة يومية' },
-          { value: '50+', label: 'مكتب عقاري' },
+          { value: '50+',    label: 'مكتب عقاري' },
           { value: '+10,000', label: 'تفاعل عميل' },
         ]}
       />
@@ -728,7 +714,7 @@ export default function HomePage() {
 
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-4 max-w-xl mx-auto">
               انضم لأكثر من{' '}
-              <span className="text-[#E5B84A] font-bold">500 مكتب عقاري</span>{' '}
+              <span className="text-[#E5B84A] font-bold">50 مكتب عقاري</span>{' '}
               يستخدمون نظام صقر لتنمية أعمالهم
             </motion.p>
 
@@ -744,7 +730,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <span className="text-[#475569] text-sm">+495 مكتب آخر</span>
+              <span className="text-[#475569] text-sm">+45 مكتب آخر</span>
             </motion.div>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
