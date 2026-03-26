@@ -1,17 +1,15 @@
 'use client'
 
-import { motion, useInView } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  ArrowLeft, BarChart3, BookOpen, Brain, Building2, CheckCircle2, ChevronLeft,
-  Clock, FileText, Megaphone, MessageSquare, Phone, Rocket, Shield, Sparkles, Star,
-  Target, TrendingUp, Users, Zap,
+  ArrowLeft, BarChart3, BookOpen, Brain, CheckCircle2, ChevronLeft,
+  Clock, FileText, Megaphone, MessageSquare, Rocket, Shield, Sparkles, Star,
+  Target, Users, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRef, useState, useEffect } from 'react'
 import { Navbar } from '@/components/navbar'
 import { AffiliateCTASection } from '@/components/affiliate/AffiliateCTASection'
 import { KnowledgeCard } from '@/components/knowledge/KnowledgeCard'
-import { StatsSection } from '@/components/stats/StatsSection'
 import { ProductCard } from '@/components/product/ProductCard'
 import { SectionTitle } from '@/components/brand/SectionTitle'
 import { PageContainer } from '@/components/layout/PageContainer'
@@ -27,13 +25,6 @@ const stagger = {
 }
 
 /* ─── Data ───────────────────────────────────────── */
-const stats = [
-  { value: '50+',    numeric: 50,    label: 'مكتب عقاري',    icon: Building2,   color: 'text-[#4F8EF7]', prefix: '', suffix: '+' },
-  { value: '+1,000', numeric: 1000,  label: 'محادثة يومية',   icon: TrendingUp,  color: 'text-[#E5B84A]', prefix: '+', suffix: '' },
-  { value: '+10,000', numeric: 10000, label: 'تفاعل عميل',   icon: Users,       color: 'text-[#34D399]', prefix: '+', suffix: '' },
-  { value: '10+',    numeric: 10,    label: 'سنوات خبرة',    icon: Star,        color: 'text-[#a78bfa]', prefix: '', suffix: '+' },
-]
-
 const features = [
   { icon: MessageSquare, title: 'رد آلي 24/7',     desc: 'يرد على عملاءك على واتساب فوراً دون تأخير حتى وأنت نائم', color: '#4F8EF7' },
   { icon: Users,         title: 'إدارة العملاء CRM', desc: 'نظام ذكي يصنّف الجادّين تلقائياً ويجدول المتابعة لك',    color: '#E5B84A' },
@@ -53,45 +44,6 @@ const testimonials = [
   { name: 'سارة علي',   role: 'وسيط عقاري',       company: 'سارة للعقارات',       avatar: 'سع', text: 'نسبة تحويل العميل زادت 40% في أول شهرين. أفضل استثمار قدمته لمكتبي حتى الآن.', rating: 5 },
   { name: 'خالد عمر',   role: 'مالك شركة',         company: 'شركة عمر العقارية',   avatar: 'خع', text: 'الفريق محترف جداً والدعم الفني متوفر دائماً. الخدمة تفوق كل توقعاتي.', rating: 5 },
 ]
-
-/* ─── Animated Counter ───────────────────────────── */
-function StatCard({ value, numeric, label, icon: Icon, color, delay, prefix = '', suffix = '' }: {
-  value: string; numeric: number; label: string; icon: React.ElementType; color: string; delay: number; prefix?: string; suffix?: string;
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (!inView) return
-    const duration = 1500
-    const start = performance.now()
-    const step = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const easeOut = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.floor(easeOut * numeric))
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    const id = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(id)
-  }, [inView, numeric])
-
-  const display = numeric >= 1000 ? `${prefix}${count.toLocaleString('ar-SA')}${suffix}` : `${prefix}${count}${suffix}`
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 24 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col items-center text-center py-2"
-    >
-      <div className={`text-4xl md:text-5xl font-black mb-1 counter ${color}`}>{display}</div>
-      <div className="text-[#475569] text-sm font-medium">{label}</div>
-    </motion.div>
-  )
-}
 
 /* ─── Page ───────────────────────────────────────── */
 export default function HomePage() {
@@ -251,24 +203,6 @@ export default function HomePage() {
               </div>
             </div>
           </motion.div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════
-          STATS BAR
-          ════════════════════════════════════════════ */}
-      <section className="relative py-12 overflow-hidden">
-        <div className="absolute inset-0 border-y border-white/[0.06]" />
-        <div className="absolute inset-0 bg-[#0D1526]/60" />
-        {/* Shimmer */}
-        <div className="absolute inset-0 shimmer" />
-
-        <div className="relative max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4 divide-x-0 md:divide-x md:divide-white/[0.06] md:[&>*:not(:first-child)]:pr-6">
-            {stats.map((s, i) => (
-              <StatCard key={i} {...s} delay={i * 0.1} />
-            ))}
-          </div>
         </div>
       </section>
 
@@ -652,7 +586,7 @@ export default function HomePage() {
                 </div>
 
                 <blockquote className="text-[#94A3B8] leading-relaxed mb-6 text-sm flex-1">
-                  "{t.text}"
+                  &ldquo;{t.text}&rdquo;
                 </blockquote>
 
                 {/* Author */}
@@ -670,18 +604,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ════════════════════════════════════════════
-          TRUSTED BY REAL ESTATE TEAMS
-          ════════════════════════════════════════════ */}
-      <StatsSection
-        title="موثوق من فرق العقارات"
-        stats={[
-          { value: '+1,000', label: 'محادثة يومية' },
-          { value: '50+',    label: 'مكتب عقاري' },
-          { value: '+10,000', label: 'تفاعل عميل' },
-        ]}
-      />
 
       {/* ════════════════════════════════════════════
           CTA SECTION
@@ -712,26 +634,9 @@ export default function HomePage() {
               {' '}اليوم
             </motion.h2>
 
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-4 max-w-xl mx-auto">
-              انضم لأكثر من{' '}
-              <span className="text-[#E5B84A] font-bold">50 مكتب عقاري</span>{' '}
-              يستخدمون نظام صقر لتنمية أعمالهم
+            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-10 max-w-xl mx-auto">
+              جرّب نظام صقر مجاناً لمدة 14 يوم — بدون بطاقة ائتمان، إعداد في دقائق.
             </motion.p>
-
-            {/* Social proof avatars */}
-            <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-10">
-              <div className="flex -space-x-2 space-x-reverse">
-                {['أح', 'سع', 'خع', 'مح', 'فس'].map((av, i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full border-2 border-[#070B14] bg-gradient-to-br from-[#4F8EF7]/30 to-[#2B6DE8]/20 flex items-center justify-center text-[10px] text-[#7AAEFF] font-bold"
-                  >
-                    {av}
-                  </div>
-                ))}
-              </div>
-              <span className="text-[#475569] text-sm">+45 مكتب آخر</span>
-            </motion.div>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
