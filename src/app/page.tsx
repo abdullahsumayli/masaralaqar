@@ -33,14 +33,14 @@ const features = [
 ]
 
 const whyUs = [
-  { icon: Zap,     title: 'رد فوري دون انتظار',     desc: 'لا تخسر عميلاً بسبب تأخر الرد — صقر يعمل بدلك على مدار الساعة' },
+  { icon: Zap,     title: 'رد فوري دون انتظار',     desc: 'لا تخسر عميلاً بسبب تأخر الرد — MQ يعمل بدلك على مدار الساعة' },
   { icon: Target,  title: 'تصفية ذكية للعملاء',     desc: 'يُحدّد الجادّين من المستفسرين تلقائياً لتركّز على من يشتري فعلاً' },
   { icon: Brain,   title: 'ذكاء اصطناعي محلّي',    desc: 'مدرّب على السوق العقاري السعودي بلهجة وأسلوب مناسب' },
   { icon: Shield,  title: 'دعم سعودي متكامل',       desc: 'فريق دعم محلي متاح، تدريب مستمر وتحديثات مجانية' },
 ]
 
 const testimonials = [
-  { name: 'أحمد محمد',  role: 'مدير مكتب عقاري', company: 'مكتب الأهلي للعقار', avatar: 'أح', text: 'نظام صقر وفّر علي أكثر من 5 ساعات يومياً. الرد على العملاء بات فورياً وتصنيفهم يتم تلقائياً.', rating: 5 },
+  { name: 'أحمد محمد',  role: 'مدير مكتب عقاري', company: 'مكتب الأهلي للعقار', avatar: 'أح', text: 'نظام MQ وفّر علي أكثر من 5 ساعات يومياً. الرد على العملاء بات فورياً وتصنيفهم يتم تلقائياً.', rating: 5 },
   { name: 'سارة علي',   role: 'وسيط عقاري',       company: 'سارة للعقارات',       avatar: 'سع', text: 'نسبة تحويل العميل زادت 40% في أول شهرين. أفضل استثمار قدمته لمكتبي حتى الآن.', rating: 5 },
   { name: 'خالد عمر',   role: 'مالك شركة',         company: 'شركة عمر العقارية',   avatar: 'خع', text: 'الفريق محترف جداً والدعم الفني متوفر دائماً. الخدمة تفوق كل توقعاتي.', rating: 5 },
 ]
@@ -102,7 +102,7 @@ export default function HomePage() {
 
             {/* Subline */}
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
-              نظام <span className="text-[#F0F4FF] font-bold">صقر</span> من منصة مسار العقار يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
+              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> من منصة مسار العقار يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
               <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
               جربه <span className="text-accent font-bold">مجاناً 14 يوم</span>.
             </motion.p>
@@ -110,7 +110,7 @@ export default function HomePage() {
             {/* CTA Buttons */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 mb-10">
               <Link href="/products/saqr" className="btn-gold text-base px-8 py-4 group">
-                جرب صقر مجاناً
+                جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
               <Link href="/demo" className="btn-outline text-base px-8 py-4">
@@ -161,7 +161,7 @@ export default function HomePage() {
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-[#F0F4FF] font-bold text-base">لوحة صقر الذكية</h3>
+                    <h3 className="text-[#F0F4FF] font-bold text-base">لوحة MQ الذكية</h3>
                     <p className="text-[#475569] text-xs mt-0.5">الثلاثاء، ٨ مارس ٢٠٢٦</p>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#34D399]/10 border border-[#34D399]/20">
@@ -267,10 +267,10 @@ export default function HomePage() {
                 <span className="gradient-text-gold">في مكان آخر</span>
               </h2>
               <p className="text-[#94A3B8] text-lg leading-relaxed mb-8">
-                صُمّم نظام صقر خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
+                صُمّم نظام MQ خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
               </p>
               <Link href="/products/saqr" className="btn-primary inline-flex">
-                اكتشف نظام صقر
+                اكتشف نظام MQ
                 <ArrowLeft className="w-4.5 h-4.5" />
               </Link>
             </motion.div>
@@ -318,7 +318,7 @@ export default function HomePage() {
                   <MessageSquare className="w-7 h-7 text-[#25D366]" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">صقر</h3>
+                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">MQ</h3>
                   <p className="text-[#475569] text-sm">رد آلي ذكي عبر واتساب — تجربة مجانية 14 يوم</p>
                 </div>
                 <ArrowLeft className="w-5 h-5 text-primary mr-auto opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -359,7 +359,7 @@ export default function HomePage() {
                   <MessageSquare className="w-7 h-7 text-primary" />
                 </div>
                 <div className="flex-1 text-right">
-                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">صقر</h3>
+                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">MQ</h3>
                   <p className="text-[#94A3B8] text-sm mb-2">أتمتة واتساب بالذكاء الاصطناعي للعقار</p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34D399]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
@@ -465,7 +465,7 @@ export default function HomePage() {
               </span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
-              نظام <span className="gradient-text-blue">صقر</span> لإدارة العمل العقاري
+              نظام <span className="gradient-text-blue">MQ</span> لإدارة العمل العقاري
             </motion.h2>
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
               منصة متكاملة مدعومة بالذكاء الاصطناعي تحوّل مكتبك إلى آلة مبيعات ذكية تعمل دون توقف
@@ -476,7 +476,7 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             <motion.div variants={fadeUp}>
               <ProductCard
-                title="صقر"
+                title="MQ"
                 description="أتمتة واتساب بالذكاء الاصطناعي — رد فوري وتصنيف العملاء"
                 href="/products/saqr"
                 icon={MessageSquare}
@@ -635,7 +635,7 @@ export default function HomePage() {
             </motion.h2>
 
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-10 max-w-xl mx-auto">
-              جرّب نظام صقر مجاناً لمدة 14 يوم — بدون بطاقة ائتمان، إعداد في دقائق.
+              جرّب نظام MQ مجاناً لمدة 14 يوم — بدون بطاقة ائتمان، إعداد في دقائق.
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -649,7 +649,7 @@ export default function HomePage() {
                 تواصل عبر واتساب
               </a>
               <Link href="/products/saqr" className="btn-primary text-base px-8 py-4">
-                جرب صقر مجاناً
+                جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </motion.div>
