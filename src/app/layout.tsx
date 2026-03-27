@@ -4,7 +4,8 @@ import './globals.css'
 import { ReferralCookieHandler } from '@/components/affiliate/ReferralCookieHandler'
 import { AnnouncementBar } from '@/components/AnnouncementBar'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { ChatWidget } from '@/components/ChatWidget'
+import { AppBranding } from '@/components/AppBranding'
+import { WhatsAppButton } from '@/components/WhatsAppButton'
 
 export const viewport: Viewport = {
   themeColor: '#F1F5F9',
@@ -59,6 +60,11 @@ export const metadata: Metadata = {
       'ar': 'https://masaralaqar.com',
     },
   },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: '/favicon.svg',
+    apple: '/logo.svg',
+  },
 }
 
 const jsonLd = {
@@ -102,13 +108,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-background antialiased">
+        <AppBranding />
         <AnnouncementBar />
         <Suspense fallback={null}>
           <ReferralCookieHandler />
         </Suspense>
         {children}
         <ScrollToTop />
-        <ChatWidget />
+        <WhatsAppButton />
       </body>
     </html>
   )

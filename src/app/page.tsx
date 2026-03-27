@@ -54,23 +54,6 @@ export default function HomePage() {
       <Navbar />
 
       {/* ════════════════════════════════════════════
-          Floating WhatsApp
-          ════════════════════════════════════════════ */}
-      <motion.a
-        href="https://wa.me/966545374069"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="تواصل عبر واتساب"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1.5, type: 'spring', stiffness: 180 }}
-        whileHover={{ scale: 1.1 }}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-2xl bg-mq-green flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] border border-white/10 hover:bg-mq-green-hover transition-colors"
-      >
-        <MessageSquare className="w-6 h-6 text-white fill-white" />
-      </motion.a>
-
-      {/* ════════════════════════════════════════════
           HERO
           ════════════════════════════════════════════ */}
       <section className="relative min-h-[100svh] flex items-center pt-20 pb-16 px-4 overflow-hidden">
