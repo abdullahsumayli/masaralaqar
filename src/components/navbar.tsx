@@ -122,7 +122,7 @@ export function Navbar() {
                     المنتجات
                   </Link>
                   <Link href="/products/saqr" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-[#94A3B8] hover:text-[#F0F4FF] text-sm">
-                    صقر
+                    MQ
                   </Link>
                   <Link href="/pricing" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
                     الأسعار
