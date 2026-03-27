@@ -27,10 +27,10 @@ export function FinalCTA() {
           variants={fadeUp}
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#F0F4FF] mb-4">
-            ابدأ استخدام صقر اليوم
+            ابدأ استخدام MQ اليوم
           </h2>
           <p className="text-[#94A3B8] text-lg mb-8">
-            انضم لمئات المكاتب العقارية التي توفر وقتها وتزيد مبيعاتها بصقر.
+            انضم لمئات المكاتب العقارية التي توفر وقتها وتزيد مبيعاتها بـ MQ.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
