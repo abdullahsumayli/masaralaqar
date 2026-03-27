@@ -17,7 +17,7 @@ const features = [
   {
     icon: Zap,
     title: "رد فوري",
-    description: "صقر يرد على العملاء فوراً عبر واتساب.",
+    description: "MQ يرد على العملاء فوراً عبر واتساب.",
     gradient: "from-emerald-500/10 to-emerald-500/5",
     iconBg: "bg-emerald-50",
     iconColor: "text-emerald-600",
