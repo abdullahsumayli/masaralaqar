@@ -84,7 +84,8 @@ export default function HomePage() {
               variants={fadeUp}
               className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-black leading-[1.1] mb-6 tracking-tight"
             >
-              لا تخسر{' '}\n              <span className="relative inline-block">
+              لا تخسر{' '}
+              <span className="relative inline-block">
                 <span className="gradient-text-blue">عميلاً واحداً</span>
                 {/* Underline decoration */}
                 <motion.span
@@ -95,12 +96,15 @@ export default function HomePage() {
                 />
               </span>
               <br className="hidden sm:block" />
-              {' '}بسبب رد{' '}\n              <span className="gradient-text-gold">متأخر</span>
+              {' '}بسبب رد{' '}
+              <span className="gradient-text-gold">متأخر</span>
             </motion.h1>
 
             {/* Subline */}
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
-              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}\n              <span className="text-[#F0F4FF]\">وأنت مرتاح.</span>{' '}\n              جربه <span className="text-accent font-bold\">مجاناً 14 يوم</span>.
+              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
+              <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
+              جربه <span className="text-accent font-bold">مجاناً 14 يوم</span>.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -212,7 +216,8 @@ export default function HomePage() {
               <span className="badge-gold">المميزات الرئيسية</span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
-              كل ما تحتاجه في{' '}\n              <span className="gradient-text-blue">منصة واحدة</span>
+              كل ما تحتاجه في{' '}
+              <span className="gradient-text-blue">منصة واحدة</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
               صُمّمت كل ميزة لتوفير وقتك وزيادة إيراداتك في السوق العقاري السعودي
@@ -258,7 +263,8 @@ export default function HomePage() {
             <motion.div variants={fadeUp}>
               <span className="badge-blue mb-6">لماذا MQ؟</span>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-5 leading-tight">
-                مميزات لن تجدها{' '}\n                <span className="gradient-text-gold">في مكان آخر</span>
+                مميزات لن تجدها{' '}
+                <span className="gradient-text-gold">في مكان آخر</span>
               </h2>
               <p className="text-[#94A3B8] text-lg leading-relaxed mb-8">
                 صُمّم نظام MQ خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
@@ -557,7 +563,8 @@ export default function HomePage() {
               <span className="badge-blue">آراء عملائنا</span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
-              ماذا يقول{' '}\n              <span className="gradient-text-gold">عملاؤنا؟</span>
+              ماذا يقول{' '}
+              <span className="gradient-text-gold">عملاؤنا؟</span>
             </motion.h2>
           </motion.div>
 
@@ -622,7 +629,8 @@ export default function HomePage() {
             </motion.div>
 
             <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 leading-tight">
-              ابدأ{' '}\n              <span className="gradient-text-blue">تحوّلك الرقمي</span>
+              ابدأ{' '}
+              <span className="gradient-text-blue">تحوّلك الرقمي</span>
               {' '}اليوم
             </motion.h2>
 
