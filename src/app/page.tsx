@@ -91,7 +91,7 @@ export default function HomePage() {
             </motion.h1>
 
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
-              MQ يرد على عملائك ويحوّلهم إلى معاينات تلقائيًا — بواجهة واتساب مألوفة ومستوى SaaS احترافي.
+              MQ يرد على عملائك فورًا ويحوّل المحادثات إلى مبيعات — عبر واتساب وبنظام احترافي.
             </motion.p>
 
             {/* CTA Buttons */}

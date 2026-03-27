@@ -12,7 +12,7 @@ export function WhatsAppButton() {
       rel="noopener noreferrer"
       title="Chat with us"
       aria-label="Chat with us on WhatsApp"
-      className="animate-mq-wa-ring fixed bottom-5 right-5 z-50 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white shadow-[0_8px_28px_rgba(37,211,102,0.45)] transition-transform duration-200 hover:scale-110"
+      className="animate-mq-wa-ring fixed bottom-5 left-5 z-50 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white shadow-[0_8px_28px_rgba(37,211,102,0.45)] transition-transform duration-200 hover:scale-110"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

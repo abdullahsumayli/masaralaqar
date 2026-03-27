@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import './globals.css'
 import { ReferralCookieHandler } from '@/components/affiliate/ReferralCookieHandler'
-import { AnnouncementBar } from '@/components/AnnouncementBar'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import { AppBranding } from '@/components/AppBranding'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
@@ -109,7 +108,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background antialiased">
         <AppBranding />
-        <AnnouncementBar />
         <Suspense fallback={null}>
           <ReferralCookieHandler />
         </Suspense>
