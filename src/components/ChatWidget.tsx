@@ -5,7 +5,7 @@ import { X, MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "966545374069";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "مرحباً، أود الاستفسار عن منصة مسار العقار ونظام صقر."
+  "مرحباً، أود الاستفسار عن منصة مسار العقار ونظام MQ."
 );
 
 export function ChatWidget() {
