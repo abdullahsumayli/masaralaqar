@@ -206,7 +206,7 @@ export class NotificationService {
       officeId,
       type: "unanswered_question",
       title: "سؤال بدون إجابة",
-      message: `${NOTIFICATION_ICONS.unanswered_question} لم يتمكن صقر من الإجابة: "${question.slice(0, 100)}"`,
+      message: `${NOTIFICATION_ICONS.unanswered_question} لم يتمكن MQ من الإجابة: \"${question.slice(0, 100)}\"`,
       link: "/dashboard/unanswered-questions",
     });
   }
