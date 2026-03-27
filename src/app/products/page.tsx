@@ -23,7 +23,7 @@ const productCategories = [
     products: [
       {
         id: "saqr",
-        title: "صقر",
+        title: "MQ",
         description: "رد آلي ذكي عبر واتساب. يرد على العملاء فوراً، يصنّف الجادّين، ويجدول المعاينات.",
         href: "/products/saqr",
         icon: MessageSquare,
