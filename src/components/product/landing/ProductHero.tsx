@@ -33,7 +33,7 @@ export function ProductHero() {
         >
           <motion.div variants={fadeUp}>
             <ProductHeader
-              productName="Saqr"
+              productName="MQ"
               subtitle="AI WhatsApp assistant for real estate."
               showPlatform
             />
@@ -50,7 +50,7 @@ export function ProductHero() {
             variants={fadeUp}
             className="text-lg md:text-xl text-[#94A3B8] max-w-2xl mx-auto leading-relaxed"
           >
-            لا تضيع أي عميل بعد اليوم. صقر يرد على استفسارات العقار تلقائيًا ويحوّلها إلى فرص بيع.
+            لا تضيع أي عميل بعد اليوم. MQ يرد على استفسارات العقار تلقائيًا ويحوّلها إلى فرص بيع.
           </motion.p>
 
           <motion.div
