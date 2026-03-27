@@ -70,7 +70,8 @@ export function AdminHeader() {
                     <p className="text-gray-400 text-xs mt-1">{notification.desc}</p>
                     <p className="text-gray-500 text-xs mt-2">{notification.time}</p>
                   </div>
-                ))}\n              </div>
+                ))}
+              </div>
               <div className="p-3 border-t border-[#21262d]">
                 <button className="w-full text-center text-primary text-sm font-medium hover:underline">
                   عرض جميع الإشعارات
@@ -90,7 +91,7 @@ export function AdminHeader() {
               <span className="text-white font-bold text-sm">م</span>
             </div>
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium text-white">مسار العقار</p>
+              <p className="text-sm font-medium text-white">MQ</p>
               <p className="text-xs text-gray-500">مدير النظام</p>
             </div>
             <ChevronDown className="w-4 h-4 text-gray-500" />
