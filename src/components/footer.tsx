@@ -43,7 +43,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 mb-5 group w-fit" aria-label="Masar AlAqar - الصفحة الرئيسية">
+            <Link href="/" className="flex items-center gap-2.5 mb-5 group w-fit" aria-label="MQ - الصفحة الرئيسية">
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 rounded-xl bg-primary/15 blur-md group-hover:bg-primary/25 transition-all" />
                 <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center border border-primary/30">
@@ -51,8 +51,8 @@ export function Footer() {
                 </div>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-cairo font-bold text-lg text-[#F0F4FF]">Masar AlAqar</span>
-                <span className="text-[10px] text-primary/80 font-medium">مسار العقار · AI tools for real estate</span>
+                <span className="font-cairo font-bold text-lg text-[#F0F4FF]">MQ</span>
+                <span className="text-[10px] text-primary/80 font-medium">MQ · AI tools for real estate</span>
               </div>
             </Link>
 
@@ -161,7 +161,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[#2D3748] text-xs">
-            © {new Date().getFullYear()} Masar AlAqar (مسار العقار). جميع الحقوق محفوظة.
+            © {new Date().getFullYear()} MQ. جميع الحقوق محفوظة.
           </p>
           <div className="flex items-center gap-1 text-[#2D3748] text-xs">
             <span>صُنع بـ</span>
