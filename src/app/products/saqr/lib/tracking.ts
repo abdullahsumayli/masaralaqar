@@ -1,7 +1,7 @@
 // WhatsApp lead flow URL with pre-filled message
 const WHATSAPP_NUMBER = "966545374069";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "مرحباً، أبي أجرب نظام صقر لاستقبال عملاء الواتساب تلقائياً 🏢",
+  "مرحباً، أبي أجرب نظام MQ لاستقبال عملاء الواتساب تلقائياً 🏢",
 );
 
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
