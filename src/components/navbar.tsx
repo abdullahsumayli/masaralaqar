@@ -41,7 +41,7 @@ export function Navbar() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <nav className="flex items-center justify-between h-16 md:h-20">
-          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0" aria-label="Masar AlAqar - الصفحة الرئيسية">
+          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0" aria-label="MQ - الصفحة الرئيسية">
             <div className="relative w-9 h-9 md:w-10 md:h-10">
               <div className="absolute inset-0 rounded-xl bg-primary/20 blur-lg group-hover:bg-primary/35 transition-all duration-500" />
               <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center border border-primary/30 shadow-button-blue">
@@ -50,10 +50,10 @@ export function Navbar() {
             </div>
             <div className="flex flex-col leading-none">
               <span className="font-cairo font-bold text-base md:text-lg text-[#F0F4FF] tracking-tight">
-                Masar AlAqar
+                MQ
               </span>
               <span className="text-[10px] text-primary/90 font-medium hidden sm:block">
-                مسار العقار · AI tools for real estate
+                MQ · AI tools for real estate
               </span>
             </div>
           </Link>
