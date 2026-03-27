@@ -16,7 +16,7 @@ const benefits = [
   {
     icon: Wallet,
     title: "وفر تكلفة 3 موظفين",
-    description: "صقر ينوب عن فريق استقبال كامل بتكلفة اشتراك واحدة.",
+    description: "MQ ينوب عن فريق استقبال كامل بتكلفة اشتراك واحدة.",
   },
   {
     icon: Zap,
@@ -51,7 +51,7 @@ export function BenefitsSection() {
             variants={fadeUp}
             className="text-2xl md:text-3xl font-bold text-[#F0F4FF]"
           >
-            لماذا تختار صقر؟
+            لماذا تختار MQ؟
           </motion.h2>
         </motion.div>
 
