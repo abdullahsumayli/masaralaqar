@@ -28,7 +28,7 @@ function buildSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "خطط تسعير Masar AlAqar - MQ",
+    name: "خطط تسعير MQ - MQ",
     description: "خطط اشتراك نظام MQ للمكاتب العقارية",
     itemListElement: offers.map((offer, index) => ({
       "@type": "ListItem",
