@@ -3,7 +3,7 @@ import { Zap, Mail, Phone, MapPin, Twitter, Linkedin, MessageCircle, ArrowLeft }
 
 const quickLinks = [
   { href: '/products', label: 'المنتجات' },
-  { href: '/products/saqr', label: 'صقر' },
+  { href: '/products/saqr', label: 'MQ' },
   { href: '/pricing', label: 'الأسعار' },
   { href: '/knowledge/blog', label: 'المدونة' },
   { href: '/knowledge/library', label: 'المكتبة' },
