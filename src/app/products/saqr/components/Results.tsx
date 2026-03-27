@@ -79,7 +79,7 @@ const metrics = [
     value: 80,
     suffix: "%",
     label: "توفير وقت المسوق",
-    description: "المسوق يركز على الإغلاق — صقر يتولى الاستقبال",
+    description: "المسوق يركز على الإغلاق — MQ يتولى الاستقبال",
     color: "text-violet-600",
     bg: "bg-violet-50",
   },
