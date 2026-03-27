@@ -48,8 +48,25 @@ const testimonials = [
 /* ─── Page ───────────────────────────────────────── */
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#070B14] text-[#F0F4FF] overflow-x-hidden">
+    <div className="min-h-screen bg-background text-text-primary overflow-x-hidden">
       <Navbar />
+
+      {/* ════════════════════════════════════════════
+          Floating WhatsApp
+          ════════════════════════════════════════════ */}
+      <motion.a
+        href="https://wa.me/966545374069"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="تواصل عبر واتساب"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.5, type: 'spring', stiffness: 180 }}
+        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-2xl bg-mq-green flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] border border-white/10 hover:bg-mq-green-hover transition-colors"
+      >
+        <MessageSquare className="w-6 h-6 text-white fill-white" />
+      </motion.a>
 
       {/* ════════════════════════════════════════════
           HERO
@@ -57,7 +74,7 @@ export default function HomePage() {
       <section className="relative min-h-[100svh] flex items-center pt-20 pb-16 px-4 overflow-hidden">
 
         {/* Background layers */}
-        <div className="absolute inset-0 bg-[#070B14]" />
+        <div className="absolute inset-0 bg-background" />
         {/* Dot pattern */}
         <div className="absolute inset-0 bg-dot-pattern opacity-100" />
         {/* Gradient radial from center */}
@@ -79,55 +96,40 @@ export default function HomePage() {
               </span>
             </motion.div>
 
-            {/* Headline */}
+            {/* Headline — MQ product entry */}
             <motion.h1
               variants={fadeUp}
-              className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-black leading-[1.1] mb-6 tracking-tight"
+              className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.15] mb-6 tracking-tight text-balance"
             >
-              لا تخسر{' '}
-              <span className="relative inline-block">
-                <span className="gradient-text-blue">عميلاً واحداً</span>
-                {/* Underline decoration */}
-                <motion.span
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.9, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="absolute -bottom-2 inset-x-0 h-1 rounded-full bg-gradient-to-r from-primary to-primary-dark origin-right"
-                />
-              </span>
-              <br className="hidden sm:block" />
-              {' '}بسبب رد{' '}
-              <span className="gradient-text-gold">متأخر</span>
+              لا تخسر عميل بسبب{' '}
+              <span className="text-mq-green">تأخر الرد</span>
             </motion.h1>
 
-            {/* Subline */}
-            <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
-              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
-              <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
-              جربه <span className="text-accent font-bold">مجاناً 14 يوم</span>.
+            <motion.p variants={fadeUp} className="text-lg md:text-xl text-text-secondary mb-10 max-w-2xl mx-auto leading-relaxed">
+              MQ يرد على عملائك ويحوّلهم إلى معاينات تلقائيًا — بواجهة واتساب مألوفة ومستوى SaaS احترافي.
             </motion.p>
 
             {/* CTA Buttons */}
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4 mb-10">
-              <Link href="/products/saqr" className="btn-gold text-base px-8 py-4 group">
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <Link href="/dashboard" className="btn-mq-cta text-base px-8 py-4 group">
                 جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
-              <Link href="/demo" className="btn-outline text-base px-8 py-4">
-                <Rocket className="w-4.5 h-4.5 text-primary" />
+              <Link href="/#mq-how" className="btn-mq-secondary text-base px-8 py-4">
+                <Rocket className="w-5 h-5 text-mq-blue shrink-0" />
                 شاهد كيف يعمل
               </Link>
             </motion.div>
 
             {/* Trust badges */}
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-5 text-[#475569] text-sm">
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-5 text-text-muted text-sm">
               {[
                 { icon: CheckCircle2, text: 'تجربة مجانية 14 يوم' },
                 { icon: CheckCircle2, text: 'بدون بطاقة ائتمان' },
                 { icon: CheckCircle2, text: 'إلغاء في أي وقت' },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-1.5">
-                  <Icon className="w-4 h-4 text-[#34D399] flex-shrink-0" />
+                  <Icon className="w-4 h-4 text-mq-green flex-shrink-0" />
                   <span>{text}</span>
                 </div>
               ))}
@@ -136,10 +138,11 @@ export default function HomePage() {
 
           {/* Dashboard mockup */}
           <motion.div
+            id="mq-how"
             initial={{ opacity: 0, y: 50, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.7, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="relative mt-20 max-w-4xl mx-auto"
+            className="relative mt-20 max-w-4xl mx-auto scroll-mt-24"
           >
             {/* Glow behind mock */}
             <div className="absolute -inset-8 bg-gradient-radial from-[#4F8EF7]/15 via-transparent to-transparent" />

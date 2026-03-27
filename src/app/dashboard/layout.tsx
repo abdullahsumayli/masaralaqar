@@ -64,10 +64,10 @@ export default function DashboardLayout({
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar — mobile only */}
-        <header className="lg:hidden flex items-center gap-3 px-4 h-14 bg-surface border-b border-border sticky top-0 z-30 flex-shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 h-14 bg-surface border-b border-border sticky top-0 z-30 flex-shrink-0 shadow-sm shadow-black/20">
           <button
             onClick={() => setMobileOpen(true)}
-            className="w-9 h-9 rounded-xl border border-border bg-background flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+            className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
             aria-label="فتح القائمة"
           >
             <Menu className="w-5 h-5" />

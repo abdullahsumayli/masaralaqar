@@ -104,21 +104,17 @@ function NavItem(
       onClick={onClick}
       title={collapsed ? label : undefined}
       className={cn(
-        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group border-r-[3px] border-transparent",
         active
-          ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(79,142,247,0.25)]"
+          ? "bg-card-hover text-text-primary border-r-mq-green"
           : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
         collapsed && "justify-center px-2",
       )}
     >
-      {/* Active indicator */}
-      {active && (
-        <span className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-l-full" />
-      )}
       <Icon
         className={cn(
           "flex-shrink-0 transition-colors",
-          active ? "text-primary" : "text-text-muted group-hover:text-text-secondary",
+          active ? "text-mq-green" : "text-text-muted group-hover:text-text-secondary",
         )}
         style={{ width: 18, height: 18 }}
       />

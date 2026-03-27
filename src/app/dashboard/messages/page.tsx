@@ -11,6 +11,7 @@ import {
     User,
     X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -167,7 +168,7 @@ export default function MessagesPage() {
         <div className="flex gap-6 flex-1 min-h-0">
           {/* Leads list (sidebar) */}
           <div
-            className={`flex flex-col ${selected ? "hidden md:flex md:w-80" : "w-full md:w-80"} bg-background rounded-xl border border-border overflow-hidden`}
+            className={`flex flex-col ${selected ? "hidden md:flex md:w-80" : "w-full md:w-80"} bg-card rounded-2xl border border-white/[0.06] shadow-mq-card overflow-hidden`}
           >
             <div className="p-4 border-b border-border">
               <h1 className="font-bold text-text-primary">المحادثات</h1>
@@ -186,7 +187,7 @@ export default function MessagesPage() {
                   <MessageSquare className="w-8 h-8 text-primary/40" />
                   <p className="text-sm text-text-muted">لا توجد محادثات بعد</p>
                   <p className="text-xs text-text-muted">
-                    ستظهر هنا المحادثات التي يجريها صقر مع عملائك
+                    ستظهر هنا المحادثات التي يجريها MQ مع عملائك
                   </p>
                 </div>
               ) : (
@@ -201,9 +202,9 @@ export default function MessagesPage() {
                     <button
                       key={lead.id}
                       onClick={() => openConversation(lead)}
-                      className={`w-full text-right px-4 py-3 border-b border-border hover:bg-surface transition-colors ${
+                      className={`w-full text-right px-4 py-3 border-b border-border hover:bg-card-hover/60 transition-colors ${
                         isActive
-                          ? "bg-primary/5 border-r-2 border-r-primary"
+                          ? "bg-mq-green/5 border-r-[3px] border-r-mq-green"
                           : ""
                       }`}
                     >
@@ -238,7 +239,7 @@ export default function MessagesPage() {
 
           {/* Conversation panel */}
           {selected ? (
-            <div className="flex-1 flex flex-col bg-background rounded-xl border border-border overflow-hidden">
+            <div className="flex-1 flex flex-col bg-card rounded-2xl border border-white/[0.06] shadow-mq-card overflow-hidden">
               {/* Conv header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-border">
                 <div className="flex items-center gap-3">
@@ -273,52 +274,73 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Messages — WhatsApp-style bubbles (RTL) */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-mq-main/40">
                 {loadingConv ? (
                   <div className="flex items-center justify-center h-full">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <Loader2 className="w-6 h-6 animate-spin text-mq-green" />
                   </div>
                 ) : !selected.conversation_history?.length ? (
-                  <div className="flex items-center justify-center h-full text-text-muted text-sm">
-                    لا توجد رسائل في هذه المحادثة
-                  </div>
-                ) : (
-                  selected.conversation_history.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-2 ${msg.role === "assistant" ? "flex-row-reverse" : "flex-row"}`}
-                    >
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          msg.role === "assistant"
-                            ? "bg-primary/10"
-                            : "bg-surface border border-border"
-                        }`}
-                      >
-                        {msg.role === "assistant" ? (
-                          <Bot className="w-3.5 h-3.5 text-primary" />
-                        ) : (
-                          <User className="w-3.5 h-3.5 text-text-muted" />
-                        )}
-                      </div>
-                      <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
-                          msg.role === "assistant"
-                            ? "bg-primary/10 text-text-primary rounded-tr-sm"
-                            : "bg-surface border border-border text-text-primary rounded-tl-sm"
-                        }`}
-                      >
-                        <p className="leading-relaxed">{msg.message}</p>
-                        <p className="text-[10px] text-text-muted mt-1">
-                          {new Date(msg.timestamp).toLocaleTimeString("ar-SA", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                  <div className="flex flex-col items-stretch justify-center min-h-[200px] gap-4 px-2">
+                    <div className="flex justify-start">
+                      <div className="max-w-[90%] rounded-2xl rounded-tr-sm bg-card border border-white/[0.08] px-4 py-3 shadow-sm">
+                        <p className="text-sm text-text-primary leading-relaxed">
+                          أنا MQ — أساعدك ترد على عملائك وأحوّلهم إلى معاينات
+                        </p>
+                        <p className="text-[10px] text-mq-green mt-2 font-medium">
+                          رسالة ترحيبية
                         </p>
                       </div>
                     </div>
-                  ))
+                    <p className="text-center text-text-muted text-xs">
+                      لا توجد رسائل بعد في هذه المحادثة
+                    </p>
+                  </div>
+                ) : (
+                  selected.conversation_history.map((msg) => {
+                    const isClient = msg.role === "user";
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex w-full ${isClient ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`flex gap-2 max-w-[min(85%,420px)] ${isClient ? "flex-row-reverse" : "flex-row"}`}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
+                              isClient
+                                ? "bg-[#DCF8C6]/30 border border-[#25D366]/25"
+                                : "bg-card-hover border border-white/[0.08]"
+                            }`}
+                          >
+                            {isClient ? (
+                              <User className="w-4 h-4 text-mq-green" />
+                            ) : (
+                              <Bot className="w-4 h-4 text-mq-blue" />
+                            )}
+                          </div>
+                          <div
+                            className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                              isClient
+                                ? "bg-[#DCF8C6] text-gray-900 rounded-tr-md"
+                                : "bg-card text-text-primary border border-white/[0.08] rounded-tl-md"
+                            }`}
+                          >
+                            <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+                            <p
+                              className={`text-[10px] mt-1.5 ${isClient ? "text-gray-600" : "text-text-muted"}`}
+                            >
+                              {new Date(msg.timestamp).toLocaleTimeString("ar-SA", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
                 <div ref={messagesEndRef} />
               </div>
@@ -343,7 +365,7 @@ export default function MessagesPage() {
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim() || sending}
-                    className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-10 h-10 rounded-xl bg-mq-green flex items-center justify-center text-white hover:bg-mq-green-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-mq-green/20"
                   >
                     {sending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -355,7 +377,7 @@ export default function MessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="hidden md:flex flex-1 items-center justify-center bg-background rounded-xl border border-border">
+            <div className="hidden md:flex flex-1 items-center justify-center bg-card rounded-2xl border border-white/[0.06] shadow-mq-card">
               <div className="text-center">
                 <MessageSquare className="w-10 h-10 text-primary/30 mx-auto mb-3" />
                 <p className="text-text-muted text-sm">اختر محادثة لعرضها</p>

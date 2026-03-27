@@ -176,12 +176,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-surface">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10">
         {/* Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-start justify-between gap-4 flex-wrap"
+          className="flex items-start justify-between gap-4 flex-wrap"
         >
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
@@ -210,14 +210,14 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-background rounded-xl p-6 border border-border"
+              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -236,15 +236,15 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-background rounded-xl p-6 border border-border"
+              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
             >
               <h2 className="text-lg font-bold text-text-primary mb-4">
                 إجراءات سريعة
@@ -271,8 +271,8 @@ export default function DashboardPage() {
                   <Link
                     key={action.href}
                     href={action.href}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-lg bg-surface transition-colors text-center
-                      ${action.isWhatsapp ? "hover:bg-[#25D366]/10" : "hover:bg-primary/5"}`}
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-xl bg-card-hover/50 transition-colors text-center
+                      ${action.isWhatsapp ? "hover:bg-mq-green/10" : "hover:bg-primary/5"}`}
                   >
                     {action.badge != null && action.badge > 0 && (
                       <span className="absolute top-2 left-2 min-w-5 h-5 px-1.5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-background rounded-xl p-6 border border-border"
+              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-text-primary">
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-40 text-text-muted text-sm">
-                  لا توجد بيانات بعد — ابدأ باستخدام صقر لتظهر هنا الإحصائيات
+                  لا توجد بيانات بعد — ابدأ باستخدام MQ لتظهر هنا الإحصائيات
                 </div>
               )}
 
@@ -364,13 +364,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Recent Activity — real leads */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-background rounded-xl p-6 border border-border"
+              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
             >
               <h2 className="text-lg font-bold text-text-primary mb-4">
                 النشاط الأخير
@@ -420,7 +420,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65 }}
-              className="bg-background rounded-xl p-5 border border-border"
+              className="bg-card rounded-2xl p-5 border border-white/[0.06] shadow-mq-card"
             >
               <h3 className="font-bold text-text-primary mb-3 text-sm">ملخص سريع</h3>
               <div className="space-y-3">
@@ -443,7 +443,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="bg-gradient-to-br from-primary to-primary-dark rounded-xl p-6 text-white"
+              className="bg-gradient-to-br from-mq-blue to-primary-dark rounded-2xl p-6 text-white shadow-mq-card"
             >
               <h3 className="font-bold text-lg mb-2">ترقية حسابك</h3>
               <p className="text-white/80 text-sm mb-4">

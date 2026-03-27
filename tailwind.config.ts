@@ -11,6 +11,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ─── MQ / WhatsApp-inspired SaaS tokens ─────────
+        mq: {
+          green:        '#25D366',
+          'green-hover':'#1EBE5A',
+          blue:         '#3B82F6',
+          orange:       '#F59E0B',
+          'orange-hover':'#D97706',
+          main:         '#0B0F1A',
+          card:         '#111827',
+          hover:        '#1F2937',
+        },
         // ─── Brand: Masar AlAqar ─────────────────────────
         // Primary: Masar Blue
         primary: {
@@ -42,19 +53,19 @@ const config: Config = {
           dark:    '#D97706',
           light:   '#FBBF24',
         },
-        // ─── Backgrounds ──────────────────────────────────
-        background:     '#070B14',
-        surface:        '#0D1526',
-        card:           '#111E35',
-        'card-hover':   '#162444',
+        // ─── Backgrounds (aligned with MQ system) ─────────
+        background:     '#0B0F1A',
+        surface:        '#0E1320',
+        card:           '#111827',
+        'card-hover':   '#1F2937',
         // ─── Borders ──────────────────────────────────────
         border:         'rgba(79,142,247,0.12)',
         'border-subtle':'rgba(255,255,255,0.06)',
         'border-gold':  'rgba(229,184,74,0.2)',
         // ─── Text ─────────────────────────────────────────
-        'text-primary':   '#F0F4FF',
-        'text-secondary': '#94A3B8',
-        'text-muted':     '#475569',
+        'text-primary':   '#FFFFFF',
+        'text-secondary': '#9CA3AF',
+        'text-muted':     '#6B7280',
         // ─── States ───────────────────────────────────────
         success:  '#34D399',
         warning:  '#FBBF24',
@@ -117,8 +128,9 @@ const config: Config = {
       boxShadow: {
         'glow-blue':   '0 0 30px rgba(37,99,235,0.3)',
         'glow-gold':   '0 0 30px rgba(245,158,11,0.25)',
-        'card':        '0 4px 24px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.5)',
-        'card-hover':  '0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(37,99,235,0.15)',
+        'card':        '0 4px 24px rgba(0,0,0,0.45), 0 1px 2px rgba(0,0,0,0.5)',
+        'card-hover':  '0 8px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(37,211,102,0.12)',
+        'mq-card':     '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
         'button-blue': '0 4px 20px rgba(37,99,235,0.35)',
         'button-gold': '0 4px 20px rgba(245,158,11,0.3)',
         'inner-glow':  'inset 0 1px 0 rgba(255,255,255,0.06)',

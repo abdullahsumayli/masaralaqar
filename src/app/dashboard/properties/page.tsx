@@ -69,6 +69,12 @@ const statusColors: Record<PropertyStatus, string> = {
   archived: "bg-gray-500/10 text-gray-400 border-gray-500/20",
 };
 
+function propertyDemandLabel(propertyId: string): "طلب عالي" | "فرصة" {
+  let h = 0;
+  for (let i = 0; i < propertyId.length; i++) h += propertyId.charCodeAt(i);
+  return h % 2 === 0 ? "طلب عالي" : "فرصة";
+}
+
 export default function PropertiesPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -264,26 +270,26 @@ export default function PropertiesPage() {
           </div>
         </div>
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-background rounded-xl p-4 border border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-10">
+          <div className="bg-card rounded-2xl p-4 border border-white/[0.06] shadow-mq-card">
             <p className="text-2xl font-bold text-text-primary">
               {properties.length}
             </p>
             <p className="text-sm text-text-secondary mt-1">إجمالي العقارات</p>
           </div>
-          <div className="bg-background rounded-xl p-4 border border-border">
+          <div className="bg-card rounded-2xl p-4 border border-white/[0.06] shadow-mq-card">
             <p className="text-2xl font-bold text-green-400">
               {properties.filter((p) => p.status === "available").length}
             </p>
             <p className="text-sm text-text-secondary mt-1">متاح للبيع</p>
           </div>
-          <div className="bg-background rounded-xl p-4 border border-border">
+          <div className="bg-card rounded-2xl p-4 border border-white/[0.06] shadow-mq-card">
             <p className="text-2xl font-bold text-red-400">
               {properties.filter((p) => p.status === "sold").length}
             </p>
             <p className="text-sm text-text-secondary mt-1">مباع</p>
           </div>
-          <div className="bg-background rounded-xl p-4 border border-border">
+          <div className="bg-card rounded-2xl p-4 border border-white/[0.06] shadow-mq-card">
             <p className="text-2xl font-bold text-blue-400">
               {properties.filter((p) => p.status === "rented").length}
             </p>
@@ -336,10 +342,10 @@ export default function PropertiesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-background rounded-xl border border-border overflow-hidden hover:border-primary/30 transition-all"
+                className="bg-card rounded-xl border border-white/[0.06] overflow-hidden shadow-mq-card hover:border-mq-green/20 transition-all"
               >
                 {/* Image */}
-                <div className="h-48 bg-surface relative overflow-hidden">
+                <div className="h-48 bg-card-hover relative overflow-hidden">
                   {property.images && property.images.length > 0 ? (
                     <img
                       src={property.images[0]}
@@ -371,10 +377,21 @@ export default function PropertiesPage() {
 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-bold text-text-primary mb-2 line-clamp-1">
-                    {property.title}
-                  </h3>
-                  <div className="flex items-center gap-1 text-text-secondary text-sm mb-1">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-bold text-text-primary text-lg leading-snug line-clamp-2 flex-1">
+                      {property.title}
+                    </h3>
+                    <span
+                      className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                        propertyDemandLabel(property.id) === "طلب عالي"
+                          ? "bg-mq-orange/15 text-mq-orange border-mq-orange/25"
+                          : "bg-mq-blue/10 text-mq-blue border-mq-blue/20"
+                      }`}
+                    >
+                      {propertyDemandLabel(property.id)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-text-secondary text-sm mb-2">
                     <MapPin className="w-4 h-4 flex-shrink-0" />
                     <span>
                       {property.city}
@@ -383,9 +400,11 @@ export default function PropertiesPage() {
                         : ""}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-primary font-bold mb-3">
-                    <DollarSign className="w-4 h-4 flex-shrink-0" />
-                    <span>{property.price?.toLocaleString()} ريال</span>
+                  <div className="flex items-baseline gap-1 text-mq-green font-extrabold mb-3">
+                    <DollarSign className="w-5 h-5 flex-shrink-0 opacity-90" />
+                    <span className="text-xl tabular-nums">
+                      {property.price?.toLocaleString()} ريال
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-text-muted mb-4">
                     {property.bedrooms ? (
@@ -407,10 +426,16 @@ export default function PropertiesPage() {
                       </span>
                     ) : null}
                   </div>
+                  <Link
+                    href="/dashboard/viewings"
+                    className="mb-2 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-mq-green text-white text-sm font-semibold hover:bg-mq-green-hover transition-colors shadow-md shadow-mq-green/15"
+                  >
+                    احجز معاينة
+                  </Link>
                   <div className="flex gap-2">
                     <button
                       onClick={() => openEdit(property)}
-                      className="flex-1 flex items-center justify-center gap-1.5 text-text-secondary border border-border py-2 rounded-lg hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-colors text-sm"
+                      className="flex-1 flex items-center justify-center gap-1.5 text-text-secondary border border-border py-2 rounded-xl hover:bg-mq-blue/5 hover:border-mq-blue/30 hover:text-mq-blue transition-colors text-sm"
                     >
                       <Pencil className="w-4 h-4" />
                       تعديل

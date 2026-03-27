@@ -5,10 +5,17 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════
-   DESIGN TOKENS — Masar AlAqar Brand
+   DESIGN TOKENS — MQ / Masar AlAqar
    ═══════════════════════════════════════════════════ */
 @layer base {
   :root {
+    /* MQ accent */
+    --mq-green:         #25D366;
+    --mq-green-hover:   #1EBE5A;
+    --mq-blue:          #3B82F6;
+    --mq-orange:        #F59E0B;
+    --mq-orange-hover:  #D97706;
+
     /* Primary: Masar Blue */
     --primary:        #2563EB;
     --primary-dark:   #1D4ED8;
@@ -31,10 +38,10 @@
     --brand-bg:       #F9FAFB;
 
     /* Backgrounds */
-    --background:     #070B14;
-    --surface:        #0D1526;
-    --card:           #111E35;
-    --card-hover:     #162444;
+    --background:     #0B0F1A;
+    --surface:        #0E1320;
+    --card:           #111827;
+    --card-hover:     #1F2937;
 
     /* Borders */
     --border:         rgba(79, 142, 247, 0.12);
@@ -42,9 +49,9 @@
     --border-gold:    rgba(229, 184, 74, 0.2);
 
     /* Text */
-    --text-primary:   #F0F4FF;
-    --text-secondary: #94A3B8;
-    --text-muted:     #475569;
+    --text-primary:   #FFFFFF;
+    --text-secondary: #9CA3AF;
+    --text-muted:     #6B7280;
 
     /* Glows */
     --glow-blue: 0 0 40px rgba(37, 99, 235, 0.35);
@@ -72,9 +79,11 @@
   }
 
   body {
-    background-color: #070B14;
-    color: #F0F4FF;
+    background-color: var(--background);
+    color: var(--text-primary);
     font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -90,15 +99,17 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Cairo', sans-serif;
     font-weight: 700;
-    color: #F0F4FF;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--text-primary);
   }
 
   code, pre { font-family: 'JetBrains Mono', monospace; }
 
   /* Selection */
   ::selection {
-    background: rgba(37, 99, 235, 0.25);
-    color: #F0F4FF;
+    background: rgba(37, 211, 102, 0.22);
+    color: #fff;
   }
 }
 
@@ -154,6 +165,69 @@
     transform: translateY(-1px);
   }
 
+  /* MQ — primary SaaS CTA (orange) */
+  .btn-mq-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    background: var(--mq-orange);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-mq-cta:hover {
+    background: var(--mq-orange-hover);
+    box-shadow: 0 6px 28px rgba(217, 119, 6, 0.35);
+    transform: translateY(-1px);
+  }
+
+  /* MQ — secondary (blue outline) */
+  .btn-mq-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    background: transparent;
+    color: var(--mq-blue);
+    font-weight: 600;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    border: 2px solid var(--mq-blue);
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-mq-secondary:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+
+  /* MQ — WhatsApp action */
+  .btn-mq-wa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--mq-green);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .btn-mq-wa:hover {
+    background: var(--mq-green-hover);
+    transform: translateY(-1px);
+  }
+
   .btn-outline {
     display: inline-flex;
     align-items: center;
@@ -176,16 +250,16 @@
 
   /* ── Cards ── */
   .card {
-    background: #111E35;
-    border: 1px solid rgba(37, 99, 235, 0.1);
-    border-radius: 1.25rem;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
     transition: all 0.3s ease;
   }
   .card:hover {
-    background: #162444;
-    border-color: rgba(37, 99, 235, 0.2);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(37,99,235,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+    background: var(--card-hover);
+    border-color: rgba(37, 211, 102, 0.12);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(37,211,102,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
     transform: translateY(-2px);
   }
 
@@ -278,7 +352,7 @@
 
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #070B14; }
+  ::-webkit-scrollbar-track { background: var(--background); }
   ::-webkit-scrollbar-thumb {
     background: rgba(37, 99, 235, 0.25);
     border-radius: 999px;

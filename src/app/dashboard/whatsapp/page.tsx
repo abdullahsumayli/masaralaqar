@@ -1,4 +1,5 @@
 "use client";
+import { MQSetupStepper } from "@/components/dashboard/mq-setup-stepper";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -282,6 +283,14 @@ export default function WhatsAppPage() {
   return (
     <div className="min-h-full bg-surface">
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {step !== "loading" && (
+          <div className="bg-card rounded-2xl border border-white/[0.06] shadow-mq-card p-5 sm:p-6">
+            <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4 text-center">
+              مسار التفعيل
+            </p>
+            <MQSetupStepper activeStep={step === "connected" ? 3 : 1} />
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {/* ─── LOADING ─────────────────────────────────────── */}
           {step === "loading" && (
