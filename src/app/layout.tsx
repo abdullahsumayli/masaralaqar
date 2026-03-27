@@ -15,14 +15,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
-    template: '%s | مسار العقار',
+    default: 'MQ — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    template: '%s | MQ',
   },
   description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري. نظام MQ للرد الآلي الذكي، الوساطة العقارية، والتدريب الاحترافي.',
-  keywords: ['مسار العقار','نظام MQ','واتساب عقاري','رد آلي عقار','ذكاء اصطناعي عقاري','وسيط عقاري','تدريب عقاري','أكاديمية عقارية','سوق العقار السعودي'],
-  authors: [{ name: 'مسار العقار' }],
-  creator: 'مسار العقار',
-  publisher: 'مسار العقار',
+  keywords: ['MQ','نظام MQ','واتساب عقاري','رد آلي عقار','ذكاء اصطناعي عقاري','وسيط عقاري','تدريب عقاري','أكاديمية عقارية','سوق العقار السعودي'],
+  authors: [{ name: 'MQ' }],
+  creator: 'MQ',
+  publisher: 'MQ',
   metadataBase: new URL('https://masaralaqar.com'),
   manifest: '/manifest.webmanifest',
   openGraph: {
@@ -30,21 +30,21 @@ export const metadata: Metadata = {
     locale: 'ar_SA',
     alternateLocale: 'en_US',
     url: 'https://masaralaqar.com',
-    siteName: 'مسار العقار',
-    title: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    siteName: 'MQ',
+    title: 'MQ — حلول الذكاء الاصطناعي للمكاتب العقارية',
     description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري. نظام MQ للرد الآلي الذكي، الوساطة العقارية، والتدريب الاحترافي.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'مسار العقار — نظام MQ الذكي',
+        alt: 'MQ — نظام MQ الذكي',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'مسار العقار — حلول الذكاء الاصطناعي للمكاتب العقارية',
+    title: 'MQ — حلول الذكاء الاصطناعي للمكاتب العقارية',
     description: 'منصة سعودية متخصصة في تقديم حلول تقنية متطورة للقطاع العقاري.',
     images: ['/og-image.jpg'],
   },
@@ -67,7 +67,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': 'https://masaralaqar.com/#organization',
-      name: 'مسار العقار',
+      name: 'MQ',
       url: 'https://masaralaqar.com',
       logo: { '@type': 'ImageObject', url: 'https://masaralaqar.com/logo.svg' },
       contactPoint: {
@@ -83,7 +83,7 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': 'https://masaralaqar.com/#website',
       url: 'https://masaralaqar.com',
-      name: 'مسار العقار',
+      name: 'MQ',
       publisher: { '@id': 'https://masaralaqar.com/#organization' },
       inLanguage: 'ar',
     },
