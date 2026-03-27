@@ -112,7 +112,7 @@ export default function KnowledgeBlogPage() {
                 placeholder="ابحث في المقالات..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl py-4 pr-12 pl-4 text-[#F0F4FF] placeholder-[#475569] focus:border-primary focus:outline-none transition"
+                className="w-full bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl py-4 pr-12 pl-4 text-[#F0F4FF] placeholder-[#475569] focus:border-primary focus:outline-none transition"
               />
             </motion.div>
           </motion.div>
@@ -142,7 +142,7 @@ export default function KnowledgeBlogPage() {
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden animate-pulse">
+                <div key={n} className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden animate-pulse">
                   <div className="aspect-video bg-[#1a2a45]" />
                   <div className="p-6 space-y-3">
                     <div className="h-5 bg-[#1a2a45] rounded-full w-1/3" />
@@ -177,7 +177,7 @@ export default function KnowledgeBlogPage() {
                 <motion.article
                   key={article.id}
                   variants={fadeInUp}
-                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
+                  className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
                 >
                   <Link href={`${BLOG_BASE}/${article.slug}`}>
                     {article.image ? (

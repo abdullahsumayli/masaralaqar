@@ -290,7 +290,7 @@ export default function BlogPostPage({
                 <Link
                   key={index}
                   href={`/blog/${related.slug}`}
-                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
+                  className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
                 >
                   {related.image ? (
                     <div className="aspect-video">

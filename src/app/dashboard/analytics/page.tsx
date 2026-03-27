@@ -79,7 +79,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const COLORS = [
-  "#4F8EF7",
+  "#25D366",
   "#10B981",
   "#F59E0B",
   "#EF4444",
@@ -228,12 +228,12 @@ export default function AnalyticsPage() {
                         >
                           <stop
                             offset="5%"
-                            stopColor="#4F8EF7"
+                            stopColor="#25D366"
                             stopOpacity={0.3}
                           />
                           <stop
                             offset="95%"
-                            stopColor="#4F8EF7"
+                            stopColor="#25D366"
                             stopOpacity={0}
                           />
                         </linearGradient>
@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
                       <Area
                         type="monotone"
                         dataKey="count"
-                        stroke="#4F8EF7"
+                        stroke="#25D366"
                         strokeWidth={2}
                         fill="url(#colorMsg)"
                       />
@@ -516,7 +516,7 @@ export default function AnalyticsPage() {
                         />
                         <Bar
                           dataKey="value"
-                          fill="#4F8EF7"
+                          fill="#25D366"
                           radius={[0, 4, 4, 0]}
                         />
                       </BarChart>

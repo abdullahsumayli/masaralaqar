@@ -157,7 +157,7 @@ export default function KnowledgeLibraryPage() {
                 <motion.div
                   key={index}
                   variants={fadeInUp}
-                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden hover:shadow-xl hover:bg-[#162444] transition-all group"
+                  className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden hover:shadow-xl hover:bg-[#162444] transition-all group"
                 >
                   <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 relative flex items-center justify-center">
                     {TypeIcon && <TypeIcon className="w-16 h-16 text-primary/30" />}

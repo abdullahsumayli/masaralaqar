@@ -107,7 +107,7 @@ function NavItem(
         "relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group border-r-[3px] border-transparent",
         active
           ? "bg-card-hover text-text-primary border-r-mq-green"
-          : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
+          : "text-text-secondary hover:text-text-primary hover:bg-card-hover",
         collapsed && "justify-center px-2",
       )}
     >
@@ -191,7 +191,7 @@ export function DashboardSidebar(
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-text-muted hover:text-text-primary hover:bg-white/[0.05] transition-all flex-shrink-0",
+            "hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-text-muted hover:text-text-primary hover:bg-card-hover transition-all flex-shrink-0",
             collapsed && "mx-auto mt-0",
           )}
           title={collapsed ? "توسيع" : "طيّ"}

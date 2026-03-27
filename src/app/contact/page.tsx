@@ -234,7 +234,7 @@ export default function ContactPage() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl p-8"
+              className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl p-8"
             >
               {isSubmitted ? (
                 <div className="text-center py-12">
@@ -383,7 +383,7 @@ export default function ContactPage() {
                     <a
                       key={index}
                       href={info.href}
-                      className="flex items-start gap-4 p-4 bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl hover:shadow-md hover:bg-[#162444] transition-all group"
+                      className="flex items-start gap-4 p-4 bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl hover:shadow-md hover:bg-[#162444] transition-all group"
                     >
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                         <info.icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
@@ -414,7 +414,7 @@ export default function ContactPage() {
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-12 h-12 rounded-xl bg-[#111E35] border border-[rgba(79,142,247,0.12)] flex items-center justify-center text-text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all"
+                      className="w-12 h-12 rounded-xl bg-[#111E35] border border-[rgba(37,211,102,0.12)] flex items-center justify-center text-text-secondary hover:bg-primary hover:text-white hover:border-primary transition-all"
                       title={social.name}
                     >
                       {social.icon}
@@ -472,7 +472,7 @@ export default function ContactPage() {
             {faqItems.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl p-6"
+                className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl p-6"
               >
                 <h3 className="font-bold mb-2">{item.question}</h3>
                 <p className="text-text-secondary">{item.answer}</p>

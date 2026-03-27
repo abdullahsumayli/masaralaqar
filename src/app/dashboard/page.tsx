@@ -217,7 +217,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
+              className="bg-card rounded-2xl p-6 border border-border shadow-mq-card"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -244,7 +244,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
+              className="bg-card rounded-2xl p-6 border border-border shadow-mq-card"
             >
               <h2 className="text-lg font-bold text-text-primary mb-4">
                 إجراءات سريعة
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
+              className="bg-card rounded-2xl p-6 border border-border shadow-mq-card"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-text-primary">
@@ -370,7 +370,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-card rounded-2xl p-6 border border-white/[0.06] shadow-mq-card"
+              className="bg-card rounded-2xl p-6 border border-border shadow-mq-card"
             >
               <h2 className="text-lg font-bold text-text-primary mb-4">
                 النشاط الأخير
@@ -420,7 +420,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65 }}
-              className="bg-card rounded-2xl p-5 border border-white/[0.06] shadow-mq-card"
+              className="bg-card rounded-2xl p-5 border border-border shadow-mq-card"
             >
               <h3 className="font-bold text-text-primary mb-3 text-sm">ملخص سريع</h3>
               <div className="space-y-3">

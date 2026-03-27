@@ -133,7 +133,7 @@ export default function BlogPage() {
                 placeholder="ابحث في المقالات..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-xl py-4 pr-12 pl-4 text-[#F0F4FF] placeholder-[#475569] focus:border-primary focus:outline-none transition"
+                className="w-full bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl py-4 pr-12 pl-4 text-[#F0F4FF] placeholder-[#475569] focus:border-primary focus:outline-none transition"
               />
             </motion.div>
           </motion.div>
@@ -189,7 +189,7 @@ export default function BlogPage() {
                 <motion.article
                   key={article.id}
                   variants={fadeInUp}
-                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
+                  className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
                 >
                   {/* Article Image */}
                   <Link href={`/blog/${article.slug}`}>

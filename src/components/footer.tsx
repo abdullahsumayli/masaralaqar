@@ -27,7 +27,7 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-[#070B14] border-t border-white/[0.06] overflow-hidden">
+    <footer className="relative bg-surface border-t border-border overflow-hidden">
       {/* Top gradient line */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
@@ -51,12 +51,12 @@ export function Footer() {
                 </div>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-cairo font-bold text-lg text-[#F0F4FF]">MQ</span>
+                <span className="font-cairo font-bold text-lg text-text-primary">MQ</span>
                 <span className="text-[10px] text-primary/80 font-medium">MQ · AI tools for real estate</span>
               </div>
             </Link>
 
-            <p className="text-[#475569] text-sm leading-relaxed mb-6 max-w-[260px]">
+            <p className="text-text-muted text-sm leading-relaxed mb-6 max-w-[260px]">
               AI tools for modern real estate teams. منصة الذكاء الاصطناعي الأولى للمكاتب العقارية في المملكة.
             </p>
 
@@ -69,7 +69,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="w-9 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-[#475569] hover:text-primary hover:border-primary/30 hover:bg-primary/[0.06] transition-all duration-200"
+                  className="w-9 h-9 rounded-lg border border-border bg-background flex items-center justify-center text-text-muted hover:text-primary hover:border-primary/30 hover:bg-primary/[0.06] transition-all duration-200"
                 >
                   <social.icon className="w-4 h-4" />
                 </a>
@@ -79,7 +79,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-[#F0F4FF] font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
+            <h3 className="text-text-primary font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
               المنتجات
             </h3>
@@ -88,7 +88,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-[#475569] hover:text-[#94A3B8] text-sm transition-colors duration-200 flex items-center gap-1.5 group"
+                    className="text-text-muted hover:text-text-secondary text-sm transition-colors duration-200 flex items-center gap-1.5 group"
                   >
                     <span className="w-0 group-hover:w-3 h-px bg-primary transition-all duration-300 flex-shrink-0" />
                     {link.label}
@@ -100,7 +100,7 @@ export function Footer() {
 
           {/* Company Links */}
           <div>
-            <h3 className="text-[#F0F4FF] font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
+            <h3 className="text-text-primary font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-accent rounded-full inline-block" />
               الشركة
             </h3>
@@ -109,7 +109,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-[#475569] hover:text-[#94A3B8] text-sm transition-colors duration-200 flex items-center gap-1.5 group"
+                    className="text-text-muted hover:text-text-secondary text-sm transition-colors duration-200 flex items-center gap-1.5 group"
                   >
                     <span className="w-0 group-hover:w-3 h-px bg-accent transition-all duration-300 flex-shrink-0" />
                     {link.label}
@@ -121,24 +121,24 @@ export function Footer() {
 
           {/* Contact + CTA */}
           <div>
-            <h3 className="text-[#F0F4FF] font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
+            <h3 className="text-text-primary font-cairo font-semibold text-sm mb-5 flex items-center gap-2">
               <span className="w-1 h-4 bg-primary rounded-full inline-block" />
               تواصل معنا
             </h3>
             <ul className="space-y-3 mb-6">
               <li>
-                <a href="tel:+966545374069" className="flex items-center gap-2.5 text-[#475569] hover:text-[#94A3B8] text-sm transition-colors group">
+                <a href="tel:+966545374069" className="flex items-center gap-2.5 text-text-muted hover:text-text-secondary text-sm transition-colors group">
                   <Phone className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                   <span dir="ltr">+966 54 537 4069</span>
                 </a>
               </li>
               <li>
-                <a href="mailto:info@masaralaqar.com" className="flex items-center gap-2.5 text-[#475569] hover:text-[#94A3B8] text-sm transition-colors">
+                <a href="mailto:info@masaralaqar.com" className="flex items-center gap-2.5 text-text-muted hover:text-text-secondary text-sm transition-colors">
                   <Mail className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                   info@masaralaqar.com
                 </a>
               </li>
-              <li className="flex items-center gap-2.5 text-[#475569] text-sm">
+              <li className="flex items-center gap-2.5 text-text-muted text-sm">
                 <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                 المملكة العربية السعودية
               </li>
@@ -147,7 +147,7 @@ export function Footer() {
             {/* Mini CTA */}
             <Link
               href="/auth/signup"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 text-primary-light text-sm font-semibold hover:border-primary/40 hover:bg-primary/15 transition-all group"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 text-primary text-sm font-semibold hover:border-primary/40 hover:bg-primary/15 transition-all group"
             >
               ابدأ مجاناً
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -160,10 +160,10 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[#2D3748] text-xs">
+          <p className="text-text-muted text-xs">
             © {new Date().getFullYear()} MQ. جميع الحقوق محفوظة.
           </p>
-          <div className="flex items-center gap-1 text-[#2D3748] text-xs">
+          <div className="flex items-center gap-1 text-text-muted text-xs">
             <span>صُنع بـ</span>
             <span className="text-primary">♥</span>
             <span>في المملكة العربية السعودية 🇸🇦</span>

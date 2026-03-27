@@ -66,7 +66,7 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, officeName: string) {
 
   doc
     .fontSize(16)
-    .fillColor("#4F8EF7")
+    .fillColor("#25D366")
     .text(title, { align: "center" })
     .moveDown(0.3);
 

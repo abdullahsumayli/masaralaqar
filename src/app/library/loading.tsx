@@ -19,7 +19,7 @@ export default function LibraryLoading() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden">
+            <div key={i} className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden">
               <div className="h-44 bg-[#162444] animate-pulse" />
               <div className="p-5 space-y-3">
                 <div className="w-16 h-5 rounded-full bg-[#162444] animate-pulse" />

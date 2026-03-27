@@ -7,7 +7,7 @@ import { ScrollToTop } from '@/components/ScrollToTop'
 import { ChatWidget } from '@/components/ChatWidget'
 
 export const viewport: Viewport = {
-  themeColor: '#070B14',
+  themeColor: '#F1F5F9',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,

@@ -206,7 +206,7 @@ export default function SubscriptionPage() {
                   key={plan.id}
                   className={`relative bg-background rounded-2xl border p-6 flex flex-col transition-all ${
                     isCurrent
-                      ? "border-primary shadow-[0_0_0_2px_rgba(79,142,247,0.25)]"
+                      ? "border-primary shadow-[0_0_0_2px_rgba(37,211,102,0.25)]"
                       : PLAN_COLORS[plan.name] || "border-border"
                   } ${isPopular ? "shadow-lg" : ""}`}
                 >

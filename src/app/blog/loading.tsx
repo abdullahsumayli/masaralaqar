@@ -16,7 +16,7 @@ export default function BlogLoading() {
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl overflow-hidden"
+              className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl overflow-hidden"
             >
               <div className="h-48 bg-[#162444] animate-pulse" />
               <div className="p-6 space-y-3">

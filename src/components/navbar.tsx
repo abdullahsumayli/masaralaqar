@@ -31,7 +31,7 @@ export function Navbar() {
       className={cn(
         "fixed top-0 right-0 left-0 z-50 transition-all duration-500",
         isScrolled
-          ? "bg-[#070B14]/90 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+          ? "bg-background/95 backdrop-blur-2xl border-b border-border shadow-sm shadow-slate-900/5"
           : "bg-transparent"
       )}
     >
@@ -49,7 +49,7 @@ export function Navbar() {
               </div>
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-cairo font-bold text-base md:text-lg text-[#F0F4FF] tracking-tight">
+              <span className="font-cairo font-bold text-base md:text-lg text-text-primary tracking-tight">
                 MQ
               </span>
               <span className="text-[10px] text-primary/90 font-medium hidden sm:block">
@@ -67,7 +67,7 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="relative px-4 py-2 rounded-lg text-[#94A3B8] hover:text-[#F0F4FF] text-sm font-medium transition-all duration-200 hover:bg-white/[0.04] group"
+                  className="relative px-4 py-2 rounded-lg text-text-secondary hover:text-text-primary text-sm font-medium transition-all duration-200 hover:bg-card-hover group"
                 >
                   <span className="relative z-10">{item.label}</span>
                   <span className="absolute inset-x-4 bottom-1 h-px bg-primary/0 group-hover:bg-primary/50 transition-all duration-300" />
@@ -79,7 +79,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/login"
-              className="px-4 py-2 text-[#94A3B8] hover:text-[#F0F4FF] text-sm font-medium transition-colors duration-200"
+              className="px-4 py-2 text-text-secondary hover:text-text-primary text-sm font-medium transition-colors duration-200"
             >
               دخول
             </Link>
@@ -90,7 +90,7 @@ export function Navbar() {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden relative w-9 h-9 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-[#94A3B8] hover:text-[#F0F4FF] hover:border-primary/30 transition-all"
+            className="lg:hidden relative w-9 h-9 rounded-lg border border-border bg-card flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-primary/30 transition-all"
             aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -116,37 +116,37 @@ export function Navbar() {
               transition={{ duration: 0.25, ease: "easeInOut" }}
               className="lg:hidden overflow-hidden"
             >
-              <div className="border-t border-white/[0.06] bg-[#0D1526]/95 backdrop-blur-2xl rounded-b-2xl">
+              <div className="border-t border-border bg-surface/98 backdrop-blur-2xl rounded-b-2xl shadow-lg shadow-slate-900/5">
                 <div className="py-4 px-2 space-y-1">
-                  <Link href="/products" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/products" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     المنتجات
                   </Link>
-                  <Link href="/products/saqr" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-[#94A3B8] hover:text-[#F0F4FF] text-sm">
+                  <Link href="/products/saqr" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-text-secondary hover:text-text-primary text-sm">
                     MQ
                   </Link>
-                  <Link href="/pricing" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/pricing" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     الأسعار
                   </Link>
-                  <Link href="/affiliate" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/affiliate" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     برنامج الإحالة
                   </Link>
-                  <Link href="/knowledge" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/knowledge" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     المعرفة
                   </Link>
-                  <Link href="/knowledge/blog" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-[#94A3B8] hover:text-[#F0F4FF] text-sm">
+                  <Link href="/knowledge/blog" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-text-secondary hover:text-text-primary text-sm">
                     المدونة
                   </Link>
-                  <Link href="/knowledge/library" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-[#94A3B8] hover:text-[#F0F4FF] text-sm">
+                  <Link href="/knowledge/library" onClick={() => setIsOpen(false)} className="flex px-6 py-2 text-text-secondary hover:text-text-primary text-sm">
                     المكتبة
                   </Link>
-                  <Link href="/about" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/about" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     عن المنصة
                   </Link>
-                  <Link href="/partners" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] rounded-xl font-medium text-sm">
+                  <Link href="/partners" onClick={() => setIsOpen(false)} className="flex px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-card-hover rounded-xl font-medium text-sm">
                     الشركاء
                   </Link>
                 </div>
-                <div className="px-4 pb-5 pt-2 grid grid-cols-2 gap-2.5 border-t border-white/[0.06]">
+                <div className="px-4 pb-5 pt-2 grid grid-cols-2 gap-2.5 border-t border-border">
                   <Link href="/login" onClick={() => setIsOpen(false)} className="btn-outline text-sm py-2.5 justify-center">
                     دخول
                   </Link>

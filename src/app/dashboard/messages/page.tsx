@@ -168,7 +168,7 @@ export default function MessagesPage() {
         <div className="flex gap-6 flex-1 min-h-0">
           {/* Leads list (sidebar) */}
           <div
-            className={`flex flex-col ${selected ? "hidden md:flex md:w-80" : "w-full md:w-80"} bg-card rounded-2xl border border-white/[0.06] shadow-mq-card overflow-hidden`}
+            className={`flex flex-col ${selected ? "hidden md:flex md:w-80" : "w-full md:w-80"} bg-card rounded-2xl border border-border shadow-mq-card overflow-hidden`}
           >
             <div className="p-4 border-b border-border">
               <h1 className="font-bold text-text-primary">المحادثات</h1>
@@ -239,7 +239,7 @@ export default function MessagesPage() {
 
           {/* Conversation panel */}
           {selected ? (
-            <div className="flex-1 flex flex-col bg-card rounded-2xl border border-white/[0.06] shadow-mq-card overflow-hidden">
+            <div className="flex-1 flex flex-col bg-card rounded-2xl border border-border shadow-mq-card overflow-hidden">
               {/* Conv header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-border">
                 <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export default function MessagesPage() {
                 ) : !selected.conversation_history?.length ? (
                   <div className="flex flex-col items-stretch justify-center min-h-[200px] gap-4 px-2">
                     <div className="flex justify-start">
-                      <div className="max-w-[90%] rounded-2xl rounded-tr-sm bg-card border border-white/[0.08] px-4 py-3 shadow-sm">
+                      <div className="max-w-[90%] rounded-2xl rounded-tr-sm bg-card border border-border px-4 py-3 shadow-sm">
                         <p className="text-sm text-text-primary leading-relaxed">
                           أنا MQ — أساعدك ترد على عملائك وأحوّلهم إلى معاينات
                         </p>
@@ -311,7 +311,7 @@ export default function MessagesPage() {
                             className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
                               isClient
                                 ? "bg-[#DCF8C6]/30 border border-[#25D366]/25"
-                                : "bg-card-hover border border-white/[0.08]"
+                                : "bg-card-hover border border-border"
                             }`}
                           >
                             {isClient ? (
@@ -324,7 +324,7 @@ export default function MessagesPage() {
                             className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
                               isClient
                                 ? "bg-[#DCF8C6] text-gray-900 rounded-tr-md"
-                                : "bg-card text-text-primary border border-white/[0.08] rounded-tl-md"
+                                : "bg-card text-text-primary border border-border rounded-tl-md"
                             }`}
                           >
                             <p className="leading-relaxed whitespace-pre-wrap">{msg.message}</p>
@@ -377,7 +377,7 @@ export default function MessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="hidden md:flex flex-1 items-center justify-center bg-card rounded-2xl border border-white/[0.06] shadow-mq-card">
+            <div className="hidden md:flex flex-1 items-center justify-center bg-card rounded-2xl border border-border shadow-mq-card">
               <div className="text-center">
                 <MessageSquare className="w-10 h-10 text-primary/30 mx-auto mb-3" />
                 <p className="text-text-muted text-sm">اختر محادثة لعرضها</p>

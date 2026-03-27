@@ -26,7 +26,7 @@ const stagger = {
 
 /* ─── Data ───────────────────────────────────────── */
 const features = [
-  { icon: MessageSquare, title: 'رد آلي 24/7',     desc: 'يرد على عملاءك على واتساب فوراً دون تأخير حتى وأنت نائم', color: '#4F8EF7' },
+  { icon: MessageSquare, title: 'رد آلي 24/7',     desc: 'يرد على عملاءك على واتساب فوراً دون تأخير حتى وأنت نائم', color: '#25D366' },
   { icon: Users,         title: 'إدارة العملاء CRM', desc: 'نظام ذكي يصنّف الجادّين تلقائياً ويجدول المتابعة لك',    color: '#E5B84A' },
   { icon: BarChart3,     title: 'تحليلات متقدمة',  desc: 'لوحة بيانات لحظية تُظهر أداء مبيعاتك وأفضل الفرص',       color: '#34D399' },
   { icon: Zap,           title: 'أتمتة التسويق',   desc: 'حملات تلقائية موجّهة تُرسَل في الوقت المثالي',             color: '#a78bfa' },
@@ -145,27 +145,27 @@ export default function HomePage() {
             className="relative mt-20 max-w-4xl mx-auto scroll-mt-24"
           >
             {/* Glow behind mock */}
-            <div className="absolute -inset-8 bg-gradient-radial from-[#4F8EF7]/15 via-transparent to-transparent" />
+            <div className="absolute -inset-8 bg-gradient-radial from-[#25D366]/15 via-transparent to-transparent" />
             {/* Browser frame */}
-            <div className="relative card-glass rounded-2xl overflow-hidden border border-[#4F8EF7]/15 shadow-[0_30px_80px_rgba(0,0,0,0.6)]">
+            <div className="relative card-glass rounded-2xl overflow-hidden border border-primary/15 shadow-xl shadow-slate-900/10">
               {/* Browser chrome */}
-              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
+              <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-slate-100/80">
                 <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
                 <span className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
                 <span className="w-3 h-3 rounded-full bg-[#28C840]" />
                 <div className="flex-1 mx-4 h-7 bg-white/[0.06] rounded-lg flex items-center justify-center px-3 gap-2">
                   <div className="w-2 h-2 rounded-full bg-[#34D399]" />
-                  <span className="text-[#475569] text-xs">dashboard.masaralaqar.com</span>
+                  <span className="text-text-muted text-xs">dashboard.masaralaqar.com</span>
                 </div>
               </div>
 
               {/* Dashboard content */}
-              <div className="bg-[#0A1020] p-6">
+              <div className="bg-slate-50 p-6">
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-[#F0F4FF] font-bold text-base">لوحة MQ الذكية</h3>
-                    <p className="text-[#475569] text-xs mt-0.5">الثلاثاء، ٨ مارس ٢٠٢٦</p>
+                    <h3 className="text-text-primary font-bold text-base">لوحة MQ الذكية</h3>
+                    <p className="text-text-muted text-xs mt-0.5">الثلاثاء، ٨ مارس ٢٠٢٦</p>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#34D399]/10 border border-[#34D399]/20">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" />
@@ -176,14 +176,14 @@ export default function HomePage() {
                 {/* Stats row */}
                 <div className="grid grid-cols-4 gap-3 mb-5">
                   {[
-                    { label: 'عملاء اليوم', val: '28', delta: '+12%', color: '#4F8EF7', bg: 'rgba(79,142,247,0.08)' },
+                    { label: 'عملاء اليوم', val: '28', delta: '+12%', color: '#25D366', bg: 'rgba(37,211,102,0.12)' },
                     { label: 'ردود آلية',   val: '156', delta: '+8%',  color: '#34D399', bg: 'rgba(52,211,153,0.08)' },
                     { label: 'صفقات مفتوحة', val: '14',  delta: '+3%',  color: '#E5B84A', bg: 'rgba(229,184,74,0.08)' },
                     { label: 'معدل التحويل', val: '32%', delta: '+5%',  color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
                   ].map((s, i) => (
-                    <div key={i} className="rounded-xl p-3 border border-white/[0.06]" style={{ background: s.bg }}>
+                    <div key={i} className="rounded-xl p-3 border border-border" style={{ background: s.bg }}>
                       <div className="text-xl font-black mb-0.5" style={{ color: s.color }}>{s.val}</div>
-                      <div className="text-[#475569] text-[10px]">{s.label}</div>
+                      <div className="text-text-muted text-[10px]">{s.label}</div>
                       <div className="text-[#34D399] text-[10px] font-semibold mt-1">{s.delta}</div>
                     </div>
                   ))}
@@ -193,13 +193,13 @@ export default function HomePage() {
                 <div className="space-y-2">
                   {[
                     { text: 'رد تلقائي على أحمد محمد — طلب معاينة شقة في الرياض', time: 'الآن',     dot: '#34D399' },
-                    { text: 'عميل جديد — سارة علي تسأل عن فيلا في جدة',          time: 'منذ 3 د', dot: '#4F8EF7' },
+                    { text: 'عميل جديد — سارة علي تسأل عن فيلا في جدة',          time: 'منذ 3 د', dot: '#25D366' },
                     { text: 'تذكير: موعد معاينة مع خالد عمر — غداً الساعة 4م',  time: 'منذ 8 د', dot: '#E5B84A' },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white border border-border">
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.dot, boxShadow: `0 0 8px ${item.dot}` }} />
-                      <span className="text-[#94A3B8] text-xs flex-1">{item.text}</span>
-                      <span className="text-[#475569] text-[10px] flex-shrink-0">{item.time}</span>
+                      <span className="text-text-secondary text-xs flex-1">{item.text}</span>
+                      <span className="text-text-muted text-[10px] flex-shrink-0">{item.time}</span>
                     </div>
                   ))}
                 </div>
@@ -222,7 +222,7 @@ export default function HomePage() {
               كل ما تحتاجه في{' '}
               <span className="gradient-text-blue">منصة واحدة</span>
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            <motion.p variants={fadeUp} className="text-text-secondary text-lg max-w-2xl mx-auto">
               صُمّمت كل ميزة لتوفير وقتك وزيادة إيراداتك في السوق العقاري السعودي
             </motion.p>
           </motion.div>
@@ -241,8 +241,8 @@ export default function HomePage() {
                 {/* Glow dot */}
                 <div className="w-1.5 h-1.5 rounded-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: f.color, boxShadow: `0 0 10px ${f.color}` }} />
 
-                <h3 className="text-[#F0F4FF] font-bold text-lg mb-2">{f.title}</h3>
-                <p className="text-[#475569] text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="text-text-primary font-bold text-lg mb-2">{f.title}</h3>
+                <p className="text-text-muted text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -253,11 +253,11 @@ export default function HomePage() {
           WHY US
           ════════════════════════════════════════════ */}
       <section className="section-padding px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[#0D1526]/50" />
+        <div className="absolute inset-0 bg-slate-200/40" />
         <div className="absolute inset-0 bg-grid-pattern opacity-100" />
         {/* Border lines */}
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/20 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/20 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#25D366]/20 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#25D366]/20 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid lg:grid-cols-2 gap-16 items-center">
@@ -269,7 +269,7 @@ export default function HomePage() {
                 مميزات لن تجدها{' '}
                 <span className="gradient-text-gold">في مكان آخر</span>
               </h2>
-              <p className="text-[#94A3B8] text-lg leading-relaxed mb-8">
+              <p className="text-text-secondary text-lg leading-relaxed mb-8">
                 صُمّم نظام MQ خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
               </p>
               <Link href="/products/saqr" className="btn-primary inline-flex">
@@ -286,11 +286,11 @@ export default function HomePage() {
                   variants={fadeUp}
                   className="card p-6 group cursor-default"
                 >
-                  <div className="w-11 h-11 rounded-xl bg-[#4F8EF7]/10 border border-[#4F8EF7]/15 flex items-center justify-center mb-4 group-hover:border-[#4F8EF7]/30 transition-colors">
-                    <item.icon className="w-5 h-5 text-[#4F8EF7]" />
+                  <div className="w-11 h-11 rounded-xl bg-[#25D366]/10 border border-[#25D366]/15 flex items-center justify-center mb-4 group-hover:border-[#25D366]/30 transition-colors">
+                    <item.icon className="w-5 h-5 text-[#25D366]" />
                   </div>
-                  <h4 className="font-bold text-[#F0F4FF] mb-2 text-sm">{item.title}</h4>
-                  <p className="text-[#475569] text-xs leading-relaxed">{item.desc}</p>
+                  <h4 className="font-bold text-text-primary mb-2 text-sm">{item.title}</h4>
+                  <p className="text-text-muted text-xs leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -312,7 +312,7 @@ export default function HomePage() {
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
               حلول <span className="gradient-text-blue">MQ</span>
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-8">
+            <motion.p variants={fadeUp} className="text-text-secondary text-lg max-w-2xl mx-auto mb-8">
               أدوات مصممة لرفع كفاءة المكاتب العقارية
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-4">
@@ -321,8 +321,8 @@ export default function HomePage() {
                   <MessageSquare className="w-7 h-7 text-[#25D366]" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">MQ</h3>
-                  <p className="text-[#475569] text-sm">رد آلي ذكي عبر واتساب — تجربة مجانية 14 يوم</p>
+                  <h3 className="text-text-primary font-bold text-lg mb-1">MQ</h3>
+                  <p className="text-text-muted text-sm">رد آلي ذكي عبر واتساب — تجربة مجانية 14 يوم</p>
                 </div>
                 <ArrowLeft className="w-5 h-5 text-primary mr-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
@@ -337,7 +337,7 @@ export default function HomePage() {
       {/* ════════════════════════════════════════════
           TOOLS INSIDE THE PLATFORM
           ════════════════════════════════════════════ */}
-      <section className="section-padding px-4 relative overflow-hidden border-t border-white/[0.06]">
+      <section className="section-padding px-4 relative overflow-hidden border-t border-border">
         <div className="absolute inset-0 bg-surface/30" />
         <PageContainer className="relative">
           <SectionTitle
@@ -362,8 +362,8 @@ export default function HomePage() {
                   <MessageSquare className="w-7 h-7 text-primary" />
                 </div>
                 <div className="flex-1 text-right">
-                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">MQ</h3>
-                  <p className="text-[#94A3B8] text-sm mb-2">أتمتة واتساب بالذكاء الاصطناعي للعقار</p>
+                  <h3 className="text-text-primary font-bold text-lg mb-1">MQ</h3>
+                  <p className="text-text-secondary text-sm mb-2">أتمتة واتساب بالذكاء الاصطناعي للعقار</p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34D399]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#34D399]" />
                     متاح الآن
@@ -374,12 +374,12 @@ export default function HomePage() {
             </motion.div>
             <motion.div variants={fadeUp}>
               <div className="card p-6 flex items-center gap-4 opacity-80 cursor-default">
-                <div className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
-                  <Rocket className="w-7 h-7 text-[#94A3B8]" />
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-border flex items-center justify-center">
+                  <Rocket className="w-7 h-7 text-text-secondary" />
                 </div>
                 <div className="flex-1 text-right">
-                  <h3 className="text-[#F0F4FF] font-bold text-lg mb-1">أدوات قادمة</h3>
-                  <p className="text-[#94A3B8] text-sm mb-2">CRM، أتمتة تسويق، تحليلات — قريباً</p>
+                  <h3 className="text-text-primary font-bold text-lg mb-1">أدوات قادمة</h3>
+                  <p className="text-text-secondary text-sm mb-2">CRM، أتمتة تسويق، تحليلات — قريباً</p>
                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6B7280]">
                     قريباً
                   </span>
@@ -394,7 +394,7 @@ export default function HomePage() {
           KNOWLEDGE SECTION — Blog + Library
           ════════════════════════════════════════════ */}
       <section className="section-padding px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[#0D1526]/30" />
+        <div className="absolute inset-0 bg-slate-200/30" />
         <div className="relative max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
             <motion.div variants={fadeUp} className="mb-4">
@@ -403,7 +403,7 @@ export default function HomePage() {
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
               مدونة <span className="gradient-text-gold">ومكتبة</span>
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-4">
+            <motion.p variants={fadeUp} className="text-text-secondary text-lg max-w-2xl mx-auto mb-4">
               مقالات، أدلة وموارد لمساعدتك في تطوير عملك العقاري
             </motion.p>
             <motion.p variants={fadeUp} className="text-[#E5B84A]/80 text-sm mb-10">
@@ -451,12 +451,12 @@ export default function HomePage() {
       <section className="section-padding px-4 relative overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0F1E3D] via-[#070B14] to-[#0D1526]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-background to-slate-100" />
           <div className="absolute inset-0 bg-dot-pattern opacity-60" />
           {/* Blue radial */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#4F8EF7]/[0.08] rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#25D366]/[0.08] rounded-full blur-3xl" />
         </div>
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/30 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#25D366]/30 to-transparent" />
         <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#E5B84A]/20 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto">
@@ -470,7 +470,7 @@ export default function HomePage() {
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
               نظام <span className="gradient-text-blue">MQ</span> لإدارة العمل العقاري
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
+            <motion.p variants={fadeUp} className="text-text-secondary text-lg max-w-2xl mx-auto">
               منصة متكاملة مدعومة بالذكاء الاصطناعي تحوّل مكتبك إلى آلة مبيعات ذكية تعمل دون توقف
             </motion.p>
           </motion.div>
@@ -519,7 +519,7 @@ export default function HomePage() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
             {[
               { icon: MessageSquare, title: 'واتساب ذكي',       desc: 'ربط مباشر مع واتساب — ردود آلية، تصنيف تلقائي، جدولة ذكية',     color: '#25D366' },
-              { icon: BarChart3,     title: 'تقارير لحظية',     desc: 'لوحة بيانات تفاعلية توضح أداءك وأفضل المصادر وأعلى الفرص',      color: '#4F8EF7' },
+              { icon: BarChart3,     title: 'تقارير لحظية',     desc: 'لوحة بيانات تفاعلية توضح أداءك وأفضل المصادر وأعلى الفرص',      color: '#25D366' },
               { icon: Users,         title: 'CRM متكامل',       desc: 'إدارة كاملة للعملاء مع تاريخ التواصل وإمكانية المتابعة الذكية', color: '#E5B84A' },
               { icon: Zap,           title: 'أتمتة الحملات',   desc: 'أرسل رسائل متخصصة للعملاء المناسبين في الوقت المناسب تلقائياً', color: '#a78bfa' },
               { icon: Brain,         title: 'ذكاء اصطناعي',    desc: 'يفهم طلبات العملاء ويقترح العقارات المناسبة من قائمتك فوراً',    color: '#34D399' },
@@ -534,8 +534,8 @@ export default function HomePage() {
                     <item.icon className="w-5 h-5" style={{ color: item.color }} />
                   </div>
                   <div>
-                    <h4 className="text-[#F0F4FF] font-bold mb-1.5">{item.title}</h4>
-                    <p className="text-[#475569] text-sm leading-relaxed">{item.desc}</p>
+                    <h4 className="text-text-primary font-bold mb-1.5">{item.title}</h4>
+                    <p className="text-text-muted text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -588,18 +588,18 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <blockquote className="text-[#94A3B8] leading-relaxed mb-6 text-sm flex-1">
+                <blockquote className="text-text-secondary leading-relaxed mb-6 text-sm flex-1">
                   &ldquo;{t.text}&rdquo;
                 </blockquote>
 
                 {/* Author */}
-                <div className="flex items-center gap-3 pt-5 border-t border-white/[0.06]">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#4F8EF7]/20 to-[#4F8EF7]/5 border border-[#4F8EF7]/15 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[#4F8EF7] font-bold text-sm">{t.avatar}</span>
+                <div className="flex items-center gap-3 pt-5 border-t border-border">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#25D366]/20 to-[#25D366]/5 border border-[#25D366]/15 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[#25D366] font-bold text-sm">{t.avatar}</span>
                   </div>
                   <div>
-                    <div className="text-[#F0F4FF] font-bold text-sm">{t.name}</div>
-                    <div className="text-[#475569] text-xs">{t.company}</div>
+                    <div className="text-text-primary font-bold text-sm">{t.name}</div>
+                    <div className="text-text-muted text-xs">{t.company}</div>
                   </div>
                 </div>
               </motion.div>
@@ -613,13 +613,13 @@ export default function HomePage() {
           ════════════════════════════════════════════ */}
       <section className="relative py-24 px-4 overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#0D1B35] to-[#070B14]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-background to-slate-200/80" />
         <div className="absolute inset-0 bg-dot-pattern opacity-60" />
         {/* Glowing orbs */}
-        <div className="orb w-[500px] h-[500px] -top-32 right-1/4 bg-[#4F8EF7]/[0.1]" />
+        <div className="orb w-[500px] h-[500px] -top-32 right-1/4 bg-[#25D366]/[0.1]" />
         <div className="orb w-[400px] h-[400px] -bottom-24 left-1/4 bg-[#E5B84A]/[0.08]" />
         {/* Border lines */}
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#4F8EF7]/40 to-transparent" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#25D366]/40 to-transparent" />
 
         <div className="relative max-w-4xl mx-auto text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
@@ -637,7 +637,7 @@ export default function HomePage() {
               {' '}اليوم
             </motion.h2>
 
-            <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg mb-10 max-w-xl mx-auto">
+            <motion.p variants={fadeUp} className="text-text-secondary text-lg mb-10 max-w-xl mx-auto">
               جرّب نظام MQ مجاناً لمدة 14 يوم — بدون بطاقة ائتمان، إعداد في دقائق.
             </motion.p>
 
@@ -658,7 +658,7 @@ export default function HomePage() {
             </motion.div>
 
             {/* Assurance row */}
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-6 mt-8 text-[#475569] text-xs">
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center justify-center gap-6 mt-8 text-text-muted text-xs">
               {['لا حاجة لبطاقة ائتمان', 'إعداد في أقل من 5 دقائق', 'دعم سعودي على مدار الساعة'].map(t => (
                 <div key={t} className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#34D399]" />

@@ -153,7 +153,7 @@ export class NotificationService {
           subject: `MQ — ${subject}`,
           html: `
             <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #4F8EF7;">${subject}</h2>
+              <h2 style="color: #25D366;">${subject}</h2>
               <p style="color: #333; line-height: 1.8;">${body}</p>
               <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
               <p style="color: #999; font-size: 12px;">MQ — منصة إدارة العقارات بالذكاء الاصطناعي</p>

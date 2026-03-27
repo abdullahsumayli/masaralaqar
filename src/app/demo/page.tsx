@@ -342,7 +342,7 @@ export default function DemoPage() {
                         className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           showFullDemo && currentStep >= index * 2
                             ? "bg-primary text-white"
-                            : "bg-[#111E35] border border-[rgba(79,142,247,0.12)] text-text-muted"
+                            : "bg-[#111E35] border border-[rgba(37,211,102,0.12)] text-text-muted"
                         }`}
                       >
                         <step.icon className="w-5 h-5" />

@@ -281,7 +281,7 @@ export default function ServicesPage() {
                 <motion.div
                   key={i}
                   variants={fadeInUp}
-                  className="bg-[#111E35] border border-[rgba(79,142,247,0.12)] rounded-2xl p-6 hover:shadow-lg hover:bg-[#162444] transition-all"
+                  className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-2xl p-6 hover:shadow-lg hover:bg-[#162444] transition-all"
                 >
                   <div
                     className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-4`}

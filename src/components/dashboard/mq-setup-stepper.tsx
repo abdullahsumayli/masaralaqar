@@ -21,7 +21,7 @@ export function MQSetupStepper({
 
   return (
     <div className={cn("w-full space-y-4", className)}>
-      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
         <div
           className="h-full rounded-full bg-mq-green transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
@@ -45,7 +45,7 @@ export function MQSetupStepper({
               <div
                 className={cn(
                   "w-10 h-10 rounded-xl flex items-center justify-center",
-                  done || current ? "bg-mq-green/15 text-mq-green" : "bg-white/[0.05] text-text-muted",
+                  done || current ? "bg-mq-green/15 text-mq-green" : "bg-slate-100 text-text-muted",
                 )}
               >
                 <Icon className="w-5 h-5" />

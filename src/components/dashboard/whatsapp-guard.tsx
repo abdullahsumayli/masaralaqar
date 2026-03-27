@@ -98,7 +98,7 @@ export function WhatsAppGuard({ children }: { children: React.ReactNode }) {
           aria-modal="true"
           role="dialog"
         >
-          <div className="w-full max-w-lg bg-card rounded-2xl border border-white/[0.08] shadow-mq-card p-6 sm:p-8 text-center space-y-6">
+          <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-mq-card p-6 sm:p-8 text-center space-y-6">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-mq-orange/15 flex items-center justify-center ring-1 ring-mq-orange/20">
               <MessageSquareWarning className="w-7 h-7 text-mq-orange" />
             </div>

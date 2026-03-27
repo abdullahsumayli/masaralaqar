@@ -28,27 +28,27 @@ export function KnowledgeDropdown() {
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-1 px-4 py-2 rounded-lg text-[#94A3B8] hover:text-[#F0F4FF] text-sm font-medium transition-all hover:bg-white/[0.04]"
+          "flex items-center gap-1 px-4 py-2 rounded-lg text-text-secondary hover:text-text-primary text-sm font-medium transition-all hover:bg-card-hover"
         )}
       >
         المعرفة
         <ChevronDown className={cn("w-4 h-4 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute top-full right-0 mt-1 w-52 rounded-xl border border-white/[0.08] bg-[#0D1526]/98 backdrop-blur-xl shadow-xl py-2 z-50">
+        <div className="absolute top-full right-0 mt-1 w-52 rounded-xl border border-border bg-surface/98 backdrop-blur-xl shadow-lg shadow-slate-900/10 py-2 z-50">
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-[#94A3B8] hover:text-[#F0F4FF] hover:bg-white/[0.04] transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors"
             >
               <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <item.icon className="w-4 h-4 text-primary" />
               </div>
               <div className="text-right">
                 <div className="font-medium text-sm">{item.label}</div>
-                <div className="text-xs text-[#475569]">{item.description}</div>
+                <div className="text-xs text-text-muted">{item.description}</div>
               </div>
             </Link>
           ))}
