@@ -16,7 +16,7 @@ const solutions = [
   {
     icon: Zap,
     title: "رد فوري على العملاء",
-    description: "صقر يرد تلقائياً خلال ثوانٍ على أي استفسار واتساب.",
+    description: "MQ يرد تلقائياً خلال ثوانٍ على أي استفسار واتساب.",
   },
   {
     icon: MessageSquare,
@@ -56,7 +56,7 @@ export function SolutionSection() {
             variants={fadeUp}
             className="text-2xl md:text-3xl font-bold text-[#F0F4FF]"
           >
-            كيف يحل صقر المشكلة؟
+            كيف يحل MQ المشكلة؟
           </motion.h2>
         </motion.div>
 
