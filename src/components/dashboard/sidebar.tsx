@@ -180,7 +180,7 @@ export function DashboardSidebar(
               <Zap className="w-4 h-4 text-white fill-white" />
             </div>
             <div className="leading-none">
-              <span className="font-cairo font-bold text-sm text-text-primary block">مسار العقار</span>
+              <span className="font-cairo font-bold text-sm text-text-primary block">MQ</span>
               <span className="text-[10px] text-primary/70 font-medium">PropTech</span>
             </div>
           </Link>
