@@ -238,7 +238,7 @@ export default function OnboardingPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">إعداد نظام صقر</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">إعداد نظام MQ</h1>
           <p className="text-gray-400">أكمل الخطوات التالية لتفعيل الرد الآلي الذكي</p>
         </div>
 
