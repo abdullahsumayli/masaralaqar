@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -148,11 +149,7 @@ export function DashboardSidebar(
   const [collapsed, setCollapsed] = useState(false);
 
   const handleSignOut = useCallback(async () => {
-    const { createBrowserClient } = await import("@supabase/ssr");
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    const supabase = getSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.push("/login");
   }, [router]);

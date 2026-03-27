@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { createBrowserClient } from "@supabase/ssr";
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 /**
  * UsageWarningBanner
@@ -22,6 +17,7 @@ export function UsageWarningBanner() {
   useEffect(() => {
     async function checkUsage() {
       try {
+        const supabase = getSupabaseBrowserClient();
         const {
           data: { user },
         } = await supabase.auth.getUser();
