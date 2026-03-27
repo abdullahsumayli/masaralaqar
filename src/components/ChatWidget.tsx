@@ -5,7 +5,7 @@ import { X, MessageCircle } from "lucide-react";
 
 const WHATSAPP_NUMBER = "966545374069";
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  "مرحباً، أود الاستفسار عن منصة مسار العقار ونظام MQ."
+  "مرحباً، أود الاستفسار عن منصة MQ ونظام MQ."
 );
 
 export function ChatWidget() {
@@ -38,7 +38,7 @@ export function ChatWidget() {
                 </svg>
               </div>
               <div>
-                <p className="text-white text-xs font-semibold">مسار العقار</p>
+                <p className="text-white text-xs font-semibold">MQ</p>
                 <p className="text-green-400 text-xs">متصل الآن</p>
               </div>
             </div>
@@ -51,7 +51,7 @@ export function ChatWidget() {
             </button>
           </div>
           <p className="text-gray-400 text-xs leading-relaxed mb-3">
-            مرحباً! 👋 كيف يمكننا مساعدتك في منصة مسار العقار؟
+            مرحباً! 👋 كيف يمكننا مساعدتك في منصة MQ؟
           </p>
           <a
             href={whatsappUrl}
