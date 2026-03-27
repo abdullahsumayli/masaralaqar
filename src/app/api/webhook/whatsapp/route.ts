@@ -156,9 +156,10 @@ export async function POST(request: NextRequest) {
           ) {
             WhatsAppService.sendMessage(
               session.phoneNumber,
-              "تم ربط حسابك بنجاح مع نظام MQ ✅\\n\\nالرد الآلي الذكي جاهز لاستقبال رسائل عملائك.",
+              "تم ربط حسابك بنجاح مع نظام MQ ✅\n\nالرد الآلي الذكي جاهز لاستقبال رسائل عملائك.",
               session.officeId,
-            ).catch((err) =>\n              console.warn("[Webhook] test message failed:", err),
+            ).catch((err) =>
+              console.warn("test message failed:", err),
             );
           }
         } else {
@@ -233,20 +234,100 @@ export async function POST(request: NextRequest) {
           ACK_MESSAGE,
           officeId,
         )
-          .then(() =>\n            console.log(\n              `[Webhook] ✓ ack sent to ${from} +${elapsed(webhookStart)}ms`,\n            ),\n          )\n          .catch((err: unknown) =>\n            console.warn(`[Webhook] ✗ ack failed:`, err),\n          );
+          .then(() =>
+            console.log(
+              `[Webhook] ✓ ack sent to ${from} +${elapsed(webhookStart)}ms`,
+            ),
+          )
+          .catch((err: unknown) =>
+            console.warn(`[Webhook] ✗ ack failed:`, err),
+          );
 
         // ── Step 2: Try Redis enqueue (1s timeout) ──────────
         let queued = false;
         try {
-          await Promise.race([\n            enqueueMessage({\n              messageId,\n              phone: from,\n              message: text,\n              officeId,\n              businessPhone,\n              timestamp: new Date().toISOString(),\n              route: "evolution",\n              instanceName,\n            }),\n            new Promise((_, reject) =>\n              setTimeout(\n                () => reject(new Error("Redis enqueue timeout")),\n                ENQUEUE_TIMEOUT_MS,\n              ),\n            ),\n          ]);\n          queued = true;\n          console.log(\n            `[Webhook] ✓ enqueued ${messageId} +${elapsed(webhookStart)}ms`,\n          );\n        } catch (enqueueError) {\n          console.warn(\n            `[Webhook] ✗ enqueue failed +${elapsed(webhookStart)}ms:`,\n            enqueueError instanceof Error\n              ? enqueueError.message\n              : enqueueError,\n          );\n          captureError(enqueueError, {\n            module: "Webhook",\n            action: "enqueueEvolution",\n            officeId,\n          });\n        }
+          await Promise.race([
+            enqueueMessage({
+              messageId,
+              phone: from,
+              message: text,
+              officeId,
+              businessPhone,
+              timestamp: new Date().toISOString(),
+              route: "evolution",
+              instanceName,
+            }),
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Redis enqueue timeout")),
+                ENQUEUE_TIMEOUT_MS,
+              ),
+            ),
+          ]);
+          queued = true;
+          console.log(
+            `[Webhook] ✓ enqueued ${messageId} +${elapsed(webhookStart)}ms`,
+          );
+        } catch (enqueueError) {
+          console.warn(
+            `[Webhook] ✗ enqueue failed +${elapsed(webhookStart)}ms:`,
+            enqueueError instanceof Error
+              ? enqueueError.message
+              : enqueueError,
+          );
+          captureError(enqueueError, {
+            module: "Webhook",
+            action: "enqueueEvolution",
+            officeId,
+          });
+        }
 
         // ── Step 3a: Redis succeeded → wait for ack, return fast ──
-        if (queued) {\n          const remaining = Math.max(\n            0,\n            ACK_TIMEOUT_MS - elapsed(webhookStart),\n          );\n          await Promise.race([\n            ackPromise,\n            new Promise((r) => setTimeout(r, remaining)),\n          ]);\n          console.log(\n            `[Webhook] → done (queued) total=${elapsed(webhookStart)}ms`,\n          );\n          return NextResponse.json({ ok: true, queued: true });\n        }
+        if (queued) {
+          const remaining = Math.max(
+            0,
+            ACK_TIMEOUT_MS - elapsed(webhookStart),
+          );
+          await Promise.race([
+            ackPromise,
+            new Promise((r) => setTimeout(r, remaining)),
+          ]);
+          console.log(
+            `[Webhook] → done (queued) total=${elapsed(webhookStart)}ms`,
+          );
+          return NextResponse.json({ ok: true, queued: true });
+        }
 
         // ── Step 3b: Redis failed → fallback to inline ──────
-        console.log(\n          `[Webhook] ↓ fallback to inline processing +${elapsed(webhookStart)}ms`,\n        );\n        try {\n          await InlineProcessor.process({\n            messageId,\n            phone: from,\n            message: text,\n            officeId,\n            businessPhone,\n            ackSent: true,\n          });\n        } catch (inlineError) {\n          console.error(\n            `[Webhook] ✗ inline failed +${elapsed(webhookStart)}ms:`,\n            inlineError,\n          );\n          captureError(inlineError, {\n            module: "Webhook",\n            action: "inlineFallback",\n            officeId,\n          });\n        }
+        console.log(
+          `[Webhook] ↓ fallback to inline processing +${elapsed(webhookStart)}ms`,
+        );
+        try {
+          await InlineProcessor.process({
+            messageId,
+            phone: from,
+            message: text,
+            officeId,
+            businessPhone,
+            ackSent: true,
+          });
+        } catch (inlineError) {
+          console.error(
+            `[Webhook] ✗ inline failed +${elapsed(webhookStart)}ms:`,
+            inlineError,
+          );
+          captureError(inlineError, {
+            module: "Webhook",
+            action: "inlineFallback",
+            officeId,
+          });
+        }
 
-        console.log(\n          `[Webhook] → done (inline) total=${elapsed(webhookStart)}ms`,\n        );\n        return NextResponse.json({ ok: true, queued: false });\n      }
+        console.log(
+          `[Webhook] → done (inline) total=${elapsed(webhookStart)}ms`,
+        );
+        return NextResponse.json({ ok: true, queued: false });
+      }
 
       // Other Evolution events
       return NextResponse.json({ ok: true });
@@ -306,4 +387,56 @@ export async function POST(request: NextRequest) {
     ).catch(() => {});
 
     try {
-      await Promise.race([\n        enqueueMessage({\n          messageId: message.id,\n          phone: message.phone,\n          message: message.text,\n          officeId: tenant.id,\n          businessPhone: tenant.whatsappNumber || "",\n          timestamp: new Date().toISOString(),\n          route: "legacy",\n          tenantId: tenant.id,\n        }),\n        new Promise((_, reject) =>\n          setTimeout(\n            () => reject(new Error("Redis enqueue timeout")),\n            ENQUEUE_TIMEOUT_MS,\n          ),\n        ),\n      ]);\n      await Promise.race([\n        legacyAck,\n        new Promise((r) => setTimeout(r, ACK_TIMEOUT_MS)),\n      ]);\n      console.log(\n        `[Webhook] ✓ legacy enqueued total=${elapsed(webhookStart)}ms`,\n      );\n      return NextResponse.json({ success: true });\n    } catch (enqueueError) {\n      captureError(enqueueError, {\n        module: "Webhook",\n        action: "enqueueLegacy",\n        officeId: tenant.id,\n      });\n      console.warn(\n        `[Webhook] ✗ legacy enqueue failed total=${elapsed(webhookStart)}ms`,\n      );\n      return NextResponse.json(\n        { error: "Failed to enqueue" },\n        { status: 500 },\n      );\n    }\n  } catch (error) {\n    captureError(error, { module: "Webhook", action: "POST" });\n    MetricsService.track(METRIC.WEBHOOK_ERROR, 1);\n    console.error(\n      `[Webhook] ✗ handler error total=${elapsed(webhookStart)}ms:`,\n      error,\n    );\n    return NextResponse.json(\n      { error: "Internal server error" },\n      { status: 500 },\n    );\n  }\n}
+      await Promise.race([
+        enqueueMessage({
+          messageId: message.id,
+          phone: message.phone,
+          message: message.text,
+          officeId: tenant.id,
+          businessPhone: tenant.whatsappNumber || "",
+          timestamp: new Date().toISOString(),
+          route: "legacy",
+          tenantId: tenant.id,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Redis enqueue timeout")),
+            ENQUEUE_TIMEOUT_MS,
+          ),
+        ),
+      ]);
+      await Promise.race([
+        legacyAck,
+        new Promise((r) => setTimeout(r, ACK_TIMEOUT_MS)),
+      ]);
+      console.log(
+        `[Webhook] ✓ legacy enqueued total=${elapsed(webhookStart)}ms`,
+      );
+      return NextResponse.json({ success: true });
+    } catch (enqueueError) {
+      captureError(enqueueError, {
+        module: "Webhook",
+        action: "enqueueLegacy",
+        officeId: tenant.id,
+      });
+      console.warn(
+        `[Webhook] ✗ legacy enqueue failed total=${elapsed(webhookStart)}ms`,
+      );
+      return NextResponse.json(
+        { error: "Failed to enqueue" },
+        { status: 500 },
+      );
+    }
+  } catch (error) {
+    captureError(error, { module: "Webhook", action: "POST" });
+    MetricsService.track(METRIC.WEBHOOK_ERROR, 1);
+    console.error(
+      `[Webhook] ✗ handler error total=${elapsed(webhookStart)}ms:`,
+      error,
+    );
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
