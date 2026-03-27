@@ -75,7 +75,7 @@ export default function HomePage() {
             <motion.div variants={fadeUp} className="mb-8">
               <span className="badge-blue text-xs md:text-sm">
                 <Sparkles className="w-3.5 h-3.5" />
-                Masar AlAqar — AI tools for modern real estate teams
+                MQ — AI tools for modern real estate teams
               </span>
             </motion.div>
 
@@ -84,8 +84,7 @@ export default function HomePage() {
               variants={fadeUp}
               className="text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] font-black leading-[1.1] mb-6 tracking-tight"
             >
-              لا تخسر{' '}
-              <span className="relative inline-block">
+              لا تخسر{' '}\n              <span className="relative inline-block">
                 <span className="gradient-text-blue">عميلاً واحداً</span>
                 {/* Underline decoration */}
                 <motion.span
@@ -96,15 +95,12 @@ export default function HomePage() {
                 />
               </span>
               <br className="hidden sm:block" />
-              {' '}بسبب رد{' '}
-              <span className="gradient-text-gold">متأخر</span>
+              {' '}بسبب رد{' '}\n              <span className="gradient-text-gold">متأخر</span>
             </motion.h1>
 
             {/* Subline */}
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-[#94A3B8] mb-10 max-w-3xl leading-relaxed">
-              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> من منصة مسار العقار يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}
-              <span className="text-[#F0F4FF]">وأنت مرتاح.</span>{' '}
-              جربه <span className="text-accent font-bold">مجاناً 14 يوم</span>.
+              نظام <span className="text-[#F0F4FF] font-bold">MQ</span> يرد على عملاءك فوراً على واتساب، يصنّف الجادّين تلقائياً، ويجدول المعاينات —{' '}\n              <span className="text-[#F0F4FF]\">وأنت مرتاح.</span>{' '}\n              جربه <span className="text-accent font-bold\">مجاناً 14 يوم</span>.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -216,8 +212,7 @@ export default function HomePage() {
               <span className="badge-gold">المميزات الرئيسية</span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
-              كل ما تحتاجه في{' '}
-              <span className="gradient-text-blue">منصة واحدة</span>
+              كل ما تحتاجه في{' '}\n              <span className="gradient-text-blue">منصة واحدة</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
               صُمّمت كل ميزة لتوفير وقتك وزيادة إيراداتك في السوق العقاري السعودي
@@ -261,10 +256,9 @@ export default function HomePage() {
 
             {/* Left: text */}
             <motion.div variants={fadeUp}>
-              <span className="badge-blue mb-6">لماذا مسار العقار؟</span>
+              <span className="badge-blue mb-6">لماذا MQ؟</span>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-5 leading-tight">
-                مميزات لن تجدها{' '}
-                <span className="gradient-text-gold">في مكان آخر</span>
+                مميزات لن تجدها{' '}\n                <span className="gradient-text-gold">في مكان آخر</span>
               </h2>
               <p className="text-[#94A3B8] text-lg leading-relaxed mb-8">
                 صُمّم نظام MQ خصيصاً للسوق العقاري السعودي، بفهم عميق للتحديات اليومية التي يواجهها الوسطاء العقاريون.
@@ -307,7 +301,7 @@ export default function HomePage() {
               <span className="badge-blue">المنتجات</span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-black mb-4">
-              حلول <span className="gradient-text-blue">Masar AlAqar</span>
+              حلول <span className="gradient-text-blue">MQ</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto mb-8">
               أدوات مصممة لرفع كفاءة المكاتب العقارية
@@ -332,14 +326,14 @@ export default function HomePage() {
       </section>
 
       {/* ════════════════════════════════════════════
-          TOOLS INSIDE THE MASAR PLATFORM
+          TOOLS INSIDE THE PLATFORM
           ════════════════════════════════════════════ */}
       <section className="section-padding px-4 relative overflow-hidden border-t border-white/[0.06]">
         <div className="absolute inset-0 bg-surface/30" />
         <PageContainer className="relative">
           <SectionTitle
             label="المنصة"
-            title="أدوات ضمن منصة Masar AlAqar"
+            title="أدوات ضمن منصة MQ"
             description="منتجنا الحالي وأدوات قادمة ضمن نفس المنصة."
             align="center"
           />
@@ -563,8 +557,7 @@ export default function HomePage() {
               <span className="badge-blue">آراء عملائنا</span>
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-black mb-4">
-              ماذا يقول{' '}
-              <span className="gradient-text-gold">عملاؤنا؟</span>
+              ماذا يقول{' '}\n              <span className="gradient-text-gold">عملاؤنا؟</span>
             </motion.h2>
           </motion.div>
 
@@ -629,8 +622,7 @@ export default function HomePage() {
             </motion.div>
 
             <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 leading-tight">
-              ابدأ{' '}
-              <span className="gradient-text-blue">تحوّلك الرقمي</span>
+              ابدأ{' '}\n              <span className="gradient-text-blue">تحوّلك الرقمي</span>
               {' '}اليوم
             </motion.h2>
 
