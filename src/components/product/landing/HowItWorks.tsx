@@ -22,8 +22,8 @@ const steps = [
   {
     step: 2,
     icon: MessageSquare,
-    title: "صقر يستقبل الرسائل",
-    description: "كل استفسار يصل لصقر الذي يرد فوراً بذكاء اصطناعي.",
+    title: "MQ يستقبل الرسائل",
+    description: "كل استفسار يصل إلى MQ الذي يرد فوراً بذكاء اصطناعي.",
   },
   {
     step: 3,
