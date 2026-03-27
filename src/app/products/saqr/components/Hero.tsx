@@ -70,7 +70,7 @@ export default function SaqrHero() {
             variants={fadeUp}
             className="flex flex-wrap items-center gap-6 text-sm text-[#2F3E46]/50"
           >
-            {["بدون بطاقة ائتمان", "إعداد خلال دقائق", "يعمل عبر واتساب"].map(
+            {[" بدون بطاقة ائتمان", "إعداد خلال دقائق", "يعمل عبر واتساب"].map(
               (txt) => (
                 <span key={txt} className="flex items-center gap-1.5">
                   <svg
@@ -89,7 +89,7 @@ export default function SaqrHero() {
                   {txt}
                 </span>
               ),
-            )}\
+            )}
           </motion.div>
         </motion.div>
 
