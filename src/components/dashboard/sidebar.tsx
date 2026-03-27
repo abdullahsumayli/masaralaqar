@@ -78,21 +78,23 @@ function useWhatsAppStatus() {
 }
 
 /* ─── NavItem ──────────────────────────────────────────────────── */
-function NavItem({
-  href,
-  label,
-  icon: Icon,
-  exact,
-  collapsed,
-  onClick,
-}: {
-  href: string;
-  label: string;
-  icon: React.ElementType;
-  exact?: boolean;
-  collapsed: boolean;
-  onClick?: () => void;
-}) {
+function NavItem(
+  {
+    href,
+    label,
+    icon: Icon,
+    exact,
+    collapsed,
+    onClick,
+  }: {
+    href: string;
+    label: string;
+    icon: React.ElementType;
+    exact?: boolean;
+    collapsed: boolean;
+    onClick?: () => void;
+  }
+) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname.startsWith(href);
 
@@ -134,13 +136,15 @@ function NavItem({
 }
 
 /* ─── Sidebar ──────────────────────────────────────────────────── */
-export function DashboardSidebar({
-  mobileOpen,
-  onMobileClose,
-}: {
-  mobileOpen: boolean;
-  onMobileClose: () => void;
-}) {
+export function DashboardSidebar(
+  {
+    mobileOpen,
+    onMobileClose,
+  }: {
+    mobileOpen: boolean;
+    onMobileClose: () => void;
+  }
+) {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
   const waStatus = useWhatsAppStatus();
@@ -256,7 +260,7 @@ export function DashboardSidebar({
             <WifiOff className="w-4 h-4 text-error flex-shrink-0" />
           )}
           <div className="leading-none min-w-0">
-            <p className="text-xs font-medium text-text-primary truncate">واتساب صقر</p>
+            <p className="text-xs font-medium text-text-primary truncate">واتساب MQ</p>
             <p
               className={cn(
                 "text-[10px] mt-0.5",
