@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 
 const products = [
-  { href: "/products/saqr", label: "صقر", description: "رد آلي ذكي عبر واتساب", icon: MessageSquare },
+  { href: "/products/saqr", label: "MQ", description: "رد آلي ذكي عبر واتساب", icon: MessageSquare },
   { href: "/products", label: "منتجات مستقبلية", description: "قريباً", icon: Package },
 ];
 
