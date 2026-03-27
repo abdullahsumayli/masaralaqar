@@ -24,13 +24,13 @@ const steps = [
     number: "01",
     icon: MessageCircle,
     title: "العميل يرسل رسالة واتساب",
-    description: "أي استفسار عقاري يوصل مباشرة لصقر",
+    description: "أي استفسار عقاري يوصل مباشرة ل MQ",
     color: "bg-blue-50 text-blue-600",
   },
   {
     number: "02",
     icon: Zap,
-    title: "صقر يرد فوراً",
+    title: "MQ يرد فوراً",
     description: "رد تلقائي خلال ثوانٍ — بدون أي تأخير",
     color: "bg-emerald-50 text-emerald-600",
   },
@@ -78,7 +78,7 @@ export default function SaqrSolution() {
             variants={fadeUp}
             className="font-cairo text-3xl md:text-4xl font-bold text-[#2F3E46] mb-4"
           >
-            كيف يعمل نظام صقر؟
+            كيف يعمل نظام MQ؟
           </motion.h2>
           <motion.p
             variants={fadeUp}
