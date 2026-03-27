@@ -30,7 +30,7 @@ export function AnnouncementBar() {
   return (
     <div className="relative bg-primary text-white text-center py-2.5 px-4 text-sm font-medium flex items-center justify-center gap-3 min-h-[44px]">
       <span>
-        🎉 جرب صقر مجاناً 14 يوماً — بدون بطاقة ائتمان
+        🎉 جرب MQ مجاناً 14 يوماً — بدون بطاقة ائتمان
       </span>
       <Link
         href="/auth/signup"
