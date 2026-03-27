@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Zap, Mail, Phone, MapPin, Twitter, Linkedin, MessageCircle, ArrowLeft } from 'lucide-react'
+import { Mail, Phone, MapPin, Twitter, Linkedin, MessageCircle, ArrowLeft } from 'lucide-react'
+import { MqLogo } from '@/components/mq/MqLogo'
 
 const quickLinks = [
   { href: '/products', label: 'المنتجات' },
@@ -46,8 +47,8 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-2.5 mb-5 group w-fit" aria-label="MQ - الصفحة الرئيسية">
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 rounded-xl bg-primary/15 blur-md group-hover:bg-primary/25 transition-all" />
-                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center border border-primary/30">
-                  <Zap className="w-5 h-5 text-white fill-white" />
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+                  <MqLogo className="h-[76%] w-[76%]" />
                 </div>
               </div>
               <div className="flex flex-col leading-none">

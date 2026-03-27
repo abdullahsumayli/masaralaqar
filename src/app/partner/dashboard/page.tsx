@@ -3,12 +3,12 @@
 import { useAuth } from "@/hooks/useAuth";
 import {
   Copy,
-  Handshake,
   Loader2,
   LogOut,
   Share2,
 } from "lucide-react";
 import Link from "next/link";
+import { MqLogo } from "@/components/mq/MqLogo";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { signOut } from "@/lib/auth";
@@ -151,10 +151,10 @@ export default function PartnerDashboardPage() {
         <header className="border-b border-[#21262d] bg-[#0D1117]/80 backdrop-blur">
           <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
             <Link href="/partner/dashboard" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                <Handshake className="w-5 h-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+                <MqLogo onPrimary className="h-[72%] w-[72%]" />
               </div>
-              <span className="font-bold text-white">برنامج الشركاء</span>
+              <span className="font-bold text-white">MQ · الشركاء</span>
             </Link>
           </div>
         </header>
@@ -199,10 +199,10 @@ export default function PartnerDashboardPage() {
       <header className="border-b border-[#21262d] bg-[#0D1117]/80 backdrop-blur">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/partner/dashboard" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Handshake className="w-5 h-5 text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+              <MqLogo onPrimary className="h-[72%] w-[72%]" />
             </div>
-            <span className="font-bold text-white">برنامج الشركاء</span>
+            <span className="font-bold text-white">MQ · الشركاء</span>
           </Link>
           <button
             onClick={handleSignOut}

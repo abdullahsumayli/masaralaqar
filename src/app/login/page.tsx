@@ -4,13 +4,13 @@ import { getUserProfile, signIn } from "@/lib/auth";
 import {
   AlertCircle,
   ArrowRight,
-  Building2,
   Eye,
   EyeOff,
   Loader2,
   Lock,
   Mail,
 } from "lucide-react";
+import { MqLogo } from "@/components/mq/MqLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -73,12 +73,10 @@ export default function LoginPage() {
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between p-5 max-w-7xl mx-auto w-full">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+            <MqLogo onPrimary className="h-[72%] w-[72%]" />
           </div>
-          <span className="font-bold text-white hidden sm:block">
-            مسار العقار
-          </span>
+          <span className="font-bold text-white hidden sm:block">MQ</span>
         </Link>
         <Link
           href="/auth/signup"

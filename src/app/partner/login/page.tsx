@@ -4,7 +4,6 @@ import { getUserProfile, signIn } from "@/lib/auth";
 import {
   AlertCircle,
   ArrowRight,
-  Handshake,
   Eye,
   EyeOff,
   Loader2,
@@ -14,6 +13,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { MqLogo } from "@/components/mq/MqLogo";
 
 export default function PartnerLoginPage() {
   const router = useRouter();
@@ -67,10 +67,10 @@ export default function PartnerLoginPage() {
 
       <div className="relative z-10 flex items-center justify-between p-5 max-w-7xl mx-auto w-full">
         <Link href="/partner/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-            <Handshake className="w-5 h-5 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+            <MqLogo onPrimary className="h-[72%] w-[72%]" />
           </div>
-          <span className="font-bold text-white hidden sm:block">برنامج الشركاء</span>
+          <span className="font-bold text-white hidden sm:block">MQ · الشركاء</span>
         </Link>
         <Link
           href="/partner/register"

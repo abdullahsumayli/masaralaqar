@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { MqLogo } from "@/components/mq/MqLogo";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -152,14 +153,14 @@ export default function DemoPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+              <MqLogo onPrimary className="h-[70%] w-[70%]" />
             </div>
             <div>
               <span className="text-primary font-bold text-xl block leading-tight">
-                مسار العقار
+                MQ
               </span>
-              <span className="text-gray-500 text-xs">Masar Al-Aqar</span>
+              <span className="text-gray-500 text-xs">masaralaqar.com</span>
             </div>
           </Link>
 
@@ -509,13 +510,13 @@ export default function DemoPage() {
       <footer className="py-8 px-4 bg-primary text-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
+              <MqLogo onPrimary className="h-[72%] w-[72%]" />
             </div>
-            <span className="font-bold text-lg">مسار العقار</span>
+            <span className="font-bold text-lg">MQ</span>
           </div>
           <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
+            © 2026 MQ — مسار العقار. جميع الحقوق محفوظة.
           </p>
         </div>
       </footer>

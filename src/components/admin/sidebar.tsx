@@ -21,8 +21,8 @@ import {
     Users,
     Zap,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { MqLogo } from "@/components/mq/MqLogo";
 import { usePathname, useRouter } from "next/navigation";
 
 const menuItems = [
@@ -75,16 +75,12 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-[#21262d]">
         <Link href="/admin" className="flex items-center gap-3">
-          <Image
-            src="/logo.png"
-            alt="مسار العقار"
-            width={44}
-            height={44}
-            className="rounded-xl"
-          />
+          <div className="h-11 w-10 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-primary/25">
+            <MqLogo variant="card" className="h-full w-full" />
+          </div>
           <div>
             <span className="font-cairo font-bold text-lg text-white block">
-              مسار العقار
+              MQ
             </span>
             <span className="text-xs text-gray-500">لوحة الإدارة</span>
           </div>

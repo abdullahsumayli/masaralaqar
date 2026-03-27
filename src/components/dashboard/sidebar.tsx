@@ -20,9 +20,10 @@ import {
   Wifi,
   WifiOff,
   X,
-  Zap,
   Share2,
+  Zap,
 } from "lucide-react";
+import { MqLogo } from "@/components/mq/MqLogo";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -172,8 +173,8 @@ export function DashboardSidebar(
       <div className="flex items-center justify-between px-4 h-16 border-b border-border flex-shrink-0">
         {!collapsed ? (
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-glow-blue flex-shrink-0">
-              <Zap className="w-4 h-4 text-white fill-white" />
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white shadow-glow-blue">
+              <MqLogo className="h-[72%] w-[72%]" />
             </div>
             <div className="leading-none">
               <span className="font-cairo font-bold text-sm text-text-primary block">MQ</span>
@@ -182,8 +183,8 @@ export function DashboardSidebar(
           </Link>
         ) : (
           <Link href="/" className="mx-auto">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-glow-blue">
-              <Zap className="w-4 h-4 text-white fill-white" />
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-border bg-white shadow-glow-blue">
+              <MqLogo className="h-[72%] w-[72%]" />
             </div>
           </Link>
         )}

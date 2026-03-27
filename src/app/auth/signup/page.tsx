@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Mail, Lock, User, Building2, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react'
+import { Mail, Lock, User, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react'
+import { MqLogo } from '@/components/mq/MqLogo'
 import { signUp } from '@/lib/auth'
 import { getReferralCookie, clearReferralCookie } from '@/lib/referral'
 
@@ -125,10 +126,10 @@ export default function SignUpPage() {
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between p-5 max-w-7xl mx-auto w-full">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark">
+            <MqLogo onPrimary className="h-[72%] w-[72%]" />
           </div>
-          <span className="font-bold text-white hidden sm:block">مسار العقار</span>
+          <span className="font-bold text-white hidden sm:block">MQ</span>
         </Link>
         <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1.5">
           لديك حساب؟ سجّل دخولك
