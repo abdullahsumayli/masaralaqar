@@ -113,7 +113,7 @@ export default function BlogPage() {
               variants={fadeInUp}
               className="text-4xl md:text-5xl font-bold mb-4"
             >
-              مدونة <span className="text-primary">مسار العقار</span>
+              مدونة <span className="text-primary">MQ</span>
             </motion.h1>
             <motion.p
               variants={fadeInUp}

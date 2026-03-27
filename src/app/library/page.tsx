@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
     BarChart3,
     BookOpen,
-    Building2,
     Check,
     Download,
     FileText,
@@ -15,6 +14,7 @@ import {
     Search
 } from "lucide-react";
 import Link from "next/link";
+import { MqLogo } from "@/components/mq/MqLogo";
 import { useState } from "react";
 
 const fadeInUp = {
@@ -161,46 +161,48 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#070B14]/95 backdrop-blur-sm border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0B1528]/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark shadow-md shadow-primary/30">
+              <MqLogo onPrimary className="h-[70%] w-[70%]" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">
-                مسار العقار
+              <span className="font-cairo text-primary block text-xl font-bold leading-tight">
+                MQ
               </span>
-              <span className="text-text-secondary text-xs">Masar Al-Aqar</span>
+              <span className="font-sora text-xs font-medium text-slate-400">
+                masaralaqar.com
+              </span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-300 transition-colors hover:text-primary"
             >
               الرئيسية
             </Link>
             <Link
               href="/blog"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-300 transition-colors hover:text-primary"
             >
               المدونة
             </Link>
-            <Link href="/library" className="text-primary font-medium">
+            <Link href="/library" className="font-ibm-arabic text-sm font-semibold text-primary">
               المكتبة
             </Link>
 
             <Link
               href="/services"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-300 transition-colors hover:text-primary"
             >
               الخدمات
             </Link>
             <Link
               href="/contact"
-              className="text-text-secondary hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-300 transition-colors hover:text-primary"
             >
               تواصل معنا
             </Link>
@@ -409,8 +411,8 @@ export default function LibraryPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              لماذا مكتبة مسار العقار؟
+            <h2 className="font-cairo text-3xl font-bold mb-4 text-text-primary">
+              لماذا مكتبة MQ؟
             </h2>
             <p className="text-text-secondary text-lg">
               موارد مصممة خصيصاً للسوق السعودي
@@ -458,13 +460,13 @@ export default function LibraryPage() {
       <footer className="py-8 px-4 bg-primary text-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
+              <MqLogo onPrimary className="h-[72%] w-[72%]" />
             </div>
-            <span className="font-bold text-lg">مسار العقار</span>
+            <span className="font-cairo text-lg font-bold text-white">MQ</span>
           </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
+          <p className="font-ibm-arabic text-sm text-white/85">
+            © 2026 MQ — masaralaqar.com
           </p>
         </div>
       </footer>

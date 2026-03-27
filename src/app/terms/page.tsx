@@ -5,8 +5,8 @@ import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
-  title: 'الشروط والأحكام | مسار العقار',
-  description: 'الشروط والأحكام لاستخدام منصة مسار العقار ونظام صقر',
+  title: 'الشروط والأحكام | MQ',
+  description: 'الشروط والأحكام لاستخدام منصة MQ',
 }
 
 export default function TermsPage() {
@@ -15,7 +15,7 @@ export default function TermsPage() {
       icon: FileText,
       title: 'قبول الشروط',
       content: [
-        'باستخدامك لمنصة مسار العقار، فإنك توافق على الالتزام بهذه الشروط والأحكام.',
+        'باستخدامك لمنصة MQ، فإنك توافق على الالتزام بهذه الشروط والأحكام.',
         'إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام خدماتنا.',
         'نحتفظ بالحق في تعديل هذه الشروط في أي وقت، وسيتم إعلامك بالتغييرات.',
         'استمرارك في استخدام الخدمة بعد التعديلات يعني موافقتك عليها.',
@@ -128,7 +128,7 @@ export default function TermsPage() {
               <h2 className="text-xl font-bold text-text-primary mb-4">الملكية الفكرية</h2>
               <p className="text-text-secondary mb-4">
                 جميع المحتويات على المنصة، بما في ذلك النصوص والرسومات والشعارات والبرمجيات، 
-                هي ملكية حصرية لمسار العقار ومحمية بموجب قوانين حقوق النشر والملكية الفكرية.
+                هي ملكية حصرية لـ MQ (masaralaqar.com) ومحمية بموجب قوانين حقوق النشر والملكية الفكرية.
               </p>
               <p className="text-text-secondary">
                 لا يجوز نسخ أو توزيع أو تعديل أي محتوى دون إذن كتابي مسبق.

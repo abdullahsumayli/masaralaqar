@@ -270,10 +270,10 @@ async function processLegacyMessage(data: WhatsAppJobPayload): Promise<void> {
   }
 
   const defaultAiPersona = {
-    agentName: "مساعد مسار العقار",
+    agentName: "مساعد MQ",
     responseStyle: "friendly" as const,
     welcomeMessage:
-      "السلام عليكم ورحمة الله وبركاته، أهلاً بك في مسار العقار 🏠",
+      "السلام عليكم ورحمة الله وبركاته، أهلاً بك في MQ 🏠",
   };
 
   const tenantContext: TenantContext = {

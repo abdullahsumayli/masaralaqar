@@ -5,7 +5,6 @@ import {
     ArrowLeft,
     BarChart3,
     Bot,
-    Building2,
     Clock,
     FileText,
     GraduationCap,
@@ -20,6 +19,7 @@ import {
     Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { MqLogo } from "@/components/mq/MqLogo";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -39,7 +39,7 @@ const services = [
     id: "tech",
     title: "حلول الذكاء الاصطناعي والأتمتة",
     subtitle: "وفّر وقتك وركز على الصفقات",
-    description: "نظام صقر وحلول أتمتة متكاملة للوسطاء العقاريين",
+    description: "نظام MQ وحلول أتمتة متكاملة للوسطاء العقاريين",
     color: "from-primary to-primary-dark",
     icon: Bot,
     features: [
@@ -64,7 +64,7 @@ const services = [
         description: "لوحة تحكم شاملة لمتابعة أدائك وتحليل النتائج",
       },
     ],
-    cta: "جرب نظام صقر مجاناً",
+    cta: "جرب MQ مجاناً",
     ctaLink: "/products/saqr",
   },
   {
@@ -167,46 +167,48 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-white/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark shadow-sm shadow-primary/25">
+              <MqLogo onPrimary className="h-[70%] w-[70%]" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">
-                مسار العقار
+              <span className="font-cairo text-primary block text-xl font-bold leading-tight">
+                MQ
               </span>
-              <span className="text-gray-500 text-xs">Masar Al-Aqar</span>
+              <span className="font-sora text-xs font-medium text-slate-600">
+                masaralaqar.com
+              </span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               الرئيسية
             </Link>
             <Link
               href="/blog"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               المدونة
             </Link>
             <Link
               href="/library"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               المكتبة
             </Link>
 
-            <Link href="/services" className="text-primary font-medium">
+            <Link href="/services" className="font-ibm-arabic text-sm font-semibold text-primary">
               الخدمات
             </Link>
             <Link
               href="/contact"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               تواصل معنا
             </Link>
@@ -350,7 +352,7 @@ export default function ServicesPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              لماذا مسار العقار؟
+              لماذا MQ؟
             </h2>
             <p className="text-text-secondary text-lg">ما يميزنا عن غيرنا</p>
           </div>
@@ -409,7 +411,7 @@ export default function ServicesPage() {
                 href="/products/saqr"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition-colors"
               >
-                جرب نظام صقر
+                جرّب MQ
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </div>
@@ -421,13 +423,13 @@ export default function ServicesPage() {
       <footer className="py-8 px-4 bg-primary text-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
+              <MqLogo onPrimary className="h-[72%] w-[72%]" />
             </div>
-            <span className="font-bold text-lg">مسار العقار</span>
+            <span className="font-cairo text-lg font-bold text-white">MQ</span>
           </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
+          <p className="font-ibm-arabic text-sm text-white/85">
+            © 2026 MQ — masaralaqar.com
           </p>
         </div>
       </footer>

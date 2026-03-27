@@ -48,7 +48,8 @@ export default function PartnersPage() {
               ما هو برنامج <span className="text-primary">الشركاء</span>؟
             </motion.h1>
             <motion.p variants={fadeUp} className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-              نستهدف شركات التقنية، وكالات التسويق، والمكاتب العقارية الكبرى لتعزيز انتشار منصة <span className="text-[#F0F4FF] font-semibold">Masar AlAqar</span>. 
+              نستهدف شركات التقنية، وكالات التسويق، والمكاتب العقارية الكبرى لتعزيز انتشار منصة{" "}
+              <span className="font-cairo font-semibold text-primary">MQ</span>. 
               كشريك يمكنك الترويج أو إعادة البيع أو دمج الحلول مع عملائك مقابل مزايا وعمولات.
             </motion.p>
           </motion.section>

@@ -233,7 +233,7 @@ export default function KnowledgeLibraryPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">لماذا مكتبة مسار العقار؟</h2>
+            <h2 className="font-cairo text-3xl font-bold mb-4 text-text-primary">لماذا مكتبة MQ؟</h2>
             <p className="text-text-secondary text-lg">موارد مصممة خصيصاً للسوق السعودي</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">

@@ -516,7 +516,7 @@ export default function DemoPage() {
             <span className="font-bold text-lg">MQ</span>
           </div>
           <p className="text-white/60 text-sm">
-            © 2026 MQ — مسار العقار. جميع الحقوق محفوظة.
+            © 2026 MQ — masaralaqar.com
           </p>
         </div>
       </footer>

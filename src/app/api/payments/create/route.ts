@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // Create Moyasar payment
     const payment = await createPayment({
       amount: sarToHalalas(plan.price_sar),
-      description: `اشتراك ${plan.name} — مسار العقار`,
+      description: `اشتراك ${plan.name} — MQ`,
       source: source as Parameters<typeof createPayment>[0]["source"],
       metadata: {
         user_id: user.id,

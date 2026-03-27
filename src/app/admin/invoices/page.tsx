@@ -58,7 +58,7 @@ export default function AdminInvoicesPage() {
   const generatePDF = (invoice: Invoice) => {
     // Simple PDF generation (can be enhanced with a library like jsPDF)
     const content = `
-      مسار العقار - فاتورة
+      MQ — فاتورة
       ========================
       رقم الفاتورة: ${invoice.invoice_number}
       التاريخ: ${new Date(invoice.issued_at).toLocaleDateString('ar-SA')}
@@ -217,7 +217,7 @@ export default function AdminInvoicesPage() {
               <div>
                 <h3 className="text-white font-semibold mb-2">شركتنا</h3>
                 <div className="text-gray-400 text-sm">
-                  <p>مسار العقار</p>
+                  <p className="text-white">MQ</p>
                   <p>نظام إدارة العقارات الحديث</p>
                   <p>المملكة العربية السعودية</p>
                 </div>

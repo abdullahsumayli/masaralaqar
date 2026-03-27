@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function KnowledgeHubPage() {
   return (
-    <div className="min-h-screen bg-background text-[#F0F4FF]">
+    <div className="min-h-screen bg-background text-text-primary">
       <Navbar />
       <main className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center mb-16">
@@ -18,14 +18,14 @@ export default function KnowledgeHubPage() {
             className="mb-4"
           >
             <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium px-4 py-1.5">
-              Masar AlAqar
+              MQ
             </span>
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="text-4xl md:text-5xl font-bold mb-4"
+            className="font-cairo text-4xl font-bold mb-4 md:text-5xl"
           >
             مركز <span className="text-primary">المعرفة</span>
           </motion.h1>
@@ -33,9 +33,9 @@ export default function KnowledgeHubPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-[#94A3B8] text-lg"
+            className="font-ibm-arabic text-lg text-text-secondary"
           >
-            مقالات، أدلة وموارد من منصة مسار العقار لمساعدتك في تطوير عملك العقاري
+            مقالات، أدلة وموارد من منصة MQ لمساعدتك في تطوير عملك العقاري
           </motion.p>
         </div>
         <div className="max-w-3xl mx-auto grid sm:grid-cols-2 gap-6">

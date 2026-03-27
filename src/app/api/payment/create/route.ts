@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
 
     const description =
       overageSar > 0
-        ? `اشتراك ${plan.nameAr || plan.name} + استخدام إضافي ${overageSar.toFixed(2)} ر.س — مسار العقار`
-        : `اشتراك ${plan.nameAr || plan.name} — مسار العقار`;
+        ? `اشتراك ${plan.nameAr || plan.name} + استخدام إضافي ${overageSar.toFixed(2)} ر.س — MQ`
+        : `اشتراك ${plan.nameAr || plan.name} — MQ`;
 
     const invoice = await createInvoice({
       amount: amountHalalas,

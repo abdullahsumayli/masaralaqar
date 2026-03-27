@@ -174,14 +174,14 @@ export default function PricingPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16">
         <p className="text-center mb-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium px-4 py-1.5">
-            Masar AlAqar
+            MQ
           </span>
         </p>
         <h1 className="text-4xl md:text-5xl font-bold text-text-primary text-center mb-4">
           خطط التسعير
         </h1>
         <p className="text-xl text-text-secondary text-center mb-8">
-          اختر الخطة المناسبة لمكتبك العقاري — صقر ومنتجات المنصة
+          اختر الخطة المناسبة لمكتبك العقاري — MQ ومنتجات المنصة
         </p>
 
         {/* Billing Toggle */}
@@ -335,7 +335,7 @@ export default function PricingPage() {
                   <td className="py-3 px-4">12,000 ر.س</td>
                 </tr>
                 <tr className="border-t border-border">
-                  <td className="py-3 px-4">نظام صقر</td>
+                  <td className="py-3 px-4">نظام MQ</td>
                   <td className="py-3 px-4 text-primary font-semibold">ابتداءً من 499 ر.س</td>
                 </tr>
               </tbody>
@@ -353,7 +353,7 @@ export default function PricingPage() {
               { title: "إلغاء في أي وقت", desc: "لا التزامات طويلة المدى" },
               { title: "دفع آمن", desc: "معاملات مشفرة وآمنة" },
               { title: "أتمتة بالذكاء الاصطناعي", desc: "ردود ذكية وتوفير وقتك" },
-              { title: "موثوق من فرق عقارية", desc: "مكاتب حقيقية تستخدم صقر من Masar AlAqar" },
+              { title: "موثوق من فرق عقارية", desc: "مكاتب حقيقية تستخدم MQ على المنصة" },
             ].map((item) => (
               <div
                 key={item.title}

@@ -69,7 +69,7 @@ export class AIService {
     try {
       // Use OpenAI for smart reply — pass full conversation history
       const reply = await OpenAIService.generateSmartReply(userMessage, {
-        agentName: tenantContext.aiPersona?.agentName || "مساعد مسار العقار",
+        agentName: tenantContext.aiPersona?.agentName || "مساعد MQ",
         availableProperties: matchedProperties,
         conversationHistory,
       });
@@ -149,7 +149,7 @@ export class AIService {
     if (intent === "greeting") {
       reply =
         tenantContext.aiPersona?.welcomeMessage ||
-        "السلام عليكم ورحمة الله وبركاته! أهلاً بك في مسار العقار 🏠 كيف يمكنني مساعدتك؟";
+        "السلام عليكم ورحمة الله وبركاته! أهلاً بك في MQ 🏠 كيف يمكنني مساعدتك؟";
       suggestions.push("ابحث عن عقار");
       suggestions.push("اعرض آخر العروض");
     }

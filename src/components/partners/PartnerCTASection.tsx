@@ -14,7 +14,7 @@ interface PartnerCTASectionProps {
 
 export function PartnerCTASection({
   title = "انضم كشريك",
-  description = "شركات ووكالات تسويق وعقارات — ادعم منصة Masar AlAqar واربح معنا.",
+  description = "شركات ووكالات تسويق وعقارات — ادعم منصة MQ واربح معنا.",
   buttonText = "تقديم طلب شراكة",
   buttonHref = "/contact?subject=partnership",
   className,

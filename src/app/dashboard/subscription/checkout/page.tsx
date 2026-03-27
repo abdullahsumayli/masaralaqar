@@ -51,7 +51,7 @@ type PaymentMethod = (typeof PAYMENT_METHODS)[number]["id"];
 
 const BANK_INFO = {
   bankName: "البنك الأهلي السعودي",
-  accountName: "شركة مسار العقار للتقنية",
+  accountName: "شركة MQ للتقنية",
   iban: "SA0000000000000000000000",
   swift: "NCBKSAJE",
 };

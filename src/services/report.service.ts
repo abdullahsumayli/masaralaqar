@@ -39,7 +39,7 @@ function createDoc(): PDFKit.PDFDocument {
     size: "A4",
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
     info: {
-      Title: "تقرير مسار العقار",
+      Title: "تقرير MQ",
       Author: "Masar Al Aqar",
     },
   });

@@ -11,7 +11,7 @@ interface AffiliateCTASectionProps {
 
 export function AffiliateCTASection({
   title = "انضم لبرنامج الإحالة",
-  description = "اربح عمولة عند إحالة مكاتب عقارية لمنصة Masar AlAqar. السنة الأولى 30%، الثانية 20%، الثالثة 10%. إحالة ضمن الإحالة: 5% إضافية.",
+  description = "اربح عمولة عند إحالة مكاتب عقارية لمنصة MQ. السنة الأولى 30%، الثانية 20%، الثالثة 10%. إحالة ضمن الإحالة: 5% إضافية.",
   className = "",
 }: AffiliateCTASectionProps) {
   return (

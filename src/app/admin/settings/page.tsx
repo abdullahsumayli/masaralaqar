@@ -73,7 +73,7 @@ export default function SettingsPage() {
                   <label className="block text-gray-400 text-sm mb-2">اسم الشركة</label>
                   <input
                     type="text"
-                    defaultValue="مسار العقار"
+                    defaultValue="MQ"
                     className="w-full bg-[#161b22] border border-[#21262d] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary"
                   />
                 </div>

@@ -38,7 +38,8 @@ export default function AffiliatePage() {
               ما هو برنامج <span className="text-primary">الإحالة</span>؟
             </h1>
             <p className="text-[#94A3B8] text-lg max-w-2xl mx-auto">
-              انضم كشريك واربح عمولة عند إحالة مكاتب عقارية أو وكلاء لاستخدام منصة <span className="text-[#F0F4FF] font-semibold">Masar AlAqar</span>. 
+              انضم كشريك واربح عمولة عند إحالة مكاتب عقارية أو وكلاء لاستخدام منصة{" "}
+              <span className="font-cairo font-semibold text-primary">MQ</span>. 
               عمولات متدرجة على مدى 36 شهراً مع إمكانية عمولة إضافية للإحالة ضمن الإحالة.
             </p>
           </motion.section>

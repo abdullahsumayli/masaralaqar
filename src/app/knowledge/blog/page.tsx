@@ -100,7 +100,7 @@ export default function KnowledgeBlogPage() {
         <div className="max-w-4xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
             <motion.h1 variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-4">
-              مدونة <span className="text-primary">مسار العقار</span>
+              مدونة <span className="text-primary">MQ</span>
             </motion.h1>
             <motion.p variants={fadeInUp} className="text-text-secondary text-lg mb-8">
               مقالات متخصصة في العقار والتقنية والتسويق العقاري

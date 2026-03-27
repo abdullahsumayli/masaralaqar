@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import { Lock, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react'
+import { MqLogo } from '@/components/mq/MqLogo'
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/lib/auth'
 
@@ -75,14 +75,10 @@ export default function AdminLoginPage() {
         {/* Card */}
         <div className="bg-[#0D1117] border border-[#21262d] rounded-2xl p-8">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Image
-              src="/logo.png"
-              alt="مسار العقار"
-              width={56}
-              height={56}
-              className="rounded-xl"
-            />
+          <div className="mb-8 flex items-center justify-center gap-3">
+            <div className="h-14 w-12 overflow-hidden rounded-xl ring-1 ring-primary/30">
+              <MqLogo variant="card" className="h-full w-full" />
+            </div>
           </div>
 
           <div className="text-center mb-8">
@@ -163,8 +159,8 @@ export default function AdminLoginPage() {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-[#21262d]">
-            <p className="text-center text-gray-500 text-sm">
-              مسار العقار © {new Date().getFullYear()}
+            <p className="text-center text-sm text-slate-400">
+              MQ © {new Date().getFullYear()} — masaralaqar.com
             </p>
           </div>
         </div>

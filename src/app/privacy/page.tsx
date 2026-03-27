@@ -6,8 +6,8 @@ import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 
 export const metadata: Metadata = {
-  title: 'سياسة الخصوصية | مسار العقار',
-  description: 'سياسة الخصوصية لمنصة مسار العقار - كيف نجمع ونستخدم ونحمي بياناتك الشخصية',
+  title: 'سياسة الخصوصية | MQ',
+  description: 'سياسة الخصوصية لمنصة MQ — كيف نجمع ونستخدم ونحمي بياناتك الشخصية',
 }
 
 export default function PrivacyPage() {

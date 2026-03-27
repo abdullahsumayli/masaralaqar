@@ -159,7 +159,7 @@ export default function KnowledgeBlogSlugPage({
             <div className="flex flex-wrap items-center gap-6 text-text-muted">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
-                <span>فريق مسار العقار</span>
+                <span className="font-ibm-arabic text-text-secondary">فريق MQ</span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />

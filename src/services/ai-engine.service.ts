@@ -263,8 +263,8 @@ export class AIEngine {
     const defaultAgent: AIAgent = {
       id: "",
       officeId: tenantId,
-      agentName: "مساعد مسار العقار",
-      greetingMessage: "السلام عليكم، أهلاً بك في مسار العقار 🏠",
+      agentName: "مساعد MQ",
+      greetingMessage: "السلام عليكم، أهلاً بك في MQ 🏠",
       officeDescription: "",
       tone: "friendly",
       language: "ar",

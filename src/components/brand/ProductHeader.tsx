@@ -12,7 +12,7 @@ interface ProductHeaderProps {
   className?: string;
 }
 
-const PLATFORM_NAME = "Masar AlAqar";
+const PLATFORM_NAME = "MQ";
 
 /**
  * Product page header that shows platform + product hierarchy.

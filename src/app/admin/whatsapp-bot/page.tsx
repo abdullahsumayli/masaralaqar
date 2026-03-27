@@ -444,7 +444,7 @@ export default function WhatsAppBotPage() {
               <CreditCard className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">ترقية نظام صقر</h3>
+              <h3 className="text-lg font-bold text-white">ترقية نظام MQ</h3>
               <p className="text-gray-400 text-sm">
                 احصل على مزايا إضافية ومحادثات غير محدودة
               </p>

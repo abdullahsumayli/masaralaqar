@@ -3,7 +3,6 @@
 import { createLead } from "@/lib/leads";
 import { motion } from "framer-motion";
 import {
-    Building2,
     CheckCircle,
     Clock,
     Mail,
@@ -13,6 +12,7 @@ import {
     Send,
 } from "lucide-react";
 import Link from "next/link";
+import { MqLogo } from "@/components/mq/MqLogo";
 import { useState } from "react";
 
 const fadeInUp = {
@@ -75,12 +75,12 @@ const socialLinks = [
 
 const faqItems = [
   {
-    question: "ما هي خدمات مسار العقار؟",
+    question: "ما هي خدمات MQ؟",
     answer:
-      "نقدم ثلاث خدمات رئيسية: حلول الذكاء الاصطناعي والأتمتة (نظام صقر)، خدمات الوساطة العقارية، والتدريب والاستشارات عبر أكاديمية مسار العقار.",
+      "نقدم ثلاث خدمات رئيسية: حلول الذكاء الاصطناعي والأتمتة (نظام MQ)، خدمات الوساطة العقارية، والتدريب والاستشارات عبر أكاديمية MQ.",
   },
   {
-    question: "كم يكلف نظام صقر؟",
+    question: "كم يكلف نظام MQ؟",
     answer:
       "نقدم باقات متنوعة تبدأ من 499 ر.س شهرياً. يمكنك تجربة النظام مجاناً لمدة 14 يوماً قبل الاشتراك.",
   },
@@ -112,7 +112,7 @@ export default function ContactPage() {
     setIsSubmitting(true);
 
     const subjectMap: Record<string, string> = {
-      saqr: "استفسار عن نظام صقر",
+      saqr: "استفسار عن نظام MQ",
       brokerage: "خدمات الوساطة العقارية",
       academy: "الأكاديمية والتدريب",
       partnership: "شراكات وتعاون",
@@ -151,47 +151,49 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-white/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-dark shadow-sm shadow-primary/25">
+              <MqLogo onPrimary className="h-[70%] w-[70%]" />
             </div>
             <div>
-              <span className="text-primary font-bold text-xl block leading-tight">
-                مسار العقار
+              <span className="font-cairo text-primary block text-xl font-bold leading-tight">
+                MQ
               </span>
-              <span className="text-gray-500 text-xs">Masar Al-Aqar</span>
+              <span className="font-sora text-xs font-medium text-slate-600">
+                masaralaqar.com
+              </span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               الرئيسية
             </Link>
             <Link
               href="/blog"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               المدونة
             </Link>
             <Link
               href="/library"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               المكتبة
             </Link>
 
             <Link
               href="/services"
-              className="text-gray-600 hover:text-primary transition-colors"
+              className="font-ibm-arabic text-sm font-medium text-slate-700 transition-colors hover:text-primary"
             >
               الخدمات
             </Link>
-            <Link href="/contact" className="text-primary font-medium">
+            <Link href="/contact" className="font-ibm-arabic text-sm font-semibold text-primary">
               تواصل معنا
             </Link>
           </nav>
@@ -323,7 +325,7 @@ export default function ContactPage() {
                         className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:outline-none focus:border-primary transition-colors"
                       >
                         <option value="">اختر الموضوع</option>
-                        <option value="saqr">استفسار عن نظام صقر</option>
+                        <option value="saqr">استفسار عن نظام MQ</option>
                         <option value="brokerage">
                           خدمات الوساطة العقارية
                         </option>
@@ -472,10 +474,10 @@ export default function ContactPage() {
             {faqItems.map((item, index) => (
               <div
                 key={index}
-                className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl p-6"
+                className="rounded-xl border border-primary/20 bg-slate-900 p-6"
               >
-                <h3 className="font-bold mb-2">{item.question}</h3>
-                <p className="text-text-secondary">{item.answer}</p>
+                <h3 className="font-cairo mb-2 font-bold text-white">{item.question}</h3>
+                <p className="font-ibm-arabic text-sm leading-relaxed text-slate-300">{item.answer}</p>
               </div>
             ))}
           </motion.div>
@@ -486,13 +488,13 @@ export default function ContactPage() {
       <footer className="py-8 px-4 bg-primary text-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
+              <MqLogo onPrimary className="h-[72%] w-[72%]" />
             </div>
-            <span className="font-bold text-lg">مسار العقار</span>
+            <span className="font-cairo text-lg font-bold text-white">MQ</span>
           </div>
-          <p className="text-white/60 text-sm">
-            © 2026 مسار العقار. جميع الحقوق محفوظة.
+          <p className="font-ibm-arabic text-sm text-white/85">
+            © 2026 MQ — masaralaqar.com
           </p>
         </div>
       </footer>

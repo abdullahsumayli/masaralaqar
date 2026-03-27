@@ -375,9 +375,9 @@ export default function PartnerDashboardPage() {
           )}
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-8">
-          <Link href="/" className="hover:text-gray-400 transition-colors">
-            مسار العقار
+        <p className="mt-8 text-center text-xs text-slate-400">
+          <Link href="/" className="font-cairo font-medium transition-colors hover:text-primary">
+            MQ
           </Link>
         </p>
       </main>

@@ -29,7 +29,7 @@ interface PlatformHeroProps {
 
 /**
  * Platform-level hero for homepage and key landing pages.
- * Emphasizes Masar AlAqar as the platform brand.
+ * Emphasizes MQ as the platform brand.
  */
 export function PlatformHero({
   badge,
