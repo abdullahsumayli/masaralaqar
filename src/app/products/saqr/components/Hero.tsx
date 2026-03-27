@@ -29,7 +29,7 @@ export default function SaqrHero() {
           <motion.div variants={fadeUp} className="mb-5">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#0F7B63]/10 px-4 py-1.5 text-sm font-medium text-[#0F7B63]">
               <span className="h-2 w-2 rounded-full bg-[#0F7B63] animate-pulse" />
-              نظام صقر — مساعد استقبال ذكي
+              نظام MQ — مساعد استقبال ذكي
             </span>
           </motion.div>
 
@@ -46,7 +46,7 @@ export default function SaqrHero() {
             variants={fadeUp}
             className="max-w-lg text-lg md:text-xl text-[#2F3E46]/70 leading-relaxed mb-8"
           >
-            صقر هو مساعد استقبال ذكي لمكاتب العقار يرد على العملاء فوراً عبر
+            MQ هو مساعد استقبال ذكي لمكاتب العقار يرد على العملاء فوراً عبر
             واتساب ويحوّل الاستفسارات إلى صفقات جاهزة للإغلاق.
           </motion.p>
 
@@ -61,7 +61,7 @@ export default function SaqrHero() {
               onClick={() => trackWhatsAppClick("hero_cta")}
               className="group inline-flex items-center justify-center gap-3 rounded-xl bg-[#0F7B63] px-8 py-4 text-lg font-bold text-white shadow-lg shadow-[#0F7B63]/25 transition-all hover:bg-[#0a6350] hover:shadow-xl hover:shadow-[#0F7B63]/30 hover:-translate-y-0.5 active:translate-y-0"
             >
-              جرّب صقر الآن
+              جرّب MQ الآن
               <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
             </a>
           </motion.div>
@@ -89,7 +89,7 @@ export default function SaqrHero() {
                   {txt}
                 </span>
               ),
-            )}
+            )}\
           </motion.div>
         </motion.div>
 
@@ -106,10 +106,10 @@ export default function SaqrHero() {
               {/* Chat header */}
               <div className="flex items-center gap-3 rounded-xl bg-[#0F7B63] px-4 py-3 mb-3">
                 <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
-                  ص
+                  ع
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm">نظام صقر</p>
+                  <p className="text-white font-bold text-sm">نظام MQ</p>
                   <p className="text-white/70 text-xs">متصل الآن</p>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function SaqrHero() {
                     السلام عليكم، أبي شقة للإيجار بالرياض
                   </div>
                 </div>
-                {/* Saqr reply */}
+                {/* MQ reply */}
                 <div className="flex justify-start">
                   <div className="max-w-[75%] rounded-xl rounded-tl-sm bg-white px-3.5 py-2.5 text-[#2F3E46] shadow-sm">
                     أهلاً وسهلاً! 👋 أقدر أساعدك. كم ميزانيتك الشهرية؟
@@ -134,7 +134,7 @@ export default function SaqrHero() {
                     من ٢٠ إلى ٣٠ ألف
                   </div>
                 </div>
-                {/* Saqr */}
+                {/* MQ */}
                 <div className="flex justify-start">
                   <div className="max-w-[75%] rounded-xl rounded-tl-sm bg-white px-3.5 py-2.5 text-[#2F3E46] shadow-sm">
                     ممتاز! كم غرفة تحتاج؟ وهل تفضل حي معين؟
