@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollToHashOnMount } from "@/components/HashScrollLink";
 import { ProductPageLayout } from "@/components/product/ProductPageLayout";
 import { ProductHero } from "@/components/product/landing/ProductHero";
 import { ProblemSection } from "@/components/product/landing/ProblemSection";
@@ -14,6 +15,7 @@ import { FinalCTA } from "@/components/product/landing/FinalCTA";
 export default function SaqrLanding() {
   return (
     <ProductPageLayout>
+      <ScrollToHashOnMount />
       <ProductHero />
       <ProblemSection />
       <SolutionSection />

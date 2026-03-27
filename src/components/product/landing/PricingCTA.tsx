@@ -38,7 +38,10 @@ const plans = [
 
 export function PricingCTA() {
   return (
-    <section className="py-16 md:py-24 px-4 border-t border-white/[0.06]">
+    <section
+      id="pricing"
+      className="scroll-mt-24 py-16 md:py-24 px-4 border-t border-white/[0.06]"
+    >
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial="hidden"

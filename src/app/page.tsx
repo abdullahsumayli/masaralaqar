@@ -7,6 +7,7 @@ import {
   Target, Users, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
+import { HashScrollLink, ScrollToHashOnMount } from '@/components/HashScrollLink'
 import { Navbar } from '@/components/navbar'
 import { AffiliateCTASection } from '@/components/affiliate/AffiliateCTASection'
 import { KnowledgeCard } from '@/components/knowledge/KnowledgeCard'
@@ -49,6 +50,7 @@ const testimonials = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-text-primary overflow-x-hidden">
+      <ScrollToHashOnMount />
       <Navbar />
 
       {/* ════════════════════════════════════════════
@@ -111,14 +113,14 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <Link href="/dashboard" className="btn-mq-cta text-base px-8 py-4 group">
+              <Link href="/auth/signup" className="btn-mq-cta text-base px-8 py-4 group">
                 جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
-              <Link href="/#mq-how" className="btn-mq-secondary text-base px-8 py-4">
+              <HashScrollLink hash="mq-how" className="btn-mq-secondary text-base px-8 py-4 inline-flex items-center justify-center gap-2">
                 <Rocket className="w-5 h-5 text-mq-blue shrink-0" />
                 شاهد كيف يعمل
-              </Link>
+              </HashScrollLink>
             </motion.div>
 
             {/* Trust badges */}
@@ -544,7 +546,7 @@ export default function HomePage() {
 
           {/* CTA Row */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/products/saqr" className="btn-gold text-base px-8 py-4">
+            <Link href="/auth/signup" className="btn-gold text-base px-8 py-4">
               ابدأ تجربتك المجانية
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -651,7 +653,7 @@ export default function HomePage() {
                 <MessageSquare className="w-5 h-5" />
                 تواصل عبر واتساب
               </a>
-              <Link href="/products/saqr" className="btn-primary text-base px-8 py-4">
+              <Link href="/auth/signup" className="btn-primary text-base px-8 py-4">
                 جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5" />
               </Link>
