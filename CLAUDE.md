@@ -5,7 +5,7 @@
 **Masaralaqar (مسار العقار)** منصة PropTech عربية (RTL) مبنية بـ **Next.js 15 App Router**. تجمع:
 - **موقع تسويقي**: منتجات، مدونة، مكتبة
 - **Dashboard المستخدم**: إدارة العقارات، العملاء، الرسائل، الإحصائيات
-- **بوت صقر**: واتساب AI مع Evolution API + Redis/BullMQ
+- **بوت MQ**: واتساب AI مع Evolution API + Redis/BullMQ
 - **Admin panel**: إدارة المنصة، المشتركين، المدفوعات
 - **نظام اشتراكات** عبر Moyasar + تحويل بنكي
 
@@ -67,7 +67,7 @@ masaralaqar/
 │  ├─ repositories/        ← Data access layer
 │  ├─ integrations/        ← whatsapp.ts, openai.ts
 │  └─ lib/                 ← evolution.ts, moyasar.ts, payments.ts, redis.ts...
-├─ server/                 ← Express bot server (صقر WhatsApp)
+├─ server/                 ← Express bot server (MQ WhatsApp)
 └─ supabase/               ← Migrations + RLS policies
 ```
 
@@ -89,7 +89,7 @@ Instance : saqr   ← ثابت لكل المستخدمين
 ## خطط الاشتراك
 
 | Key | الاسم | السعر/شهر | العقارات | رسائل AI |
-|-----|------|-----------|---------|---------|
+|-----|------|-----------|---------|---------:|
 | `free` | مجاني | 0 | 10 | 10 |
 | `basic` | أساسي | 99 | 50 | 100 |
 | `pro` | احترافي | 299 | غير محدود | غير محدود (-1) |
@@ -160,7 +160,7 @@ npm run worker
 ## ملاحظات مهمة
 
 1. **tenant_id**: يُستخرج دائماً من الجلسة في الـ API، لا من client
-2. **instanaceId**: ثابت `"saqr"` — لا قيم ديناميكية
+2. **instanceId**: ثابت `"saqr"` — لا قيم ديناميكية
 3. **supabaseAdmin**: للعمليات server-side التي تحتاج bypass RLS
 4. **getServerUser()**: في `/api/*` routes للتحقق من المستخدم
 5. **Admin role**: يُتحقق من `profile.role === 'admin'` في كل admin API
