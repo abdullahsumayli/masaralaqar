@@ -88,8 +88,23 @@ const config: Config = {
         'pulse-slow':  'pulse 4s cubic-bezier(0.4,0,0.6,1) infinite',
         'shimmer':     'shimmer 2.5s linear infinite',
         'orbit':       'orbit 20s linear infinite',
+        'mq-logo-pulse':
+          'mqLogoPulse 1.5s ease-in-out infinite',
+        'mq-wa-ring':
+          'mqWaRing 3s ease-in-out infinite',
       },
       keyframes: {
+        mqLogoPulse: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%':      { transform: 'scale(1.05)' },
+        },
+        mqWaRing: {
+          '0%, 88%, 100%': { boxShadow: '0 8px 28px rgba(37,211,102,0.45)' },
+          '94%': {
+            boxShadow:
+              '0 8px 36px rgba(37,211,102,0.65), 0 0 0 6px rgba(37,211,102,0.15)',
+          },
+        },
         fadeIn: {
           '0%':   { opacity: '0' },
           '100%': { opacity: '1' },
