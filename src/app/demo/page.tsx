@@ -18,7 +18,7 @@ import {
     Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -35,7 +35,7 @@ const demoConversation = [
   {
     type: "bot",
     message:
-      "وعليكم السلام! 👋\n\nأهلاً بك، أنا المساعد الذكي لمكتب الصقر العقاري.\n\nممتاز، حي النرجس من الأحياء المميزة! عشان أساعدك بشكل أفضل:\n\n📐 كم عدد الغرف اللي تحتاجها؟",
+      "وعليكم السلام! 👋\n\nأهلاً بك، أنا مساعد MQ الذكي لمكتبك العقاري.\n\nممتاز، حي النرجس من الأحياء المميزة! عشان أساعدك بشكل أفضل:\n\n📐 كم عدد الغرف اللي تحتاجها؟",
     time: "10:30 ص",
   },
   {
@@ -67,7 +67,7 @@ const demoConversation = [
   {
     type: "bot",
     message:
-      "تم حجز موعدك! ✅\n\n📍 المعاينة: غداً الساعة 10 صباحاً\n📌 الموقع: حي النرجس، الرياض\n👤 المندوب: أ. محمد\n📱 للتواصل: 0501234567\n\nسيتواصل معك المندوب قبل الموعد للتأكيد.\n\nشكراً لثقتك بمكتب الصقر العقاري! 🏢",
+      "تم حجز موعدك! ✅\n\n📍 المعاينة: غداً الساعة 10 صباحاً\n📌 الموقع: حي النرجس، الرياض\n👤 المندوب: أ. محمد\n📱 للتواصل: 0501234567\n\nسيتواصل معك المندوب قبل الموعد للتأكيد.\n\nشكراً لثقتك بمكتبنا! 🏢",
     time: "10:33 ص",
   },
 ];
@@ -81,7 +81,7 @@ const demoSteps = [
   {
     icon: Bot,
     title: "فهم الطلب بالذكاء الاصطناعي",
-    description: "صقر يفهم احتياجات العميل ويسأل أسئلة ذكية",
+    description: "MQ يفهم احتياجات العميل ويسأل أسئلة ذكية",
   },
   {
     icon: Users,
@@ -111,20 +111,36 @@ export default function DemoPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showFullDemo, setShowFullDemo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   const startDemo = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsPlaying(true);
     setCurrentStep(0);
     setShowFullDemo(true);
 
-    // Auto-advance through messages
     let step = 0;
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       step++;
       if (step < demoConversation.length) {
         setCurrentStep(step);
       } else {
-        clearInterval(interval);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
         setIsPlaying(false);
       }
     }, 2000);
@@ -158,7 +174,7 @@ export default function DemoPage() {
               href="/products/saqr"
               className="text-gray-600 hover:text-primary transition-colors"
             >
-              نظام صقر
+              نظام MQ
             </Link>
             <Link
               href="/contact"
@@ -169,10 +185,10 @@ export default function DemoPage() {
           </nav>
 
           <Link
-            href="/products/saqr"
+            href="/auth/signup"
             className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-white rounded-lg font-medium hover:bg-secondary-dark transition-colors"
           >
-            جرب صقر مجاناً
+            جرب MQ مجاناً
           </Link>
         </div>
       </header>
@@ -187,11 +203,10 @@ export default function DemoPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
               شاهد كيف يعمل
-              <span className="text-primary"> نظام صقر</span>
+              <span className="text-primary"> MQ</span>
             </h1>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10">
-              محادثة حقيقية توضح كيف يرد صقر على عملائك ويجدول المعاينات
-              تلقائياً
+              محادثة توضيحية لكيفية رد MQ على عملائك وجدولة المعاينات تلقائياً
             </p>
           </motion.div>
         </div>
@@ -219,7 +234,7 @@ export default function DemoPage() {
                         <Building2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="font-medium">مكتب الصقر العقاري</div>
+                        <div className="font-medium">مكتب تجريبي</div>
                         <div className="text-xs text-white/70">متصل الآن</div>
                       </div>
                     </div>
@@ -230,6 +245,7 @@ export default function DemoPage() {
                     {!showFullDemo ? (
                       <div className="flex items-center justify-center h-full">
                         <button
+                          type="button"
                           onClick={startDemo}
                           className="flex flex-col items-center gap-4 text-center"
                         >
@@ -264,7 +280,7 @@ export default function DemoPage() {
                                   <div className="flex items-center gap-1 mb-1">
                                     <Sparkles className="w-3 h-3 text-primary" />
                                     <span className="text-xs text-primary font-medium">
-                                      صقر AI
+                                      MQ AI
                                     </span>
                                   </div>
                                 )}
@@ -361,6 +377,7 @@ export default function DemoPage() {
               {/* Controls */}
               <div className="flex gap-4">
                 <button
+                  type="button"
                   onClick={startDemo}
                   disabled={isPlaying}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
@@ -369,10 +386,10 @@ export default function DemoPage() {
                   {showFullDemo ? "إعادة العرض" : "بدء العرض"}
                 </button>
                 <Link
-                  href="/products/saqr"
+                  href="/auth/signup"
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-white rounded-xl font-bold hover:bg-secondary-dark transition-colors"
                 >
-                  جرب صقر الآن
+                  جرّب MQ الآن
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
               </div>
@@ -408,7 +425,7 @@ export default function DemoPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">لماذا صقر مختلف؟</h2>
+            <h2 className="text-3xl font-bold mb-4">لماذا MQ مختلف؟</h2>
             <p className="text-text-secondary text-lg">
               ليس مجرد بوت — بل مساعد ذكي يفهم السوق السعودي
             </p>
@@ -420,7 +437,7 @@ export default function DemoPage() {
                 icon: Bot,
                 title: "يفهم اللهجة السعودية",
                 description:
-                  'صقر يفهم "أبي"، "ودي"، "يعني" وكل العبارات المحلية',
+                  'MQ يفهم "أبي"، "ودي"، "يعني" وكل العبارات المحلية',
               },
               {
                 icon: Clock,
@@ -463,19 +480,19 @@ export default function DemoPage() {
             variants={fadeInUp}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              جاهز تجرب صقر؟
+              جاهز تجرب MQ؟
             </h2>
             <p className="text-white/80 text-lg mb-10">
               14 يوم مجاناً — بدون بطاقة ائتمانية
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
+              <Link
                 href="/auth/signup"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-[#F0F4FF] text-[#070B14] rounded-xl font-bold hover:bg-white transition-colors"
               >
                 ابدأ التجربة المجانية
                 <ArrowLeft className="w-5 h-5" />
-              </a>
+              </Link>
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition-colors"

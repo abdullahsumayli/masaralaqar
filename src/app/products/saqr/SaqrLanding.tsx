@@ -1,6 +1,6 @@
 "use client";
 
-import { ScrollToHashOnMount } from "@/components/HashScrollLink";
+import { ScrollToHashOnMount } from "@/components/ScrollToHashOnMount";
 import { ProductPageLayout } from "@/components/product/ProductPageLayout";
 import { ProductHero } from "@/components/product/landing/ProductHero";
 import { ProblemSection } from "@/components/product/landing/ProblemSection";

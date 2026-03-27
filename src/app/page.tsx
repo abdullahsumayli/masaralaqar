@@ -7,7 +7,7 @@ import {
   Target, Users, Zap,
 } from 'lucide-react'
 import Link from 'next/link'
-import { HashScrollLink, ScrollToHashOnMount } from '@/components/HashScrollLink'
+import { ScrollToHashOnMount } from '@/components/ScrollToHashOnMount'
 import { Navbar } from '@/components/navbar'
 import { AffiliateCTASection } from '@/components/affiliate/AffiliateCTASection'
 import { KnowledgeCard } from '@/components/knowledge/KnowledgeCard'
@@ -117,10 +117,13 @@ export default function HomePage() {
                 جرب MQ مجاناً
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </Link>
-              <HashScrollLink hash="mq-how" className="btn-mq-secondary text-base px-8 py-4 inline-flex items-center justify-center gap-2">
+              <Link
+                href="/demo"
+                className="btn-mq-secondary text-base px-8 py-4 inline-flex items-center justify-center gap-2"
+              >
                 <Rocket className="w-5 h-5 text-mq-blue shrink-0" />
                 شاهد كيف يعمل
-              </HashScrollLink>
+              </Link>
             </motion.div>
 
             {/* Trust badges */}
