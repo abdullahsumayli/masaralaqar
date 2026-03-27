@@ -60,7 +60,7 @@ export function AdminHeader() {
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {[
-                  { title: 'طلب تجربة جديد', desc: 'مكتب الأفق العقاري طلب تجربة نظام صقر', time: 'منذ 5 دقائق', type: 'trial' },
+                  { title: 'طلب تجربة جديد', desc: 'مكتب الأفق العقاري طلب تجربة نظام MQ', time: 'منذ 5 دقائق', type: 'trial' },
                   { title: 'تذكرة دعم جديدة', desc: 'مشكلة في ربط الواتساب - عقارات المستقبل', time: 'منذ 15 دقيقة', type: 'support' },
                   { title: 'اشتراك جديد', desc: 'دار الإعمار اشترك في الباقة الاحترافية', time: 'منذ ساعة', type: 'subscription' },
                   { title: 'تجديد اشتراك', desc: 'شركة البناء جددت اشتراكها', time: 'منذ ساعتين', type: 'renewal' },
@@ -70,8 +70,7 @@ export function AdminHeader() {
                     <p className="text-gray-400 text-xs mt-1">{notification.desc}</p>
                     <p className="text-gray-500 text-xs mt-2">{notification.time}</p>
                   </div>
-                ))}
-              </div>
+                ))}\n              </div>
               <div className="p-3 border-t border-[#21262d]">
                 <button className="w-full text-center text-primary text-sm font-medium hover:underline">
                   عرض جميع الإشعارات
