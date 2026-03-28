@@ -13,7 +13,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 const TEST_MESSAGE =
-  "تم ربط حسابك بنجاح مع نظام صقر ✅\n\nالرد الآلي الذكي جاهز لاستقبال رسائل عملائك.";
+  "تم ربط حسابك بنجاح مع نظام MQ ✅\n\nالرد الآلي الذكي جاهز لاستقبال رسائل عملائك.";
 
 async function getUser() {
   const cookieStore = await cookies();
