@@ -6,7 +6,7 @@ import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
 import {
   checkInstanceStatus,
-  getEvolutionQR,
+  getSessionQR,
 } from "@/integrations/whatsapp";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    await getEvolutionQR(instanceName);
+    await getSessionQR(instanceName);
     return NextResponse.json({
       success: true,
       message: "تم طلب رمز QR جديد",

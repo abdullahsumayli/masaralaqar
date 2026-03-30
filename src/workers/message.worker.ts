@@ -132,7 +132,7 @@ async function processJob(job: Job<WhatsAppJobPayload>): Promise<void> {
   await waitForRateLimit(officeId);
 
   const jobStart = Date.now();
-  if (route === "evolution") {
+  if (route === "waha") {
     await processEvolutionMessage(job.data);
   } else {
     await processLegacyMessage(job.data);
@@ -153,7 +153,7 @@ async function processEvolutionMessage(
 ): Promise<void> {
   const { phone, message, officeId, businessPhone, messageId } = data;
 
-  // 1. Create or update lead (evolution path: officeId, not tenantId)
+  // 1. Create or update lead (WAHA path: officeId, not tenantId)
   const lead = await LeadService.createLeadFromMessage(
     officeId,  // used as tenantId fallback
     phone,

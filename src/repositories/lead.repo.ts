@@ -71,7 +71,7 @@ export class LeadRepository {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      // Search by office_id first (evolution path), fallback to tenant_id
+      // Search by office_id first (WAHA / office session path), fallback to tenant_id
       if (officeId) {
         query = query.or(`office_id.eq.${officeId},tenant_id.eq.${tenantId}`);
       } else {

@@ -3,7 +3,7 @@
  * Logs: manual_disconnect
  */
 
-import { logoutEvolutionInstance } from "@/integrations/whatsapp";
+import { logoutWhatsappSession } from "@/integrations/whatsapp";
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
     const officeId = session?.officeId ?? instanceName.replace(/^office_/, "");
 
-    await logoutEvolutionInstance(instanceName);
+    await logoutWhatsappSession(instanceName);
     trackWhatsAppIncident(officeId, instanceName, "manual_disconnect");
 
     console.log(

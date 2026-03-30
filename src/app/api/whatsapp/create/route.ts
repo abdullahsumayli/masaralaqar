@@ -1,8 +1,9 @@
 /**
- * POST /api/whatsapp/create — Create Evolution instance for user's office (multi-tenant)
+ * POST /api/whatsapp/create — Ensure WAHA session for user's office (multi-tenant)
  */
 
-import { createInstance, instanceNameForOffice } from "@/lib/evolution";
+import { ensureInstanceExists } from "@/integrations/whatsapp";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { getServerUser } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
@@ -21,7 +22,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    // Resolve the user's office
     const { data: profile } = await supabaseAdmin
       .from("users")
       .select("office_id")
@@ -36,15 +36,21 @@ export async function POST(request: NextRequest) {
     }
 
     const instanceName = instanceNameForOffice(profile.office_id);
-    const result = await createInstance(instanceName);
-    console.log(
-      "[whatsapp/create] instance created:",
+    const ok = await ensureInstanceExists(
       instanceName,
+      "[whatsapp/create]",
     );
+    if (!ok) {
+      return NextResponse.json(
+        { error: "تعذر إنشاء/تجهيز جلسة WAHA" },
+        { status: 502 },
+      );
+    }
+
+    console.log("[whatsapp/create] session ensured:", instanceName);
 
     return NextResponse.json({
       success: true,
-      data: result,
       instanceName,
     });
   } catch (err: unknown) {

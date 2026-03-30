@@ -1,34 +1,42 @@
 /**
- * WhatsApp Integration — WAHA (WhatsApp HTTP API)
- *
- * Drop-in replacement for Evolution API integration.
- * Public interface (WhatsAppService) is UNCHANGED — all callers work as-is.
- *
- * Each office has its own WAHA session (office_{officeId}).
- * Session name is resolved from the whatsapp_sessions table via officeId,
- * with an in-memory cache to avoid repeated DB lookups.
+ * WhatsApp — WAHA (multi-tenant). One session per office: office_{officeId}.
  */
 
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
-import { instanceNameForOffice } from "@/lib/waha";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import {
-  ensureSessionExists,
-  getSessionStatus,
-  sendText,
-  sendImage,
-  getQRCode,
-  createSession,
-  startSession,
-  setSessionWebhook,
-  stopSession,
-  deleteSession,
-  listSessions,
-} from "@/lib/waha";
+  defaultWebhookUrl,
+  wahaConfigured,
+  wahaCreateSession,
+  wahaDeleteSession,
+  wahaFetchQrJson,
+  wahaFetchSession,
+  wahaLivePayload,
+  wahaLogoutSession,
+  wahaRestartSession,
+  wahaSendImage,
+  wahaSendText,
+  wahaStartSession,
+  wahaStatusToOpen,
+  wahaSyncWebhooks,
+} from "@/lib/waha-client";
 import { WhatsAppMessage } from "@/types/message";
 import { isCircuitOpen } from "@/lib/circuit-breaker";
 import { trackWhatsAppIncident } from "@/services/whatsapp-incident.service";
 
-// ── Instance Resolution Cache ────────────────────────────────
+export { instanceNameForOffice } from "@/lib/whatsapp-session";
+
+function formatPhoneNumber(phone: string): string {
+  let cleaned = phone.replace(/\D/g, "");
+  if (cleaned.startsWith("0")) cleaned = "966" + cleaned.substring(1);
+  if (!cleaned.startsWith("966") && cleaned.length === 9)
+    cleaned = "966" + cleaned;
+  return cleaned;
+}
+
+function phoneToChatId(digits: string): string {
+  return `${digits}@c.us`;
+}
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -49,7 +57,10 @@ async function resolveInstanceName(officeId: string): Promise<string> {
     const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
     const instanceName =
       session?.instanceId || instanceNameForOffice(officeId);
-    instanceCache.set(officeId, { instanceName, ts: Date.now() });
+    instanceCache.set(officeId, {
+      instanceName,
+      ts: Date.now(),
+    });
     return instanceName;
   } catch {
     return instanceNameForOffice(officeId);
@@ -60,82 +71,20 @@ export function invalidateInstanceCache(officeId: string): void {
   instanceCache.delete(officeId);
 }
 
-// ── Session Management (exported for API routes) ─────────────
+const QR_RETRY_ATTEMPTS = 6;
+const QR_RETRY_DELAY_MS = 3500;
+const INSTANCE_READY_RETRY_MS = 5000;
 
-export { instanceNameForOffice };
-
-export async function createEvolutionInstance(instanceName: string) {
-  await createSession(instanceName);
-  return { instance: { instanceName, status: "created" } };
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
-export async function getEvolutionQR(
-  instanceName: string,
-  _phoneNumber?: string,
-): Promise<{ base64: string | null; pairingCode: string | null; code: unknown }> {
-  const QR_RETRY_ATTEMPTS = 6;
-  const QR_RETRY_DELAY_MS = 3500;
-  const INSTANCE_READY_RETRY_MS = 5000;
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-  for (let attempt = 1; attempt <= QR_RETRY_ATTEMPTS; attempt++) {
-    try {
-      const status = await getSessionStatus(instanceName);
-
-      if (!status) {
-        if (attempt < QR_RETRY_ATTEMPTS) {
-          await sleep(INSTANCE_READY_RETRY_MS);
-          continue;
-        }
-        throw new Error("جاري تهيئة الاتصال — انتظر دقيقة ثم جرّب مرة أخرى");
-      }
-
-      if (status.status === "WORKING") {
-        return { base64: null, pairingCode: null, code: "WORKING" };
-      }
-
-      if (status.status === "SCAN_QR_CODE") {
-        const result = await getQRCode(instanceName);
-        if (result.base64 || result.pairingCode) {
-          return { ...result, code: null };
-        }
-      }
-
-      if (status.status === "STOPPED" || status.status === "STARTING") {
-        if (status.status === "STOPPED") await startSession(instanceName);
-        if (attempt < QR_RETRY_ATTEMPTS) {
-          await sleep(INSTANCE_READY_RETRY_MS);
-          continue;
-        }
-      }
-
-      if (attempt < QR_RETRY_ATTEMPTS) await sleep(QR_RETRY_DELAY_MS);
-    } catch (err) {
-      if (attempt === QR_RETRY_ATTEMPTS) throw err;
-      await sleep(QR_RETRY_DELAY_MS);
-    }
-  }
-
-  return { base64: null, pairingCode: null, code: null };
-}
-
-export async function setEvolutionWebhook(
-  instanceName: string,
-  webhookUrl?: string,
-): Promise<void> {
-  await setSessionWebhook(instanceName, webhookUrl);
-}
-
-export async function getEvolutionStatus(instanceName: string) {
-  const status = await getSessionStatus(instanceName);
-  if (!status) return null;
-  return {
-    instance: {
-      instanceName,
-      state: status.status === "WORKING" ? "open" : "close",
-      wahaStatus: status.status,
-    },
-  };
+function normalizeQRBase64(data: string | null): {
+  base64: string | null;
+  pairingCode: string | null;
+} {
+  if (!data) return { base64: null, pairingCode: null };
+  return { base64: data, pairingCode: null };
 }
 
 export interface InstanceStatusResult {
@@ -145,96 +94,209 @@ export interface InstanceStatusResult {
 }
 
 export async function checkInstanceStatus(
-  instanceName: string,
+  sessionName: string,
 ): Promise<InstanceStatusResult | null> {
-  const status = await getSessionStatus(instanceName);
-  if (!status) return null;
-  return {
-    state: status.status === "WORKING" ? "open" : "close",
-    instance: { instanceName, wahaStatus: status.status },
-    exists: true,
-  };
+  if (!wahaConfigured()) return null;
+  try {
+    const s = await wahaFetchSession(sessionName);
+    if (!s) return null;
+    const st = String(s.status ?? "");
+    const open = wahaStatusToOpen(st);
+    return {
+      state: open ? "open" : String(st).toLowerCase(),
+      instance: s,
+      exists: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Same shape previously returned for Evolution `connectionState` checks. */
+export async function getLiveConnectionPayload(sessionName: string) {
+  if (!wahaConfigured()) return null;
+  try {
+    const s = await wahaFetchSession(sessionName);
+    return wahaLivePayload(s);
+  } catch {
+    return null;
+  }
+}
+
+export async function syncSessionWebhook(
+  sessionName: string,
+  webhookUrl?: string,
+) {
+  const url = webhookUrl || defaultWebhookUrl();
+  await wahaSyncWebhooks(sessionName, url);
+  return { url };
+}
+
+export async function getSessionWebhookDebug(sessionName: string) {
+  const s = await wahaFetchSession(sessionName);
+  if (!s) return null;
+  const config = s.config as Record<string, unknown> | undefined;
+  return config?.webhooks ?? null;
 }
 
 export async function ensureInstanceExists(
-  instanceName: string,
+  sessionName: string,
   logPrefix = "[WAHA]",
 ): Promise<boolean> {
-  return ensureSessionExists(instanceName, logPrefix);
+  if (!wahaConfigured()) return false;
+
+  let s = await wahaFetchSession(sessionName).catch(() => null);
+  const webhookUrl = defaultWebhookUrl();
+
+  if (!s) {
+    console.log(`${logPrefix} session ${sessionName} missing — creating`);
+    try {
+      await wahaCreateSession(sessionName, webhookUrl);
+      await wahaStartSession(sessionName);
+      await sleep(2000);
+      return true;
+    } catch (err) {
+      console.error(`${logPrefix} create failed:`, err);
+      return false;
+    }
+  }
+
+  try {
+    await wahaSyncWebhooks(sessionName, webhookUrl);
+  } catch (err) {
+    console.warn(`${logPrefix} webhook sync:`, err);
+  }
+
+  const st = String(s.status ?? "");
+  if (st === "STOPPED" || st === "FAILED") {
+    try {
+      await wahaStartSession(sessionName);
+      await sleep(1500);
+    } catch (e) {
+      console.warn(`${logPrefix} start:`, e);
+    }
+  }
+
+  console.log(`${logPrefix} session ${sessionName} ready status=${st}`);
+  return true;
+}
+
+export async function getSessionQR(sessionName: string, _phoneNumber?: string) {
+  for (let attempt = 1; attempt <= QR_RETRY_ATTEMPTS; attempt++) {
+    try {
+      await wahaStartSession(sessionName);
+    } catch {
+      // ignore
+    }
+
+    let base64: string | null = null;
+    try {
+      const r = await wahaFetchQrJson(sessionName);
+      base64 = r.base64;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const notReady =
+        msg.toLowerCase().includes("not ready") ||
+        msg.toLowerCase().includes("503") ||
+        msg.toLowerCase().includes("scan");
+      if (notReady && attempt < QR_RETRY_ATTEMPTS) {
+        await sleep(INSTANCE_READY_RETRY_MS);
+        continue;
+      }
+      if (attempt < QR_RETRY_ATTEMPTS) {
+        await sleep(QR_RETRY_DELAY_MS);
+        continue;
+      }
+      throw e;
+    }
+
+    const { base64: b, pairingCode } = normalizeQRBase64(base64);
+    if (b || pairingCode) {
+      return { base64: b, pairingCode, code: null };
+    }
+
+    if (attempt < QR_RETRY_ATTEMPTS) await sleep(QR_RETRY_DELAY_MS);
+  }
+
+  return { base64: null, pairingCode: null, code: null };
 }
 
 export async function getFreshQR(
-  instanceName: string,
+  sessionName: string,
   phoneNumber?: string,
   logPrefix = "[WAHA]",
-): Promise<{ base64: string | null; pairingCode: string | null; code: unknown }> {
-  console.log(`${logPrefix} generating QR for ${instanceName}`);
-  const result = await getEvolutionQR(instanceName, phoneNumber);
-  console.log(`${logPrefix} QR for ${instanceName}: ${result.base64 ? "ok" : "empty"}`);
+) {
+  console.log(`${logPrefix} generating fresh QR for ${sessionName}`);
+  const result = await getSessionQR(sessionName, phoneNumber);
+  const hasQr = !!(result.base64 || result.pairingCode);
+  console.log(
+    `${logPrefix} QR for ${sessionName}: ${hasQr ? "ok" : "empty"}`,
+  );
   return result;
 }
 
-export async function deleteEvolutionInstance(instanceName: string) {
-  await deleteSession(instanceName);
-  return { deleted: true };
+export async function deleteWhatsappInstance(sessionName: string) {
+  await wahaDeleteSession(sessionName);
 }
 
-export async function logoutEvolutionInstance(instanceName: string) {
-  await stopSession(instanceName);
-  return { stopped: true };
+export async function logoutWhatsappSession(sessionName: string) {
+  await wahaLogoutSession(sessionName);
 }
 
-export async function fetchInstances() {
-  return listSessions();
+async function triggerQrRegeneration(sessionName: string): Promise<void> {
+  try {
+    await wahaRestartSession(sessionName);
+    console.log(
+      `[WhatsApp] instance_name=${sessionName} WAHA restart triggered`,
+    );
+  } catch (err) {
+    console.warn(`[WhatsApp] restart error:`, err);
+  }
 }
 
-// ── Auto-recovery ─────────────────────────────────────────────
+async function attemptInstanceRecovery(
+  officeId: string,
+  sessionName: string,
+  logPrefix: string,
+): Promise<boolean> {
+  if (isCircuitOpen(sessionName)) {
+    console.log(
+      `${logPrefix} circuit open — skip auto-retry, manual intervention required`,
+    );
+    return false;
+  }
+  const status = await checkInstanceStatus(sessionName);
+  if (!status) {
+    console.log(`${logPrefix} session not found — no recovery`);
+    return false;
+  }
+  if (status.state === "open") {
+    console.log(`${logPrefix} already WORKING — retry send`);
+    return true;
+  }
+  console.log(`${logPrefix} auto-reconnect — state=${status.state}`);
+  trackWhatsAppIncident(officeId, sessionName, "auto_reconnect_triggered", {
+    previousState: status.state,
+  });
+  await triggerQrRegeneration(sessionName);
+  return true;
+}
 
 const CONNECTION_ERROR_PATTERNS = [
-  "not connected", "session closed", "unauthorized",
-  "401", "connection", "logged out", "disconnected",
-  "scan_qr", "failed",
+  "not connected",
+  "unauthorized",
+  "401",
+  "connection",
+  "logged out",
+  "disconnected",
+  "session",
+  "closed",
 ];
 
 function isConnectionError(status: number, body: string): boolean {
   if (status === 401) return true;
   const lower = body.toLowerCase();
   return CONNECTION_ERROR_PATTERNS.some((p) => lower.includes(p));
-}
-
-async function attemptInstanceRecovery(
-  officeId: string,
-  instanceName: string,
-  logPrefix: string,
-): Promise<boolean> {
-  if (isCircuitOpen(instanceName)) {
-    console.log(`[WhatsApp] circuit open for ${instanceName} — skip`);
-    return false;
-  }
-  const status = await checkInstanceStatus(instanceName);
-  if (!status) return false;
-  if (status.state === "open") return true;
-
-  trackWhatsAppIncident(officeId, instanceName, "auto_reconnect_triggered", {
-    previousState: status.state,
-  });
-
-  try {
-    await startSession(instanceName);
-  } catch (err) {
-    console.warn(`${logPrefix} startSession failed:`, err);
-  }
-  return true;
-}
-
-// ── WhatsAppService ───────────────────────────────────────────
-
-function formatPhoneNumber(phone: string): string {
-  let cleaned = phone.replace(/\D/g, "");
-  if (cleaned.startsWith("0")) cleaned = "966" + cleaned.substring(1);
-  if (!cleaned.startsWith("966") && cleaned.length === 9)
-    cleaned = "966" + cleaned;
-  return cleaned;
 }
 
 export class WhatsAppService {
@@ -245,32 +307,48 @@ export class WhatsAppService {
     message: string,
     officeId: string,
   ): Promise<boolean> {
-    const instanceName = await resolveInstanceName(officeId);
+    const sessionName = await resolveInstanceName(officeId);
     const formattedPhone = formatPhoneNumber(recipientPhone);
-    const logPrefix = `[WhatsApp] office_id=${officeId} instance=${instanceName} sendMessage`;
+    const chatId = phoneToChatId(formattedPhone);
+    const logPrefix = `[WhatsApp] office_id=${officeId} session=${sessionName} sendMessage`;
 
-    const doSend = async () => {
-      const ok = await sendText(instanceName, formattedPhone, message);
-      return { ok, status: ok ? 200 : 500, body: ok ? "" : "send failed" };
+    const doSend = async (): Promise<{ ok: boolean; status: number; body: string }> => {
+      return wahaSendText(sessionName, chatId, message);
     };
 
     try {
       let result = await doSend();
       if (result.ok) return true;
 
+      console.log(
+        `${logPrefix} failed — status=${result.status} body=${result.body.slice(0, 200)}`,
+      );
+
       if (isConnectionError(result.status, result.body)) {
-        const recovered = await attemptInstanceRecovery(officeId, instanceName, logPrefix);
+        const recovered = await attemptInstanceRecovery(
+          officeId,
+          sessionName,
+          logPrefix,
+        );
         if (recovered) {
           result = await doSend();
           if (result.ok) {
-            trackWhatsAppIncident(officeId, instanceName, "reconnect_success");
+            console.log(`${logPrefix} retry success`);
+            trackWhatsAppIncident(officeId, sessionName, "reconnect_success");
             return true;
           }
-          trackWhatsAppIncident(officeId, instanceName, "reconnect_failed");
+          trackWhatsAppIncident(officeId, sessionName, "reconnect_failed", {
+            status: result.status,
+            body: result.body.slice(0, 200),
+          });
         }
       }
 
-      console.error(`${logPrefix} send failed`);
+      console.error(
+        `${logPrefix} failed:`,
+        result.status,
+        result.body.slice(0, 300),
+      );
       return false;
     } catch (error) {
       console.error(`${logPrefix} exception:`, error);
@@ -284,22 +362,32 @@ export class WhatsAppService {
     caption: string,
     officeId: string,
   ): Promise<boolean> {
-    const instanceName = await resolveInstanceName(officeId);
+    const sessionName = await resolveInstanceName(officeId);
     const formattedPhone = formatPhoneNumber(recipientPhone);
-    const logPrefix = `[WhatsApp] office_id=${officeId} instance=${instanceName} sendMedia`;
+    const chatId = phoneToChatId(formattedPhone);
+    const logPrefix = `[WhatsApp] office_id=${officeId} session=${sessionName} sendMedia`;
+
+    const doSend = async (): Promise<{ ok: boolean; status: number; body: string }> => {
+      return wahaSendImage(sessionName, chatId, mediaUrl, caption);
+    };
 
     try {
-      const ok = await sendImage(instanceName, formattedPhone, mediaUrl, caption);
-      if (ok) return true;
+      let result = await doSend();
+      if (result.ok) return true;
 
-      const recovered = await attemptInstanceRecovery(officeId, instanceName, logPrefix);
-      if (recovered) {
-        const retryOk = await sendImage(instanceName, formattedPhone, mediaUrl, caption);
-        if (retryOk) {
-          trackWhatsAppIncident(officeId, instanceName, "reconnect_success");
-          return true;
+      if (isConnectionError(result.status, result.body)) {
+        const recovered = await attemptInstanceRecovery(
+          officeId,
+          sessionName,
+          logPrefix,
+        );
+        if (recovered) {
+          result = await doSend();
+          if (result.ok) {
+            trackWhatsAppIncident(officeId, sessionName, "reconnect_success");
+            return true;
+          }
         }
-        trackWhatsAppIncident(officeId, instanceName, "reconnect_failed");
       }
       return false;
     } catch (error) {
@@ -308,44 +396,62 @@ export class WhatsAppService {
     }
   }
 
-  /**
-   * Parse incoming WAHA or Evolution webhook payload.
-   * Both formats supported for backward compatibility.
-   */
   static parseIncomingMessage(
     payload: Record<string, unknown>,
   ): WhatsAppMessage | null {
     try {
-      // WAHA format
       if (payload?.event === "message" && payload?.payload) {
         const p = payload.payload as Record<string, unknown>;
-        if (p.fromMe) return null;
-        const from = (p.from as string)?.replace("@c.us", "") || "";
-        const text = (p.body as string) || "";
-        const id = (p.id as string) || `waha_${Date.now()}`;
-        if (!from || !text) return null;
-        return { id, phone: from, text, timestamp: new Date().toISOString(), media: undefined };
+        if (p.fromMe === true) return null;
+        const fromRaw = typeof p.from === "string" ? p.from : "";
+        const phone = fromRaw
+          .replace(/@s\.whatsapp\.net$/i, "")
+          .replace(/@c\.us$/i, "")
+          .replace(/@lid$/i, "");
+        const text = typeof p.body === "string" ? p.body : "";
+        const id =
+          (typeof p.id === "string" && p.id) || `waha_${Date.now()}`;
+        if (!phone || !text) return null;
+        return {
+          id,
+          phone,
+          text,
+          timestamp: new Date().toISOString(),
+          media: undefined,
+        };
       }
 
-      // Evolution format (backward compat)
-      if (payload?.event === "messages.upsert") {
-        const data = payload.data as Record<string, unknown> | undefined;
-        const messages = data?.messages as Record<string, unknown>[] | undefined;
-        const msg = messages?.[0];
+      const data = payload?.data as Record<string, unknown> | undefined;
+      if (
+        payload?.event === "messages.upsert" &&
+        data?.messages
+      ) {
+        const messages = data.messages as Record<string, unknown>[];
+        const msg = messages[0];
         if (!msg) return null;
         const key = msg.key as Record<string, unknown> | undefined;
         if (key?.fromMe) return null;
-        const phone = (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") || "";
+
+        const phone =
+          (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") || "";
         const msgBody = msg.message as Record<string, unknown> | undefined;
         const text =
           (msgBody?.conversation as string) ||
-          ((msgBody?.extendedTextMessage as Record<string, unknown>)?.text as string) ||
+          ((msgBody?.extendedTextMessage as Record<string, unknown>)
+            ?.text as string) ||
           "";
-        const id = (key?.id as string) || `evo_${Date.now()}`;
-        if (!phone || !text) return null;
-        return { id, phone, text, timestamp: new Date().toISOString(), media: undefined };
-      }
+        const id = (key?.id as string) || `msg_${Date.now()}`;
 
+        if (!phone || !text) return null;
+
+        return {
+          id,
+          phone,
+          text,
+          timestamp: new Date().toISOString(),
+          media: undefined,
+        };
+      }
       return null;
     } catch (error) {
       console.error("[WhatsApp] parseIncomingMessage error:", error);
@@ -361,3 +467,5 @@ export class WhatsAppService {
     return true;
   }
 }
+
+export { wahaPing as pingWhatsappBackend } from "@/lib/waha-client";

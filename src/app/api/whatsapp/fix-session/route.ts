@@ -3,7 +3,7 @@
  * GET /api/whatsapp/fix-session
  */
 
-import { instanceNameForOffice } from "@/lib/evolution";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 

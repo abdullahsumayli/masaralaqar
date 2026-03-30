@@ -2,7 +2,7 @@
  * GET /api/whatsapp/qr?instance_name=... — Return QR for instance (admin only)
  */
 
-import { getEvolutionQR } from "@/integrations/whatsapp";
+import { getSessionQR } from "@/integrations/whatsapp";
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { base64, pairingCode } = await getEvolutionQR(instanceName);
+    const { base64, pairingCode } = await getSessionQR(instanceName);
     return NextResponse.json({
       success: true,
       qr: base64,

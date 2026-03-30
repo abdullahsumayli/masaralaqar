@@ -13,7 +13,7 @@
  *     6. Return < 2s
  *
  * WAHA events handled:
- *   message        → incoming customer message
+ *   message | message.any → incoming customer message
  *   session.status → connection state change (WORKING / SCAN_QR_CODE / FAILED)
  */
 
@@ -121,12 +121,19 @@ export async function POST(request: NextRequest) {
     }
 
     // ── WAHA: message ─────────────────────────────────────
-    if (payload?.event === "message") {
+    if (
+      payload?.event === "message" ||
+      payload?.event === "message.any"
+    ) {
       const sessionName = payload.session as string;
       const p = payload.payload as Record<string, unknown> | undefined;
-      if (!p || p.fromMe) return NextResponse.json({ ok: true });
+      if (!p || p.fromMe === true) return NextResponse.json({ ok: true });
 
-      const from = (p.from as string)?.replace("@c.us", "") ?? "";
+      const fromRaw = typeof p.from === "string" ? p.from : "";
+      const from = fromRaw
+        .replace(/@s\.whatsapp\.net$/i, "")
+        .replace(/@c\.us$/i, "")
+        .replace(/@lid$/i, "");
       const text = (p.body as string) || "";
       const messageId = (p.id as string) || `waha_${Date.now()}`;
 

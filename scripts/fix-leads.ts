@@ -88,7 +88,3 @@ NOTIFY pgrst, 'reload schema';
 }
 
 fixLeadsTable();
-
-# Evolution API (use in .env)
-# EVOLUTION_API_URL=https://evo.masaralaqar.com
-# EVOLUTION_API_KEY=your-evolution-api-key

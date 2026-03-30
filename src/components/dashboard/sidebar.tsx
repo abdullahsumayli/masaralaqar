@@ -70,7 +70,7 @@ function useWhatsAppStatus() {
       .then((r) => r.json())
       .then((d) => {
         const isConnected =
-          d.evolutionStatus === "connected" ||
+          d.whatsappStatus === "connected" ||
           d.session?.sessionStatus === "connected";
         setConnected(isConnected);
       })

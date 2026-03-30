@@ -5,7 +5,7 @@
 **Masaralaqar (مسار العقار)** منصة PropTech عربية (RTL) مبنية بـ **Next.js 15 App Router**. تجمع:
 - **موقع تسويقي**: منتجات، مدونة، مكتبة
 - **Dashboard المستخدم**: إدارة العقارات، العملاء، الرسائل، الإحصائيات
-- **بوت MQ**: واتساب AI مع Evolution API + Redis/BullMQ
+- **بوت MQ**: واتساب AI مع WAHA + Redis/BullMQ
 - **Admin panel**: إدارة المنصة، المشتركين، المدفوعات
 - **نظام اشتراكات** عبر Moyasar + تحويل بنكي
 
@@ -19,7 +19,7 @@
 | Styling | Tailwind CSS + shadcn/ui + Framer Motion |
 | DB | Supabase (PostgreSQL + RLS + Auth + Storage) |
 | Queue | Redis + BullMQ (whatsapp-messages queue) |
-| WhatsApp | Evolution API (instance: `saqr`) |
+| WhatsApp | WAHA (`office_{officeId}` per office) |
 | AI | OpenAI (GPT-4o-mini) |
 | Payments | Moyasar + Bank Transfer |
 | Media | Cloudinary |
@@ -66,23 +66,22 @@ masaralaqar/
 │  ├─ services/            ← Business logic
 │  ├─ repositories/        ← Data access layer
 │  ├─ integrations/        ← whatsapp.ts, openai.ts
-│  └─ lib/                 ← evolution.ts, moyasar.ts, payments.ts, redis.ts...
+│  └─ lib/                 ← waha-client.ts, moyasar.ts, payments.ts, redis.ts...
 ├─ server/                 ← Express bot server (MQ WhatsApp)
 └─ supabase/               ← Migrations + RLS policies
 ```
 
 ---
 
-## Evolution API (واتساب)
+## WAHA (واتساب)
 
 ```
-Base URL : https://evo.masaralaqar.com (عبر Traefik — لا تستخدم IP مباشرة)
-Env      : EVOLUTION_API_URL أو EVOLUTION_URL، EVOLUTION_API_KEY
-API Key  : يُرسل في الـ headers باسم apikey
-Instance : saqr   ← ثابت لكل المستخدمين
+Base URL : WAHA_API_URL (مثال: https://waha.example.com:3000)
+Env      : WAHA_API_URL، WAHA_API_KEY
+API Key  : يُرسل في الـ header باسم X-Api-Key
+Session  : لكل مكتب اسم جلسة `office_{officeId}` (من instanceNameForOffice)
+Webhook  : {NEXT_PUBLIC_URL}/api/webhook/whatsapp — أحداث message و session.status
 ```
-
-**مهم**: `instanceId` = `"saqr"` دائماً. لا `user_${userId}` ولا `office_${officeId}`.
 
 ---
 
@@ -160,7 +159,7 @@ npm run worker
 ## ملاحظات مهمة
 
 1. **tenant_id**: يُستخرج دائماً من الجلسة في الـ API، لا من client
-2. **instanceId**: ثابت `"saqr"` — لا قيم ديناميكية
+2. **جلسة WAHA**: اسم الجلسة لكل مكتب `office_{officeId}` عبر `instanceNameForOffice`
 3. **supabaseAdmin**: للعمليات server-side التي تحتاج bypass RLS
 4. **getServerUser()**: في `/api/*` routes للتحقق من المستخدم
 5. **Admin role**: يُتحقق من `profile.role === 'admin'` في كل admin API

@@ -5,7 +5,7 @@
  *   - Redis     (BullMQ message queue)
  *   - Supabase  (database + auth)
  *   - OpenAI    (AI engine)
- *   - Evolution API (WhatsApp)
+ *   - WAHA (WhatsApp HTTP API)
  *
  * URL: GET /api/system/health
  *
@@ -99,21 +99,13 @@ async function checkOpenAI(): Promise<ServiceStatus> {
 
 async function checkWhatsApp(): Promise<ServiceStatus> {
   const start = Date.now();
-  const evoUrl =
-    process.env.EVOLUTION_API_URL ||
-    process.env.EVOLUTION_URL ||
-    "https://evo.masaralaqar.com";
-  const evoKey = process.env.EVOLUTION_API_KEY || "";
   try {
-    const res = await fetch(`${evoUrl}/instance/fetchInstances`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json", apikey: evoKey },
-      signal: AbortSignal.timeout(5000),
-    });
+    const { wahaPing } = await import("@/lib/waha-client");
+    const { ok, status } = await wahaPing();
     return {
-      status: res.ok ? "reachable" : "error",
+      status: ok ? "reachable" : "error",
       latency: Date.now() - start,
-      error: res.ok ? undefined : `HTTP ${res.status}`,
+      error: ok ? undefined : `HTTP ${status}`,
     };
   } catch (err) {
     return {

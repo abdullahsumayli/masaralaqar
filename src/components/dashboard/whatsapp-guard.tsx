@@ -48,7 +48,7 @@ export function WhatsAppGuard({ children }: { children: React.ReactNode }) {
         }
         const data = await res.json();
         const isConnected =
-          data.evolutionStatus === "connected" ||
+          data.whatsappStatus === "connected" ||
           data.session?.sessionStatus === "connected";
         if (!cancelled) setStatus(isConnected ? "connected" : "disconnected");
       } catch {
@@ -69,7 +69,7 @@ export function WhatsAppGuard({ children }: { children: React.ReactNode }) {
         .then((r) => r.json())
         .then((data) => {
           const isConnected =
-            data.evolutionStatus === "connected" ||
+            data.whatsappStatus === "connected" ||
             data.session?.sessionStatus === "connected";
           if (isConnected) setStatus("connected");
         })

@@ -10,7 +10,7 @@ export type OpenAIMessage = { role: "user" | "assistant"; content: string };
 export class ConversationService {
   /**
    * Save a user message to the conversation log.
-   * For evolution path, pass officeId (tenantId may be empty).
+   * For WAHA office path, pass officeId (tenantId may be empty).
    */
   static async saveUserMessage(
     tenantId: string,
@@ -23,7 +23,7 @@ export class ConversationService {
 
   /**
    * Save an assistant (bot) reply to the conversation log.
-   * For evolution path, pass officeId (tenantId may be empty).
+   * For WAHA office path, pass officeId (tenantId may be empty).
    */
   static async saveAssistantMessage(
     tenantId: string,

@@ -38,10 +38,10 @@ export interface WhatsAppJobPayload {
   /** ISO timestamp when the message was received */
   timestamp: string;
   /**
-   * Routing path: "evolution" for the modern office-based path,
+   * Routing path: "waha" for office WAHA sessions,
    * "legacy" for the tenant-based webhook secret path.
    */
-  route: "evolution" | "legacy";
+  route: "waha" | "legacy";
   /** Only present for legacy route — tenant context */
   tenantId?: string;
   /** Sender name if available */

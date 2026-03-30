@@ -5,7 +5,8 @@
  *   { status: "connecting" | "connected" | "disconnected", phoneNumber?: string }
  */
 
-import { getConnectionState, instanceNameForOffice } from "@/lib/evolution";
+import { getLiveConnectionPayload } from "@/integrations/whatsapp";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { getServerUser } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
@@ -50,14 +51,12 @@ export async function GET(request: NextRequest) {
     const instanceName =
       session.instanceId || instanceNameForOffice(profile.office_id);
 
-    // Check live Evolution status
-    let evoState: string = "unknown";
+    let liveState: string = "unknown";
     try {
-      const result = await getConnectionState(instanceName);
-      evoState =
-        result?.instance?.state || result?.state || "unknown";
+      const result = await getLiveConnectionPayload(instanceName);
+      liveState = result?.instance?.state || "unknown";
     } catch {
-      // Evolution API unreachable — rely on DB status
+      // WAHA unreachable — rely on DB status
     }
 
     const phone =
@@ -66,7 +65,7 @@ export async function GET(request: NextRequest) {
         ? session.phoneNumber
         : null;
 
-    if (evoState === "open" || session.sessionStatus === "connected") {
+    if (liveState === "open" || session.sessionStatus === "connected") {
       return NextResponse.json({
         status: "connected" as const,
         phoneNumber: phone,

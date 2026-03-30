@@ -4,7 +4,7 @@
 
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
-import { getEvolutionQR } from "@/integrations/whatsapp";
+import { getSessionQR } from "@/integrations/whatsapp";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { base64, pairingCode } = await getEvolutionQR(instanceName);
+    const { base64, pairingCode } = await getSessionQR(instanceName);
     return NextResponse.json({
       success: true,
       qr: base64,

@@ -2,19 +2,19 @@
  * WhatsApp Debug Endpoint — Diagnose message pipeline issues (multi-tenant)
  * GET /api/whatsapp/debug
  *
- * Checks: Evolution API status, webhook config, Redis connectivity,
+ * Checks: WAHA status, webhook config, Redis connectivity,
  *         WhatsApp sessions, and provides actionable recommendations.
  */
 
-import { instanceNameForOffice } from "@/lib/evolution";
+import {
+  getLiveConnectionPayload,
+  getSessionWebhookDebug,
+  syncSessionWebhook,
+} from "@/integrations/whatsapp";
 import { getRedisConnectionOptions } from "@/lib/redis";
 import { supabaseAdmin } from "@/lib/supabase";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
-import {
-  getEvolutionStatus,
-  getEvolutionWebhook,
-  setEvolutionWebhook,
-} from "@/integrations/whatsapp";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
       const instanceName =
         session?.instanceId || instanceNameForOffice(targetOfficeId);
-      const result = await setEvolutionWebhook(instanceName);
+      const result = await syncSessionWebhook(instanceName);
       return NextResponse.json({
         success: true,
         message: "Webhook set",
@@ -118,12 +118,8 @@ export async function GET(request: NextRequest) {
 
   // 1. Check env variables
   checks.env = {
-    EVOLUTION_API_URL: process.env.EVOLUTION_API_URL
-      ? "✅ set"
-      : "❌ missing",
-    EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY
-      ? "✅ set"
-      : "❌ missing",
+    WAHA_API_URL: process.env.WAHA_API_URL ? "✅ set" : "❌ missing",
+    WAHA_API_KEY: process.env.WAHA_API_KEY ? "✅ set" : "❌ missing",
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "✅ set" : "❌ missing",
     REDIS_URL: process.env.REDIS_URL ? "✅ set" : "—",
     REDIS_URI: process.env.REDIS_URI ? "✅ set" : "—",
@@ -131,8 +127,10 @@ export async function GET(request: NextRequest) {
     WEBHOOK_SECRET: process.env.WEBHOOK_SECRET ? "✅ set" : "⚠️ missing",
   };
 
-  if (!process.env.EVOLUTION_API_KEY)
-    issues.push("EVOLUTION_API_KEY not set");
+  if (!process.env.WAHA_API_KEY)
+    issues.push("WAHA_API_KEY not set");
+  if (!process.env.WAHA_API_URL)
+    issues.push("WAHA_API_URL not set");
   if (!process.env.OPENAI_API_KEY)
     issues.push("OPENAI_API_KEY not set — AI replies won't work");
   if (!process.env.REDIS_URL && !process.env.REDIS_URI)
@@ -140,7 +138,7 @@ export async function GET(request: NextRequest) {
       "No Redis URL — queue will fail, inline fallback will be used",
     );
 
-  // 2. Check WhatsApp sessions in DB + per-instance Evolution status
+  // 2. Check WhatsApp sessions in DB + per-session WAHA status
   try {
     const sessions = await WhatsAppSessionRepository.getAll();
     checks.sessions = sessions.map((s) => ({
@@ -169,24 +167,22 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Check Evolution status for each connected session
       const instanceChecks: Record<string, unknown>[] = [];
       for (const s of sessions.slice(0, 5)) {
         const instName = s.instanceId || instanceNameForOffice(s.officeId);
         try {
-          const evoStatus = await getEvolutionStatus(instName);
+          const live = await getLiveConnectionPayload(instName);
           instanceChecks.push({
             instanceName: instName,
             officeId: s.officeId,
-            evolutionState:
-              evoStatus?.instance?.state || evoStatus?.state || "unknown",
+            wahaState: live?.instance?.state || "unknown",
             dbStatus: s.sessionStatus,
           });
         } catch {
           instanceChecks.push({
             instanceName: instName,
             officeId: s.officeId,
-            evolutionState: "unreachable",
+            wahaState: "unreachable",
             dbStatus: s.sessionStatus,
           });
         }
@@ -204,7 +200,7 @@ export async function GET(request: NextRequest) {
         await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
       const instName =
         session?.instanceId || instanceNameForOffice(targetOfficeId);
-      const webhook = await getEvolutionWebhook(instName);
+      const webhook = await getSessionWebhookDebug(instName);
       checks.webhook = { instanceName: instName, config: webhook };
     } catch (err) {
       checks.webhook = { error: String(err) };
@@ -258,7 +254,7 @@ export async function POST(request: NextRequest) {
         await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
       const instanceName =
         session?.instanceId || instanceNameForOffice(targetOfficeId);
-      const result = await setEvolutionWebhook(instanceName);
+      const result = await syncSessionWebhook(instanceName);
       return NextResponse.json({
         success: true,
         message: "Webhook configured successfully",

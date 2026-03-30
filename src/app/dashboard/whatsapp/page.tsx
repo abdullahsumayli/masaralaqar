@@ -70,7 +70,7 @@ export default function WhatsAppPage() {
       if (!res.ok) return;
       const data = await res.json();
       const isConnected =
-        data.evolutionStatus === "connected" ||
+        data.whatsappStatus === "connected" ||
         data.session?.sessionStatus === "connected";
       if (data.session) setSession(data.session);
       setStep(isConnected ? "connected" : "disconnected");
@@ -100,7 +100,7 @@ export default function WhatsAppPage() {
         if (!res.ok) return;
         const data = await res.json();
         const isConnected =
-          data.evolutionStatus === "connected" ||
+          data.whatsappStatus === "connected" ||
           data.session?.sessionStatus === "connected";
         if (isConnected) {
           if (data.session) setSession(data.session);

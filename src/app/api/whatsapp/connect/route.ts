@@ -1,25 +1,23 @@
 /**
- * WhatsApp Connect API — multi-tenant: one instance per office
- *
- * Instance naming: office_{officeId}
- * Each office gets its own Evolution API instance, QR code, and webhook routing.
+ * WhatsApp Connect API — multi-tenant: one WAHA session per office (office_{officeId}).
  */
 import {
   checkInstanceStatus,
-  deleteEvolutionInstance,
+  deleteWhatsappInstance,
   ensureInstanceExists,
-  getEvolutionStatus,
   getFreshQR,
+  getLiveConnectionPayload,
   invalidateInstanceCache,
-  setEvolutionWebhook,
+  syncSessionWebhook,
 } from "@/integrations/whatsapp";
-import { instanceNameForOffice } from "@/lib/evolution";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { OfficeService } from "@/services/office.service";
 import { trackWhatsAppOnboarding } from "@/services/whatsapp-onboarding-tracking.service";
 import { WhatsAppSessionService } from "@/services/whatsapp-session.service";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { wahaApiKey, wahaBaseUrl } from "@/lib/waha-client";
 
 async function createSupabaseRouteClient() {
   const cookieStore = await cookies();
@@ -61,30 +59,32 @@ export async function GET() {
 
     const session = await WhatsAppSessionService.getSessionByOffice(office.id);
 
-    // Resolve the instance name from the session (or derive it)
     const instanceName = session?.instanceId || instanceNameForOffice(office.id);
 
-    // Check live status from Evolution API using the office's own instance
-    let evolutionStatus: string | null = null;
+    let whatsappStatus: string | null = null;
     try {
-      const instanceData = await getEvolutionStatus(instanceName);
-      if (instanceData?.instance?.state === "open") {
-        evolutionStatus = "connected";
-      } else if (instanceData) {
-        evolutionStatus = "disconnected";
+      const live = await getLiveConnectionPayload(instanceName);
+      if (live?.instance?.state === "open") {
+        whatsappStatus = "connected";
+      } else if (live) {
+        whatsappStatus = "disconnected";
       }
     } catch {
-      // Evolution API not reachable — rely on DB status
+      // WAHA unreachable — rely on DB
     }
 
-    return NextResponse.json({ session, evolutionStatus, instanceName });
+    return NextResponse.json({
+      session,
+      whatsappStatus,
+      instanceName,
+    });
   } catch (err) {
     console.error("WhatsApp GET error:", err);
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
 }
 
-/** POST: Connect WhatsApp — create per-office Evolution instance and return QR */
+/** POST: Connect — ensure WAHA session + QR */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseRouteClient();
@@ -100,26 +100,26 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
 
-    // Track connect_clicked (user started onboarding)
     trackWhatsAppOnboarding(office.id, "whatsapp_connect_clicked");
 
     const body = await request.json().catch(() => ({}));
     const { phoneNumber } = body;
 
-    if (!process.env.EVOLUTION_API_KEY?.trim()) {
+    if (!wahaApiKey() || !wahaBaseUrl()) {
       trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
-        reason: "evolution_api_missing",
+        reason: "waha_api_missing",
       });
       return NextResponse.json(
-        { error: "إعدادات Evolution API غير مكتملة (EVOLUTION_API_KEY)" },
+        {
+          error: "إعدادات WAHA غير مكتملة (WAHA_API_URL و WAHA_API_KEY)",
+        },
         { status: 503 },
       );
     }
 
     const instanceName = instanceNameForOffice(office.id);
-    const logPrefix = `[WhatsApp Connect] office=${office.id} instance=${instanceName}`;
+    const logPrefix = `[WhatsApp Connect] office=${office.id} session=${instanceName}`;
 
-    // Normalize phone if provided
     let normalized = "";
     if (phoneNumber) {
       normalized = phoneNumber.replace(/[^0-9]/g, "");
@@ -127,11 +127,9 @@ export async function POST(request: NextRequest) {
       if (!normalized.startsWith("966")) normalized = "966" + normalized;
     }
 
-    // 1) Check instance status before generating QR
     const status = await checkInstanceStatus(instanceName);
-    console.log(`${logPrefix} instance status: ${status ? status.state : "not_found"}`);
+    console.log(`${logPrefix} session status: ${status ? status.state : "not_found"}`);
 
-    // 2) If status is "open" → return connected immediately
     if (status?.state === "open") {
       let session = await WhatsAppSessionService.getSessionByOffice(office.id);
       await WhatsAppSessionService.connectPhone({
@@ -146,10 +144,10 @@ export async function POST(request: NextRequest) {
       }
       invalidateInstanceCache(office.id);
 
-      console.log(`${logPrefix} already connected — returning without QR`);
+      console.log(`${logPrefix} already connected — no QR`);
       return NextResponse.json({
         connected: true,
-        evolutionStatus: "connected",
+        whatsappStatus: "connected",
         instanceName,
         session: session
           ? {
@@ -169,29 +167,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 3) If instance does not exist → create + set webhook
     if (!status) {
       const ready = await ensureInstanceExists(instanceName, logPrefix);
       if (!ready) {
         trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
-          reason: "instance_creation_failed",
+          reason: "session_creation_failed",
         });
         return NextResponse.json(
-          { error: "فشل في إنشاء الاتصال — تحقق من Evolution API" },
+          { error: "فشل في إنشاء الجلسة — تحقق من WAHA" },
           { status: 500 },
         );
       }
     } else {
-      // 4) Instance exists but close/logged out → reinitialize (trigger fresh QR)
-      console.log(`${logPrefix} reconnect triggered — state=${status.state}`);
+      console.log(`${logPrefix} reconnect — state=${status.state}`);
       try {
-        await setEvolutionWebhook(instanceName);
+        await syncSessionWebhook(instanceName);
       } catch (err) {
-        console.warn(`${logPrefix} setWebhook on reconnect:`, err);
+        console.warn(`${logPrefix} webhook sync:`, err);
       }
     }
 
-    // 5) Get fresh QR
     let qrData: { base64: string | null; pairingCode: string | null };
     try {
       const raw = await getFreshQR(
@@ -204,12 +199,17 @@ export async function POST(request: NextRequest) {
         pairingCode: raw.pairingCode ?? null,
       };
     } catch (err) {
-      console.error(`${logPrefix} QR fetch failed:`, err);
+      console.error(`${logPrefix} QR failed:`, err);
       trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
         reason: "qr_fetch_failed",
       });
       return NextResponse.json(
-        { error: typeof err === "object" && err !== null && "message" in err ? (err as Error).message : "فشل في استرجاع رمز QR" },
+        {
+          error:
+            typeof err === "object" && err !== null && "message" in err
+              ? (err as Error).message
+              : "فشل في استرجاع رمز QR",
+        },
         { status: 500 },
       );
     }
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** DELETE: Disconnect WhatsApp — delete the office's Evolution instance */
+/** DELETE: Disconnect — logout/delete WAHA session + DB */
 export async function DELETE() {
   try {
     const supabase = await createSupabaseRouteClient();
@@ -257,25 +257,19 @@ export async function DELETE() {
         { status: 500 },
       );
 
-    // Resolve instance name from session (backward compat: may be "saqr" for old offices)
-    const session = await WhatsAppSessionService.getSessionByOffice(
-      office.id,
-    );
+    const session = await WhatsAppSessionService.getSessionByOffice(office.id);
     const instanceName = session?.instanceId || instanceNameForOffice(office.id);
 
-    // Delete Evolution instance
     try {
-      await deleteEvolutionInstance(instanceName);
+      await deleteWhatsappInstance(instanceName);
     } catch {
-      // Instance may not exist
+      // Session may not exist on WAHA
     }
 
-    // Remove DB session
     if (session) {
       await WhatsAppSessionService.disconnect(session.id);
     }
 
-    // Invalidate cache
     invalidateInstanceCache(office.id);
 
     return NextResponse.json({ success: true });

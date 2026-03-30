@@ -3,7 +3,7 @@
  * Logs: manual_reconnect_triggered
  */
 
-import { getEvolutionQR } from "@/integrations/whatsapp";
+import { getSessionQR } from "@/integrations/whatsapp";
 import { resetCircuit } from "@/lib/circuit-breaker";
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const officeId = session?.officeId ?? instanceName.replace(/^office_/, "");
 
     resetCircuit(instanceName);
-    await getEvolutionQR(instanceName);
+    await getSessionQR(instanceName);
     trackWhatsAppIncident(officeId, instanceName, "manual_reconnect_triggered");
 
     console.log(
