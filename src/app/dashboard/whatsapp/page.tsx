@@ -39,6 +39,7 @@ interface SessionData {
 // ── Constants ───────────────────────────────────────────────────
 const POLL_INTERVAL_MS = 3000;
 const QR_EXPIRY_MS = 45_000;
+const QR_COUNTDOWN_S = Math.floor(QR_EXPIRY_MS / 1000);
 
 // ── Page ────────────────────────────────────────────────────────
 export default function WhatsAppPage() {
@@ -49,6 +50,7 @@ export default function WhatsAppPage() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [qrExpired, setQrExpired] = useState(false);
+  const [qrSecondsLeft, setQrSecondsLeft] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -57,6 +59,8 @@ export default function WhatsAppPage() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoRefreshRef = useRef<() => Promise<void>>(async () => {});
 
   // ── Auth redirect ─────────────────────────────────────────────
   useEffect(() => {
@@ -88,6 +92,7 @@ export default function WhatsAppPage() {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (qrTimerRef.current) clearTimeout(qrTimerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, []);
 
@@ -107,6 +112,7 @@ export default function WhatsAppPage() {
           setStep("connected");
           stopPolling();
           clearQrTimer();
+          clearQrCountdown();
           setQrCode(null);
           setPairingCode(null);
           setQrExpired(false);
@@ -128,8 +134,10 @@ export default function WhatsAppPage() {
   // ── QR expiry timer ───────────────────────────────────────────
   function startQrTimer() {
     clearQrTimer();
+    startQrCountdown();
     qrTimerRef.current = setTimeout(() => {
-      setQrExpired(true);
+      clearQrCountdown();
+      autoRefreshRef.current();
     }, QR_EXPIRY_MS);
   }
 
@@ -138,6 +146,23 @@ export default function WhatsAppPage() {
       clearTimeout(qrTimerRef.current);
       qrTimerRef.current = null;
     }
+  }
+
+  // ── QR countdown ──────────────────────────────────────────────
+  function clearQrCountdown() {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setQrSecondsLeft(null);
+  }
+
+  function startQrCountdown() {
+    clearQrCountdown();
+    setQrSecondsLeft(QR_COUNTDOWN_S);
+    countdownRef.current = setInterval(() => {
+      setQrSecondsLeft((s) => (s !== null && s > 1 ? s - 1 : 0));
+    }, 1000);
   }
 
   // ── Send test message after connection ────────────────────────
@@ -250,6 +275,9 @@ export default function WhatsAppPage() {
       setSaving(false);
     }
   };
+
+  // Always-latest ref — prevents stale closure when called from setTimeout
+  autoRefreshRef.current = handleRefreshQR;
 
   // ── Disconnect ────────────────────────────────────────────────
   const handleDisconnect = async () => {
@@ -559,7 +587,7 @@ export default function WhatsAppPage() {
                   </div>
 
                   {/* QR image */}
-                  {qrCode && !qrExpired && (
+                  {qrCode && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -578,7 +606,7 @@ export default function WhatsAppPage() {
                   )}
 
                   {/* Pairing code */}
-                  {pairingCode && !qrExpired && (
+                  {pairingCode && (
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -597,22 +625,7 @@ export default function WhatsAppPage() {
                     </motion.div>
                   )}
 
-                  {/* QR expired */}
-                  {qrExpired && (
-                    <div className="py-8 space-y-3">
-                      <div className="w-12 h-12 mx-auto rounded-full bg-yellow-500/10 flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-yellow-400" />
-                      </div>
-                      <p className="text-yellow-400 font-medium">
-                        انتهت صلاحية الرمز
-                      </p>
-                      <p className="text-text-muted text-sm">
-                        اضغط تحديث للحصول على رمز جديد
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Refresh button */}
+                  {/* Manual refresh button */}
                   <button
                     onClick={handleRefreshQR}
                     disabled={saving}
@@ -628,18 +641,20 @@ export default function WhatsAppPage() {
                 </div>
               </div>
 
-              {/* Polling indicator */}
-              {!qrExpired && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center justify-center gap-2 text-yellow-400"
-                >
-                  <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                  <span className="text-sm">بانتظار مسح QR Code...</span>
-                </motion.div>
-              )}
+              {/* Polling indicator with countdown */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center justify-center gap-2 text-yellow-400"
+              >
+                <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                <span className="text-sm">
+                  {qrSecondsLeft !== null
+                    ? `يتجدد خلال ${qrSecondsLeft}ث`
+                    : "بانتظار مسح QR Code..."}
+                </span>
+              </motion.div>
 
               {/* Reassurance below QR */}
               <motion.div
