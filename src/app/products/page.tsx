@@ -22,10 +22,10 @@ const productCategories = [
     description: "رد فوري وتصنيف ذكي للعملاء",
     products: [
       {
-        id: "saqr",
+        id: "mq",
         title: "MQ",
         description: "رد آلي ذكي عبر واتساب. يرد على العملاء فوراً، يصنّف الجادّين، ويجدول المعاينات.",
-        href: "/products/saqr",
+        href: "/products/mq",
         icon: MessageSquare,
         available: true,
       },
