@@ -57,15 +57,35 @@ export async function GET() {
         { status: 500 },
       );
 
-    const session = await WhatsAppSessionService.getSessionByOffice(office.id);
+    let session = await WhatsAppSessionService.getSessionByOffice(office.id);
 
-    const instanceName = session?.instanceId || instanceNameForOffice(office.id);
+    // Always use the canonical instance name (office_{officeId}).
+    // Never rely on session.instanceId — it may be stale (e.g. old "saqr" sessions
+    // from Evolution API era) and cause polling to check the wrong WAHA session.
+    const instanceName = instanceNameForOffice(office.id);
 
     let whatsappStatus: string | null = null;
     try {
       const live = await getLiveConnectionPayload(instanceName);
       if (live?.instance?.state === "open") {
         whatsappStatus = "connected";
+
+        // Sync DB immediately when WAHA confirms connection.
+        // This prevents the polling from needing a separate webhook round-trip.
+        if (session) {
+          if (session.sessionStatus !== "connected" || session.instanceId !== instanceName) {
+            await WhatsAppSessionService.markConnected(session.id);
+            // Also fix the instanceId in case it's stale
+            if (session.instanceId !== instanceName) {
+              await WhatsAppSessionService.connectPhone({
+                officeId: office.id,
+                phoneNumber: session.phoneNumber || "pending",
+                instanceId: instanceName,
+              });
+            }
+            session = await WhatsAppSessionService.getSessionByOffice(office.id);
+          }
+        }
       } else if (live) {
         whatsappStatus = "disconnected";
       }
@@ -216,6 +236,7 @@ export async function POST(request: NextRequest) {
 
     trackWhatsAppOnboarding(office.id, "whatsapp_qr_shown");
 
+    // Save/update session in DB — this also fixes any stale instanceId (e.g. "saqr")
     await WhatsAppSessionService.connectPhone({
       officeId: office.id,
       phoneNumber: normalized || "pending",
