@@ -1,19 +1,19 @@
 /**
  * WhatsApp Incident Tracking Service
  *
- * Logs WhatsApp connection incidents (disconnects, reconnects, failures)
- * to console with structured data. Can be extended to persist to Supabase
- * or send alerts when needed.
- *
+ * Logs incidents and persists to whatsapp_incidents (service role).
  * Fire-and-forget: callers should NOT await this.
  */
+
+import { supabaseAdmin } from "@/lib/supabase";
 
 export type IncidentType =
   | "instance_disconnected"
   | "auto_reconnect_triggered"
   | "reconnect_success"
   | "reconnect_failed"
-  | "send_failure";
+  | "manual_reconnect_triggered"
+  | "manual_disconnect";
 
 interface IncidentMetadata {
   wasConnected?: boolean;
@@ -41,6 +41,56 @@ export function trackWhatsAppIncident(
     metadata ? JSON.stringify(metadata) : "",
   );
 
-  // TODO: persist to Supabase whatsapp_incidents table
-  // TODO: send alert for critical incidents (e.g. repeated disconnects)
+  void supabaseAdmin
+    .from("whatsapp_incidents")
+    .insert({
+      office_id: officeId,
+      instance_name: instanceName,
+      event_type: type,
+      metadata: (metadata ?? {}) as Record<string, unknown>,
+    })
+    .then(({ error }) => {
+      if (error)
+        console.warn("[WhatsApp Incident] DB insert failed:", error.message);
+    });
+}
+
+export interface WhatsAppIncidentRow {
+  id: string;
+  officeId: string;
+  instanceName: string;
+  eventType: string;
+  severity: string | null;
+  needsManualIntervention: boolean;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export async function getWhatsAppIncidents(
+  limit: number,
+  officeId: string | null,
+): Promise<WhatsAppIncidentRow[]> {
+  let q = supabaseAdmin
+    .from("whatsapp_incidents")
+    .select(
+      "id, office_id, instance_name, event_type, severity, needs_manual_intervention, metadata, created_at",
+    )
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 100));
+
+  if (officeId) q = q.eq("office_id", officeId);
+
+  const { data, error } = await q;
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id as string,
+    officeId: row.office_id as string,
+    instanceName: row.instance_name as string,
+    eventType: row.event_type as string,
+    severity: (row.severity as string) ?? null,
+    needsManualIntervention: Boolean(row.needs_manual_intervention),
+    metadata: (row.metadata as Record<string, unknown>) ?? {},
+    createdAt: row.created_at as string,
+  }));
 }

@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    invalidatePropertiesCache(office.id);
+    await invalidatePropertiesCache(office.id);
 
     return NextResponse.json({
       imported: toInsert.length,

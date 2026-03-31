@@ -18,14 +18,15 @@ async function requireAdmin() {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "صلاحيات غير كافية" }, { status: 403 });
 
   try {
+    const { id } = await params;
     const body = await request.json();
-    const plan = await PlanService.updatePlan(params.id, body);
+    const plan = await PlanService.updatePlan(id, body);
     if (!plan) return NextResponse.json({ error: "الباقة غير موجودة" }, { status: 404 });
     return NextResponse.json({ plan });
   } catch {
@@ -35,13 +36,14 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "صلاحيات غير كافية" }, { status: 403 });
 
   try {
-    const ok = await PlanService.deletePlan(params.id);
+    const { id } = await params;
+    const ok = await PlanService.deletePlan(id);
     if (!ok) return NextResponse.json({ error: "فشل في الحذف" }, { status: 500 });
     return NextResponse.json({ success: true });
   } catch {

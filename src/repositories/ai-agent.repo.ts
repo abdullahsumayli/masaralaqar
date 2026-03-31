@@ -21,6 +21,10 @@ export class AIAgentRepository {
       officeId: row.office_id as string,
       agentName: row.agent_name as string,
       greetingMessage: row.greeting_message as string,
+      customerAckMessage:
+        typeof row.customer_ack_message === "string"
+          ? row.customer_ack_message
+          : null,
       officeDescription: (row.office_description as string) || "",
       tone: (row.tone as AIAgent["tone"]) || "professional",
       language: (row.language as AIAgent["language"]) || "ar",
@@ -63,6 +67,8 @@ export class AIAgentRepository {
     if (input.agentName !== undefined) updates.agent_name = input.agentName;
     if (input.greetingMessage !== undefined)
       updates.greeting_message = input.greetingMessage;
+    if (input.customerAckMessage !== undefined)
+      updates.customer_ack_message = input.customerAckMessage;
     if (input.officeDescription !== undefined)
       updates.office_description = input.officeDescription;
     if (input.tone !== undefined) updates.tone = input.tone;

@@ -129,7 +129,7 @@ GET  /api/offices/my             ← مكتب المستخدم الحالي
 GET  /api/properties/my          ← عقارات المستخدم
 GET  /api/unanswered-questions   ← أسئلة معلّقة
 GET  /api/whatsapp/connect       ← حالة اتصال واتساب
-POST /api/webhook/whatsapp       ← webhook من Evolution API
+POST /api/webhook/whatsapp       ← webhook من WAHA
 GET  /api/plans                  ← الباقات المتاحة
 GET  /api/subscription/current   ← اشتراك المستخدم الحالي
 POST /api/payments/bank-transfer ← تسجيل تحويل بنكي

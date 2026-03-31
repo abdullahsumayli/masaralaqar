@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { isOnlinePaymentsEnabled } from "@/lib/checkout-config";
 import {
   AlertCircle,
   CheckCircle2,
@@ -111,11 +112,15 @@ export default function SubscriptionPage() {
     load();
   }, [user]);
 
+  const onlinePay = isOnlinePaymentsEnabled();
+
   const handleUpgrade = async (plan: Plan) => {
     if (!plan.price || paying) return;
     setPaying(plan.name);
     try {
-      if (["starter", "growth", "pro"].includes(plan.name)) {
+      const canMoyasarRedirect =
+        onlinePay && ["starter", "growth", "pro"].includes(plan.name);
+      if (canMoyasarRedirect) {
         const res = await fetch("/api/payment/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -126,7 +131,10 @@ export default function SubscriptionPage() {
           window.location.href = json.url;
           return;
         }
-        setToast({ type: "error", text: json.error || "فشل في إنشاء عملية الدفع" });
+        setToast({
+          type: "error",
+          text: json.error || "فشل في إنشاء عملية الدفع",
+        });
       } else {
         router.push(`/dashboard/subscription/checkout?plan=${plan.name}`);
       }
@@ -178,6 +186,14 @@ export default function SubscriptionPage() {
           <p className="text-text-secondary text-sm">
             اختر الباقة التي تناسب حجم نشاطك العقاري
           </p>
+          {!onlinePay && (
+            <div className="mt-4 mx-auto max-w-xl rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/95">
+              <span className="font-semibold text-amber-200">تنبيه: </span>
+              الدفع بالبطاقة الإلكترونية قيد اعتماد الجهات المختصة. يمكنك{" "}
+              <strong>الترقية عبر التحويل البنكي</strong> من صفحة إتمام الاشتراك
+              بعد اختيار الباقة.
+            </div>
+          )}
           {currentSub?.endsAt && (
             <p className="text-xs text-text-muted mt-2">
               اشتراكك الحالي ينتهي في:{" "}
@@ -309,7 +325,11 @@ export default function SubscriptionPage() {
                       {paying === plan.name ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : null}
-                      {paying === plan.name ? "جاري المعالجة..." : "اشترك الآن"}
+                      {paying === plan.name
+                        ? "جاري المعالجة..."
+                        : onlinePay
+                          ? "اشترك الآن"
+                          : "إتمام الاشتراك (تحويل بنكي)"}
                     </button>
                   )}
                 </div>
@@ -320,8 +340,8 @@ export default function SubscriptionPage() {
 
         {/* Billing note */}
         <p className="text-center text-xs text-text-muted mt-8">
-          جميع الأسعار بالريال السعودي وتشمل ضريبة القيمة المضافة — يمكن إلغاء
-          الاشتراك في أي وقت
+          جميع الأسعار بالريال السعودي وتشمل ضريبة القيمة المضافة حيث ينطبق —
+          يمكن إلغاء الاشتراك وفق شروط الخدمة
         </p>
       </main>
     </div>

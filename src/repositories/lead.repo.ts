@@ -24,7 +24,7 @@ export class LeadRepository {
         created_at: new Date().toISOString(),
       };
 
-      // Evolution path passes officeId; legacy passes tenantId (UUID from tenants table)
+      // WAHA/office path passes officeId; legacy passes tenantId (tenants table)
       if (officeId) {
         insertData.office_id = officeId;
         // Only set tenant_id if it's a valid tenant reference (not an office UUID)

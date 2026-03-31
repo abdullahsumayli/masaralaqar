@@ -23,7 +23,30 @@ import {
     XCircle,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
+
+function PropertyRowImage({ src, title }: { src: string; title: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div className="w-14 h-14 rounded-lg bg-gray-800 flex items-center justify-center">
+        <Building2 className="w-6 h-6 text-gray-600" />
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={src}
+      alt={title}
+      width={56}
+      height={56}
+      className="w-14 h-14 rounded-lg object-cover bg-gray-800"
+      unoptimized
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export default function WhatsAppBotPage() {
   const [leads, setLeads] = useState<MasarLead[]>([]);
@@ -355,14 +378,9 @@ export default function WhatsAppBotPage() {
                   >
                     <td className="px-5 py-4">
                       {property.image ? (
-                        <img
+                        <PropertyRowImage
                           src={property.image}
-                          alt={property.title}
-                          className="w-14 h-14 rounded-lg object-cover bg-gray-800"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>';
-                          }}
+                          title={property.title}
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-lg bg-gray-800 flex items-center justify-center">
@@ -431,7 +449,8 @@ export default function WhatsAppBotPage() {
             </code>
           </div>
           <p className="text-gray-500 text-sm mt-4">
-            اضبط webhook في لوحة تحكم Evolution API ليشير إلى عنوان السيرفر الخاص بك.
+            اضبط webhook في WAHA (إعدادات الجلسة) ليشير إلى عنوان التطبيق العام
+            (مثال: https://نطاقك.com/api/webhook/whatsapp).
           </p>
         </div>
       </div>

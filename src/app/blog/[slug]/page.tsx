@@ -16,6 +16,7 @@ import {
     User,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { use, useEffect, useState } from "react";
 
 const fadeInUp = {
@@ -199,10 +200,14 @@ export default function BlogPostPage({
         <div className="max-w-4xl mx-auto">
           {article.image ? (
             <div className="relative aspect-video rounded-2xl overflow-hidden -mt-4">
-              <img
+              <Image
                 src={article.image}
                 alt={article.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 896px) 100vw, 896px"
+                priority
+                unoptimized
               />
             </div>
           ) : (
@@ -293,11 +298,14 @@ export default function BlogPostPage({
                   className="bg-[#111E35] border border-[rgba(37,211,102,0.12)] rounded-xl overflow-hidden hover:shadow-lg hover:bg-[#162444] transition-shadow group"
                 >
                   {related.image ? (
-                    <div className="aspect-video">
-                      <img
+                    <div className="relative aspect-video">
+                      <Image
                         src={related.image}
                         alt={related.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        unoptimized
                       />
                     </div>
                   ) : (

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import Image from 'next/image'
 import { Upload, X, File, Image as ImageIcon, FileText, Video, Music, Archive, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadToCloudinary, uploadFileToCloudinary, isCloudinaryConfigured } from '@/lib/cloudinary'
@@ -49,6 +50,51 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+function compressImage(file: File, maxWidth: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('فشل في ضغط الصورة'))
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality)
+        resolve(compressedBase64)
+      }
+      img.onerror = () => reject(new Error('فشل في قراءة الصورة'))
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export function FileUpload({
   onUpload,
   accept = '*/*',
@@ -74,7 +120,7 @@ export function FileUpload({
     setIsDragging(false)
   }, [])
 
-  const processFile = async (file: File) => {
+  const processFile = useCallback(async (file: File) => {
     setError(null)
     
     // Validate file size
@@ -159,55 +205,7 @@ export function FileUpload({
       setIsUploading(false)
       setUploadProgress(0)
     }
-  }
-
-  // Compress image to reduce size for localStorage
-  const compressImage = (file: File, maxWidth: number, quality: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = document.createElement('img')
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          let width = img.width
-          let height = img.height
-
-          // Scale down if needed
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width
-            width = maxWidth
-          }
-
-          canvas.width = width
-          canvas.height = height
-
-          const ctx = canvas.getContext('2d')
-          if (!ctx) {
-            reject(new Error('فشل في ضغط الصورة'))
-            return
-          }
-
-          ctx.drawImage(img, 0, 0, width, height)
-          const compressedBase64 = canvas.toDataURL('image/jpeg', quality)
-          resolve(compressedBase64)
-        }
-        img.onerror = () => reject(new Error('فشل في قراءة الصورة'))
-        img.src = e.target?.result as string
-      }
-      reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
-      reader.readAsDataURL(file)
-    })
-  }
-
-  // Convert file to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = () => reject(new Error('فشل في قراءة الملف'))
-      reader.readAsDataURL(file)
-    })
-  }
+  }, [maxSize, onUpload])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -221,7 +219,7 @@ export function FileUpload({
         processFile(files[0])
       }
     }
-  }, [multiple, maxSize, onUpload])
+  }, [multiple, processFile])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -310,10 +308,13 @@ export function FileUpload({
             exit={{ opacity: 0, scale: 0.95 }}
             className="relative inline-block"
           >
-            <img 
-              src={preview} 
-              alt="Preview" 
-              className="max-w-xs max-h-48 rounded-xl border border-[#21262d]"
+            <Image
+              src={preview}
+              alt="Preview"
+              width={320}
+              height={192}
+              className="max-h-48 max-w-xs rounded-xl border border-[#21262d] object-contain"
+              unoptimized
             />
             <button
               onClick={(e) => { e.stopPropagation(); clearPreview(); }}
@@ -334,10 +335,10 @@ export function FileManager({ onSelect }: { onSelect?: (file: UploadedFile) => v
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
 
-  useState(() => {
+  useEffect(() => {
     const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]')
     setFiles(savedFiles)
-  })
+  }, [])
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -385,13 +386,22 @@ export function FileManager({ onSelect }: { onSelect?: (file: UploadedFile) => v
             <div
               key={file.id}
               onClick={() => onSelect?.(file)}
-              className="bg-[#0D1117] border border-[#21262d] rounded-xl p-3 hover:border-primary/30 cursor-pointer transition-all group"
+              className="group relative cursor-pointer rounded-xl border border-[#21262d] bg-[#0D1117] p-3 transition-all hover:border-primary/30"
             >
-              <div className="aspect-square rounded-lg overflow-hidden bg-[#161b22] flex items-center justify-center mb-2">
+              <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-[#161b22]">
                 {isImage ? (
-                  <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                  <Image
+                    src={file.url}
+                    alt={file.name}
+                    fill
+                    className="object-cover"
+                    sizes="25vw"
+                    unoptimized
+                  />
                 ) : (
-                  <FileIcon className="w-12 h-12 text-gray-500" />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <FileIcon className="h-12 w-12 text-gray-500" />
+                  </div>
                 )}
               </div>
               <p className="text-white text-xs truncate">{file.name}</p>

@@ -20,6 +20,7 @@ import {
   HardDrive
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FileUpload } from '@/components/admin/file-upload'
 import { 
   getAllBlogPosts, 
@@ -472,11 +473,14 @@ export default function AdminBlogPage() {
                   onUpload={(file) => setEditingPost({ ...editingPost, image: file.url })}
                 />
                 {editingPost.image && (
-                  <div className="mt-3 relative inline-block">
-                    <img 
-                      src={editingPost.image} 
-                      alt="صورة المقال" 
-                      className="max-w-xs max-h-40 rounded-xl border border-[#21262d] object-cover"
+                  <div className="mt-3 relative inline-block max-w-xs">
+                    <Image
+                      src={editingPost.image}
+                      alt="صورة المقال"
+                      width={320}
+                      height={160}
+                      className="max-h-40 w-auto rounded-xl border border-[#21262d] object-cover"
+                      unoptimized
                     />
                     <button
                       onClick={() => setEditingPost({ ...editingPost, image: undefined })}

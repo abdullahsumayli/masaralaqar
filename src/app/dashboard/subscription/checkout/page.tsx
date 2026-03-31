@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { isOnlinePaymentsEnabled } from "@/lib/checkout-config";
 import {
   AlertCircle,
   ArrowRight,
@@ -49,6 +50,11 @@ const PAYMENT_METHODS = [
 
 type PaymentMethod = (typeof PAYMENT_METHODS)[number]["id"];
 
+function paymentMethodsForEnv(online: boolean) {
+  if (online) return [...PAYMENT_METHODS];
+  return PAYMENT_METHODS.filter((m) => m.id === "bank_transfer");
+}
+
 const BANK_INFO = {
   bankName: "البنك الأهلي السعودي",
   accountName: "شركة MQ للتقنية",
@@ -68,6 +74,8 @@ export default function CheckoutPage() {
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
+  const onlinePay = isOnlinePaymentsEnabled();
+  const availableMethods = paymentMethodsForEnv(onlinePay);
   const [method, setMethod] = useState<PaymentMethod>("bank_transfer");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -84,6 +92,10 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (!onlinePay && method !== "bank_transfer") setMethod("bank_transfer");
+  }, [onlinePay, method]);
 
   useEffect(() => {
     if (!user) return;
@@ -130,6 +142,10 @@ export default function CheckoutPage() {
 
   const handleCardPayment = async () => {
     if (!plan) return;
+    if (!onlinePay) {
+      setError("الدفع بالبطاقة غير متاح حتى اكتمال اعتماد بوابة الدفع.");
+      return;
+    }
     setError("");
     setSubmitting(true);
     try {
@@ -229,9 +245,16 @@ export default function CheckoutPage() {
           العودة للباقات
         </Link>
 
-        <h1 className="text-2xl font-bold text-text-primary mb-8">
+        <h1 className="text-2xl font-bold text-text-primary mb-4">
           إتمام الاشتراك
         </h1>
+        {!onlinePay && (
+          <p className="text-sm text-amber-200/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 mb-8">
+            الدفع الإلكتروني (بطاقة / STC Pay) معطّل مؤقتاً بانتظار اعتماد الجهات
+            المختصة. يمكنك إتمام الاشتراك عبر{" "}
+            <strong>التحويل البنكي</strong> فقط.
+          </p>
+        )}
 
         <div className="grid md:grid-cols-5 gap-8">
           {/* Left — Payment form */}
@@ -240,7 +263,7 @@ export default function CheckoutPage() {
             <div className="bg-background rounded-2xl border border-border p-6">
               <h2 className="font-bold text-text-primary mb-4">طريقة الدفع</h2>
               <div className="space-y-3">
-                {PAYMENT_METHODS.map((pm) => (
+                {availableMethods.map((pm) => (
                   <label
                     key={pm.id}
                     className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${

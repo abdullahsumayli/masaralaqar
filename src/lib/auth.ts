@@ -9,6 +9,9 @@ export interface User {
   subscription?: string
   role?: string
   created_at?: string
+  /** From `users` row when column exists */
+  office_id?: string | null
+  tenant_id?: string | null
 }
 
 // Sign up new user — also auto-creates an office

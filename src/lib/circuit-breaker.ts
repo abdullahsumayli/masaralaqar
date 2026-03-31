@@ -1,5 +1,5 @@
 /**
- * Circuit Breaker — prevents repeated calls to failing Evolution instances.
+ * Circuit Breaker — reduces repeated sends to a disconnected WAHA session.
  *
  * When an instance fails too many times in a short window, the circuit
  * "opens" and subsequent calls are skipped (returns true for isCircuitOpen).
@@ -80,4 +80,10 @@ export function recordSuccess(instanceName: string): void {
     circuits.delete(instanceName);
     console.log(`[CircuitBreaker] ${instanceName} circuit reset on success`);
   }
+}
+
+/** Manual reset (e.g. admin reconnect) — allow immediate retries */
+export function resetCircuit(instanceName: string): void {
+  circuits.delete(instanceName);
+  console.log(`[CircuitBreaker] ${instanceName} circuit cleared (manual reset)`);
 }

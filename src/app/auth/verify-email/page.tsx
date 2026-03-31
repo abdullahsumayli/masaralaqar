@@ -36,7 +36,9 @@ export default function VerifyEmailPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-primary font-bold">3.</span>
-              <span>انقر على الرابط "تأكيد البريد الإلكتروني"</span>
+              <span>
+                انقر على الرابط &quot;تأكيد البريد الإلكتروني&quot;
+              </span>
             </li>
             <li className="flex gap-3">
               <span className="text-primary font-bold">4.</span>

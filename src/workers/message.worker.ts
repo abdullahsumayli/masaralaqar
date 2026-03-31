@@ -13,8 +13,8 @@
  * ║  Or:          npx tsx src/workers/message.worker.ts           ║
  * ║                                                              ║
  * ║  The worker dequeues jobs from the "whatsapp-messages" queue, ║
- * ║  processes them through the AI engine, sends replies via      ║
- * ║  Evolution API, and stores conversations in Supabase.         ║
+ * ║  processes them through the AI engine, sends replies via WAHA, ║
+ * ║  and stores conversations in Supabase.                          ║
  * ║                                                              ║
  * ║  Retry: 3 attempts, exponential backoff (2s → 4s → 8s)      ║
  * ║  Rate:  max 5 messages/second to avoid WhatsApp throttling   ║
@@ -133,7 +133,7 @@ async function processJob(job: Job<WhatsAppJobPayload>): Promise<void> {
 
   const jobStart = Date.now();
   if (route === "waha") {
-    await processEvolutionMessage(job.data);
+    await processWahaOfficeMessage(job.data);
   } else {
     await processLegacyMessage(job.data);
   }
@@ -146,9 +146,9 @@ async function processJob(job: Job<WhatsAppJobPayload>): Promise<void> {
   });
 }
 
-// ── Evolution API Path (modern office-based routing) ────────
+// ── WAHA office session path (officeId + instance office_{id}) ────────
 
-async function processEvolutionMessage(
+async function processWahaOfficeMessage(
   data: WhatsAppJobPayload,
 ): Promise<void> {
   const { phone, message, officeId, businessPhone, messageId } = data;
@@ -213,7 +213,7 @@ async function processEvolutionMessage(
     );
   }
 
-  // 6. Send reply via Evolution API
+  // 6. Send reply via WAHA (WhatsAppService)
   const sent = await WhatsAppService.sendMessage(
     phone,
     engineResult.reply,
@@ -307,10 +307,17 @@ async function processLegacyMessage(data: WhatsAppJobPayload): Promise<void> {
     conversationHistory,
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let response: { reply: string; properties?: any[]; suggestions?: string[] };
+  let response: {
+    reply: string;
+    properties?: Array<Record<string, unknown>>;
+    suggestions?: string[];
+  };
   if (engineResult) {
-    response = engineResult;
+    response = {
+      reply: engineResult.reply,
+      properties: engineResult.properties,
+      suggestions: engineResult.suggestions,
+    };
     await SubscriptionRepository.incrementUsage(
       tenant.id,
       "whatsapp_message",

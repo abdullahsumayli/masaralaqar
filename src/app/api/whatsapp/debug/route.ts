@@ -209,12 +209,17 @@ export async function GET(request: NextRequest) {
 
   // 4. Check Redis connectivity
   try {
-    const redisOpts = getRedisConnectionOptions();
+    const redisOpts = getRedisConnectionOptions() as {
+      host?: string;
+      port?: number;
+      password?: string;
+      tls?: unknown;
+    };
     checks.redis = {
       host: redisOpts.host,
       port: redisOpts.port,
       hasPassword: !!redisOpts.password,
-      hasTLS: !!(redisOpts as Record<string, unknown>).tls,
+      hasTLS: !!redisOpts.tls,
     };
   } catch (err) {
     checks.redis = { status: "error", error: String(err) };

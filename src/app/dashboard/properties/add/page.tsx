@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import {
@@ -369,8 +370,15 @@ export default function AddPropertyPage() {
               {images.length > 0 && (
                 <div className="grid grid-cols-4 gap-3">
                   {images.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img src={url} alt="" className="w-full h-24 object-cover rounded-lg" />
+                    <div key={index} className="relative group h-24">
+                      <Image
+                        src={url}
+                        alt=""
+                        fill
+                        className="rounded-lg object-cover"
+                        sizes="25vw"
+                        unoptimized
+                      />
                       {index === 0 && (
                         <span className="absolute bottom-1 right-1 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded">
                           رئيسية

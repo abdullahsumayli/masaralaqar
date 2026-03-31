@@ -20,6 +20,7 @@ import {
     X,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ImportExcelButton from "@/components/properties/ImportExcelButton";
@@ -347,16 +348,22 @@ export default function PropertiesPage() {
                 {/* Image */}
                 <div className="h-48 bg-card-hover relative overflow-hidden">
                   {property.images && property.images.length > 0 ? (
-                    <img
+                    <Image
                       src={property.images[0]}
                       alt={property.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      unoptimized
                     />
                   ) : property.image_url ? (
-                    <img
+                    <Image
                       src={property.image_url}
                       alt={property.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -691,11 +698,14 @@ export default function PropertiesPage() {
                 {editImages.length > 0 && (
                   <div className="mt-3 grid grid-cols-4 gap-2">
                     {editImages.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img
+                      <div key={index} className="relative group h-20">
+                        <Image
                           src={url}
                           alt=""
-                          className="w-full h-20 object-cover rounded-lg"
+                          fill
+                          className="rounded-lg object-cover"
+                          sizes="25vw"
+                          unoptimized
                         />
                         <button
                           type="button"

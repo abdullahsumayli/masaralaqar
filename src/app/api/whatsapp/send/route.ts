@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send via Evolution API
+    // Send via WAHA (WhatsAppService)
     const sent = await WhatsAppService.sendMessage(phone, message, office.id);
     if (!sent) {
       return NextResponse.json(

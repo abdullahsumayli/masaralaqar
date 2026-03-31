@@ -42,7 +42,7 @@ export async function DELETE(
     }
 
     const office = await OfficeService.getOfficeByUserId(user.id);
-    if (office?.id) invalidatePropertiesCache(office.id);
+    if (office?.id) await invalidatePropertiesCache(office.id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -100,7 +100,7 @@ export async function PATCH(
     }
 
     const office = await OfficeService.getOfficeByUserId(user.id);
-    if (office?.id) invalidatePropertiesCache(office.id);
+    if (office?.id) await invalidatePropertiesCache(office.id);
 
     return NextResponse.json({ success: true, property: data });
   } catch (error: any) {

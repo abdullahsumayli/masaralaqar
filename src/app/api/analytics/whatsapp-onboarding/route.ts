@@ -15,7 +15,8 @@ import { OfficeService } from "@/services/office.service";
 import {
   getWhatsAppOnboardingStats,
   trackWhatsAppOnboarding,
-  WhatsAppOnboardingEvent,
+  type WhatsAppOnboardingEvent,
+  type WhatsAppOnboardingStats,
 } from "@/services/whatsapp-onboarding-tracking.service";
 import { NextRequest, NextResponse } from "next/server";
 

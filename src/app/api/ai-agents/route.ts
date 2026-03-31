@@ -44,6 +44,7 @@ export async function PUT(request: NextRequest) {
     const allowedFields = [
       "agentName",
       "greetingMessage",
+      "customerAckMessage",
       "officeDescription",
       "tone",
       "language",

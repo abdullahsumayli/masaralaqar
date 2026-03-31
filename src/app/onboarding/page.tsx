@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Building2,
@@ -143,6 +144,7 @@ export default function OnboardingPage() {
         : `هلا والله! أنا ${agentName} من ${officeName || 'المكتب'}، شلون أقدر أخدمك؟ 😊`
       setWelcomeMessage(style)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- welcomeMessage مستثنى عمداً
   }, [agentName, responseStyle, officeName])
 
   // Save current step
@@ -314,7 +316,13 @@ export default function OnboardingPage() {
                   <div className="flex items-center gap-4">
                     {officeLogoPreview ? (
                       <div className="relative w-20 h-20 rounded-xl overflow-hidden">
-                        <img src={officeLogoPreview} alt="Logo" className="w-full h-full object-cover" />
+                        <Image
+                          src={officeLogoPreview}
+                          alt="Logo"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
                         <button
                           onClick={() => {
                             setOfficeLogo(null)

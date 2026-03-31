@@ -185,7 +185,15 @@ export default function PartnerDashboardPage() {
     );
   }
 
-  const isFirstTime = data!.totalSignups === 0;
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-400">فشل تحميل البيانات</p>
+      </div>
+    );
+  }
+
+  const isFirstTime = data.totalSignups === 0;
 
   return (
     <div className="min-h-screen">

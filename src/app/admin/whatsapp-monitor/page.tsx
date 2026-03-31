@@ -10,6 +10,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
 type ConnectionStatus = "connected" | "reconnecting" | "failed";
@@ -316,11 +317,13 @@ export default function AdminWhatsAppMonitorPage() {
             </h3>
             {qrModal.qr ? (
               <div className="bg-white p-4 rounded-xl mb-4 flex justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={qrModal.qr}
                   alt="QR Code"
-                  className="w-48 h-48"
+                  width={192}
+                  height={192}
+                  className="h-48 w-48"
+                  unoptimized
                 />
               </div>
             ) : (

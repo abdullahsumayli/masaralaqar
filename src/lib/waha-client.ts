@@ -52,7 +52,7 @@ export function wahaStatusToOpen(state: string): boolean {
   return String(state).toUpperCase() === "WORKING";
 }
 
-/** Map WAHA session.status to Evolution-compatible { instance.state } for existing callers. */
+/** Map WAHA session.status to { instance.state } for dashboard/status callers. */
 export function wahaLivePayload(sessionJson: Record<string, unknown> | null): {
   instance: { state: string };
 } | null {
@@ -61,6 +61,21 @@ export function wahaLivePayload(sessionJson: Record<string, unknown> | null): {
   return {
     instance: { state: wahaStatusToOpen(st) ? "open" : "close" },
   };
+}
+
+/** WAHA webhook config: events + optional X-Webhook-Secret when WEBHOOK_SECRET is set */
+export function wahaWebhookConfigBlock(webhookUrl: string): {
+  webhooks: Record<string, unknown>[];
+} {
+  const entry: Record<string, unknown> = {
+    url: webhookUrl,
+    events: ["message", "message.any", "session.status"],
+  };
+  const whSecret = process.env.WEBHOOK_SECRET?.trim();
+  if (whSecret) {
+    entry.customHeaders = [{ name: "X-Webhook-Secret", value: whSecret }];
+  }
+  return { webhooks: [entry] };
 }
 
 export async function wahaCreateSession(
@@ -73,14 +88,7 @@ export async function wahaCreateSession(
     headers: headers(),
     body: JSON.stringify({
       name: sessionName,
-      config: {
-        webhooks: [
-          {
-            url: webhookUrl,
-            events: ["message", "session.status"],
-          },
-        ],
-      },
+      config: wahaWebhookConfigBlock(webhookUrl),
     }),
   });
   const text = await res.text();
@@ -105,18 +113,13 @@ export async function wahaSyncWebhooks(
   webhookUrl: string,
 ): Promise<void> {
   const b = wahaBaseUrl();
-  const res = await fetch(`${b}/api/sessions/${enc(sessionName)}/`, {
-    method: "POST",
+  // WAHA: update session via PUT /api/sessions/{name} + full config (see waha.devlike.pro sessions doc)
+  const res = await fetch(`${b}/api/sessions/${enc(sessionName)}`, {
+    method: "PUT",
     headers: headers(),
     body: JSON.stringify({
-      config: {
-        webhooks: [
-          {
-            url: webhookUrl,
-            events: ["message", "session.status"],
-          },
-        ],
-      },
+      name: sessionName,
+      config: wahaWebhookConfigBlock(webhookUrl),
     }),
   });
   if (!res.ok) {
@@ -151,7 +154,7 @@ export async function wahaRestartSession(sessionName: string): Promise<void> {
 
 export async function wahaDeleteSession(sessionName: string): Promise<void> {
   const b = wahaBaseUrl();
-  const res = await fetch(`${b}/api/sessions/${enc(sessionName)}/`, {
+  const res = await fetch(`${b}/api/sessions/${enc(sessionName)}`, {
     method: "DELETE",
     headers: headers(),
   });

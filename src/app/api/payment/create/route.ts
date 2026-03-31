@@ -3,10 +3,13 @@
  *
  * Create Moyasar invoice for subscription — returns checkout URL for redirect
  * Input: { plan: "starter" | "growth" | "pro" }
- * Prevents bypass: plan upgrade only after successful payment (handled in callback)
+ *
+ * Also see POST /api/payments/create (tokenized card flow). Both respect
+ * NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED (must be "true" after gateway approval).
  */
 
 import crypto from "crypto";
+import { isOnlinePaymentsEnabled } from "@/lib/checkout-config";
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
 import { createInvoice, sarToHalalas } from "@/lib/moyasar";
@@ -21,6 +24,17 @@ const BASE_URL =
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isOnlinePaymentsEnabled()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "الدفع بالبطاقة غير مفعّل حالياً. استخدم التحويل البنكي من صفحة الاشتراك.",
+        },
+        { status: 403 },
+      );
+    }
+
     const user = await getServerUser();
     if (!user)
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });

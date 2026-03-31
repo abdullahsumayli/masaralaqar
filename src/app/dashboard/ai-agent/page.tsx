@@ -55,6 +55,7 @@ export default function DashboardAIAgentPage() {
   const [form, setForm] = useState({
     agent_name: "",
     greeting_message: "",
+    customer_ack_message: "",
     office_description: "",
     tone: "professional",
     language: "ar",
@@ -84,14 +85,29 @@ export default function DashboardAIAgentPage() {
         if (data.agent) {
           setAgent(data.agent);
           setForm({
-            agent_name: data.agent.agent_name || "",
-            greeting_message: data.agent.greeting_message || "",
-            office_description: data.agent.office_description || "",
+            agent_name: data.agent.agent_name || data.agent.agentName || "",
+            greeting_message:
+              data.agent.greeting_message || data.agent.greetingMessage || "",
+            customer_ack_message:
+              data.agent.customer_ack_message ||
+              data.agent.customerAckMessage ||
+              "",
+            office_description:
+              data.agent.office_description || data.agent.officeDescription || "",
             tone: data.agent.tone || "professional",
             language: data.agent.language || "ar",
-            working_hours_start: data.agent.working_hours?.start || "09:00",
-            working_hours_end: data.agent.working_hours?.end || "18:00",
-            custom_instructions: data.agent.custom_instructions || "",
+            working_hours_start:
+              data.agent.working_hours?.start ||
+              data.agent.workingHours?.start ||
+              "09:00",
+            working_hours_end:
+              data.agent.working_hours?.end ||
+              data.agent.workingHours?.end ||
+              "18:00",
+            custom_instructions:
+              data.agent.custom_instructions ||
+              data.agent.customInstructions ||
+              "",
             is_active: data.agent.is_active ?? true,
           });
         }
@@ -108,18 +124,18 @@ export default function DashboardAIAgentPage() {
     setSaved(false);
     try {
       const body = {
-        agent_name: form.agent_name,
-        greeting_message: form.greeting_message,
-        office_description: form.office_description,
+        agentName: form.agent_name,
+        greetingMessage: form.greeting_message,
+        customerAckMessage: form.customer_ack_message.trim() || null,
+        officeDescription: form.office_description,
         tone: form.tone,
         language: form.language,
-        working_hours: {
+        workingHours: {
           start: form.working_hours_start,
           end: form.working_hours_end,
-          timezone: "Asia/Riyadh",
+          days: ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
         },
-        custom_instructions: form.custom_instructions,
-        is_active: form.is_active,
+        customInstructions: form.custom_instructions,
       };
       const res = await fetch("/api/ai-agents", {
         method: "PUT",
@@ -195,6 +211,23 @@ export default function DashboardAIAgentPage() {
                 rows={3}
                 className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors resize-none"
               />
+            </div>
+            <div>
+              <label className="block text-sm text-text-secondary mb-1.5">
+                رسالة التسليم الفوري (واتساب)
+              </label>
+              <textarea
+                value={form.customer_ack_message}
+                onChange={(e) =>
+                  setForm({ ...form, customer_ack_message: e.target.value })
+                }
+                placeholder="تُرسل للعميل فور استلام رسالته، قبل رد الذكاء الاصطناعي. اتركه فارغاً للرسالة الافتراضية."
+                rows={2}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-primary transition-colors resize-none"
+              />
+              <p className="text-text-muted text-xs mt-1.5">
+                افتراضي المنصة: «تم استلام رسالتك، جاري البحث الآن…»
+              </p>
             </div>
             <div>
               <label className="block text-sm text-text-secondary mb-1.5">وصف المكتب</label>

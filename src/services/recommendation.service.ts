@@ -229,8 +229,10 @@ export class RecommendationEngine {
     officeId: string,
     criteria: MergedCriteria,
   ): Promise<Record<string, unknown>[]> {
-    // 1) حاول من الكاش
-    let all = getCachedProperties(officeId) as Array<Record<string, unknown>> | null;
+    // 1) حاول من الكاش (ذاكرة + Redis)
+    let all = (await getCachedProperties(officeId)) as
+      | Array<Record<string, unknown>>
+      | null;
 
     // 2) إذا ما فيه كاش → جيب من Supabase وخزّن
     if (!all) {
@@ -242,7 +244,7 @@ export class RecommendationEngine {
         .limit(5000);
 
       all = (data as Array<Record<string, unknown>>) || [];
-      setCachedProperties(officeId, all);
+      await setCachedProperties(officeId, all);
     }
 
     const city = criteria.city?.toLowerCase();

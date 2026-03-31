@@ -265,6 +265,7 @@ export class AIEngine {
       officeId: tenantId,
       agentName: "مساعد MQ",
       greetingMessage: "السلام عليكم، أهلاً بك في MQ 🏠",
+      customerAckMessage: null,
       officeDescription: "",
       tone: "friendly",
       language: "ar",

@@ -1,7 +1,10 @@
 /**
- * Payment Creation API — إنشاء عملية دفع عبر Moyasar
+ * Payment Creation API — إنشاء عملية دفع عبر Moyasar (بطاقة / مصدر)
+ * يُعطّل تلقائياً ما لم يُضبط NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED=true
+ * للمسار البسيط (إعادة توجيه) انظر POST /api/payment/create
  */
 
+import { isOnlinePaymentsEnabled } from "@/lib/checkout-config";
 import { getUserProfile } from "@/lib/auth";
 import { createPayment, sarToHalalas } from "@/lib/moyasar";
 import { captureError } from "@/lib/sentry";
@@ -12,6 +15,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isOnlinePaymentsEnabled()) {
+      return NextResponse.json(
+        {
+          error:
+            "الدفع الإلكتروني غير مفعّل. استخدم التحويل البنكي من الاشتراك.",
+        },
+        { status: 403 },
+      );
+    }
+
     const user = await getServerUser();
     if (!user) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });

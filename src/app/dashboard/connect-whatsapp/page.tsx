@@ -1,6 +1,7 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "creating" | "waiting" | "connected" | "error";
@@ -11,7 +12,7 @@ export default function ConnectWhatsAppPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  /* ── 1. Create instance + fetch QR on mount ── */
+  /* ── 1. POST /api/whatsapp/connect → returns QR directly ── */
   useEffect(() => {
     let cancelled = false;
 
@@ -19,33 +20,30 @@ export default function ConnectWhatsAppPage() {
       try {
         setStatus("creating");
 
-        // Create instance (idempotent on Evolution side)
-        const createRes = await fetch("/api/whatsapp/create", {
-          method: "POST",
-        });
-        if (!createRes.ok) {
-          const body = await createRes.json().catch(() => ({}));
-          throw new Error(body.error || "فشل إنشاء الاتصال");
+        const res = await fetch("/api/whatsapp/connect", { method: "POST" });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || "فشل إنشاء الاتصال");
         }
 
         if (cancelled) return;
 
-        // Fetch QR
-        const qrRes = await fetch("/api/whatsapp/qr");
-        const qrData = await qrRes.json();
+        // Already connected — skip QR
+        if (data.connected || data.whatsappStatus === "connected") {
+          setStatus("connected");
+          return;
+        }
 
-        if (cancelled) return;
-
-        const code =
-          qrData?.data?.base64 || qrData?.data?.code || qrData?.data?.qrcode;
-        if (code) {
-          setQrValue(code);
+        // QR returned directly in response
+        const qr = data.qr;
+        if (qr) {
+          setQrValue(qr);
           setStatus("waiting");
         } else {
-          // QR not ready yet — Evolution server may need time to connect to WhatsApp
           setStatus("error");
           setErrorMsg(
-            "لم يتم استلام QR — السيرفر في وضع الاتصال. أعد المحاولة بعد لحظات."
+            "لم يتم استلام QR — الجلسة في وضع التهيئة. أعد المحاولة بعد لحظات."
           );
         }
       } catch (err: unknown) {
@@ -62,7 +60,7 @@ export default function ConnectWhatsAppPage() {
     };
   }, []);
 
-  /* ── 2. Poll status every 5 s while waiting ── */
+  /* ── 2. Poll /api/whatsapp/status every 5s while waiting ── */
   useEffect(() => {
     if (status !== "waiting") return;
 
@@ -70,12 +68,9 @@ export default function ConnectWhatsAppPage() {
       try {
         const res = await fetch("/api/whatsapp/status");
         const json = await res.json();
-        const state =
-          json?.data?.state ||
-          json?.data?.instance?.state ||
-          json?.data?.connectionState;
 
-        if (state === "open") {
+        // API returns: { status: "connected" | "connecting" | "disconnected" }
+        if (json?.status === "connected") {
           setStatus("connected");
           setQrValue(null);
         }
@@ -110,12 +105,12 @@ export default function ConnectWhatsAppPage() {
           <>
             <div className="mx-auto mb-6 inline-block rounded-xl bg-white p-4">
               {qrValue.startsWith("data:image") ? (
-                // base64 image from Evolution
-                <img
+                <Image
                   src={qrValue}
                   alt="WhatsApp QR"
                   width={256}
                   height={256}
+                  unoptimized
                 />
               ) : (
                 // Raw text — render via qrcode.react
@@ -152,7 +147,7 @@ export default function ConnectWhatsAppPage() {
               </svg>
             </div>
             <p className="text-lg font-semibold text-green-400">
-              WhatsApp Connected ✅
+              واتساب متصل ✅
             </p>
           </div>
         )}

@@ -13,6 +13,7 @@ import {
     Search,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const fadeInUp = {
@@ -194,11 +195,14 @@ export default function BlogPage() {
                   {/* Article Image */}
                   <Link href={`/blog/${article.slug}`}>
                     {article.image ? (
-                      <div className="aspect-video overflow-hidden">
-                        <img
+                      <div className="relative aspect-video overflow-hidden">
+                        <Image
                           src={article.image}
                           alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          unoptimized
                         />
                       </div>
                     ) : (

@@ -18,6 +18,7 @@ import {
   Wifi,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -595,11 +596,13 @@ export default function WhatsAppPage() {
                       className="flex justify-center py-1"
                     >
                       <div className="bg-white p-5 rounded-2xl shadow-lg shadow-black/20 ring-1 ring-black/5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={qrCode}
                           alt="WhatsApp QR Code"
-                          className="w-60 h-60 sm:w-64 sm:h-64"
+                          width={256}
+                          height={256}
+                          className="h-60 w-60 sm:h-64 sm:w-64"
+                          unoptimized
                         />
                       </div>
                     </motion.div>

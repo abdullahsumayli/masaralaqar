@@ -25,28 +25,25 @@ import { Queue } from "bullmq";
 // ── Job Payload ─────────────────────────────────────────────
 
 export interface WhatsAppJobPayload {
-  /** Unique message ID from Evolution API (idempotency key) */
+  /** Unique message idempotency key (from WAHA or legacy parser) */
   messageId: string;
-  /** Sender's phone number (without @s.whatsapp.net) */
+  /** Sender's phone number (digits, no @suffix) */
   phone: string;
   /** Message text content */
   message: string;
-  /** Office ID resolved from the Evolution instance name */
+  /** Office UUID */
   officeId: string;
   /** Business phone number of the office's WhatsApp session */
   businessPhone: string;
   /** ISO timestamp when the message was received */
   timestamp: string;
-  /**
-   * Routing path: "waha" for office WAHA sessions,
-   * "legacy" for the tenant-based webhook secret path.
-   */
+  /** Office WAHA session vs tenant-scoped legacy webhook. */
   route: "waha" | "legacy";
   /** Only present for legacy route — tenant context */
   tenantId?: string;
   /** Sender name if available */
   senderName?: string;
-  /** Evolution instance name (e.g. office_{officeId}) for multi-tenant routing */
+  /** WAHA session name (e.g. office_{officeId}) */
   instanceName?: string;
 }
 

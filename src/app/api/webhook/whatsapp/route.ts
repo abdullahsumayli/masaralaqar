@@ -1,7 +1,7 @@
 /**
  * WhatsApp Webhook Handler — WAHA (multi-tenant)
  *
- * Handles both WAHA and Evolution payload formats.
+ * WAHA JSON events + optional legacy tenant path (query secret).
  *
  * Pipeline:
  *   WAHA → POST /api/webhook/whatsapp
@@ -15,11 +15,18 @@
  * WAHA events handled:
  *   message | message.any → incoming customer message
  *   session.status → connection state change (WORKING / SCAN_QR_CODE / FAILED)
+ *
+ * Security: when WEBHOOK_SECRET is set, WAHA-shaped JSON must send the same value in
+ * header X-Webhook-Secret (or query w_secret). Configure via wahaWebhookConfigBlock().
+ *
+ * Dedup: Redis SET NX (1h TTL) when REDIS_URL available; else in-process Set (serverless caveat).
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
 import { captureError } from "@/lib/sentry";
+import { getRedisClient } from "@/lib/redis";
 import { enqueueMessage } from "@/queues/message.queue";
+import { AIAgentRepository } from "@/repositories/ai-agent.repo";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { InlineProcessor } from "@/services/inline-processor.service";
 import { METRIC, MetricsService } from "@/services/metrics.service";
@@ -31,7 +38,8 @@ import { NextRequest, NextResponse } from "next/server";
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 const ENQUEUE_TIMEOUT_MS = 1000;
 const ACK_TIMEOUT_MS = 1500;
-const ACK_MESSAGE = "⏳ تم استلام رسالتك، جاري البحث الآن...";
+const DEFAULT_ACK_MESSAGE =
+  "⏳ تم استلام رسالتك، جاري البحث الآن...";
 
 if (!WEBHOOK_SECRET) {
   console.error("WEBHOOK_SECRET environment variable is not set");
@@ -39,8 +47,47 @@ if (!WEBHOOK_SECRET) {
 
 const processedMessages = new Set<string>();
 const MAX_CACHE_SIZE = 1000;
+const DEDUP_KEY_PREFIX = "whatsapp:wh:dedup:";
+const DEDUP_TTL_SEC = 3600;
 
-function isDuplicate(messageId: string): boolean {
+function isWahaJsonPayload(payload: Record<string, unknown>): boolean {
+  return (
+    typeof payload.session === "string" &&
+    typeof payload.event === "string" &&
+    payload.instance == null
+  );
+}
+
+/** 401 when WEBHOOK_SECRET is set and X-Webhook-Secret / ?w_secret mismatch */
+function rejectUnlessWebhookSecretHeader(request: NextRequest): NextResponse | null {
+  const required = WEBHOOK_SECRET?.trim();
+  if (!required) return null;
+  const header = request.headers.get("x-webhook-secret")?.trim();
+  const q = request.nextUrl.searchParams.get("w_secret")?.trim();
+  const provided = header || q || "";
+  if (!WhatsAppService.verifyWebhookSignature("", provided, required)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
+}
+
+/** @returns true if this message was already seen (duplicate) */
+async function isDuplicateMessage(messageId: string): Promise<boolean> {
+  if (!messageId) return false;
+  const redis = await getRedisClient();
+  if (redis) {
+    try {
+      const key = `${DEDUP_KEY_PREFIX}${messageId}`;
+      const ok = await redis.set(key, "1", "EX", DEDUP_TTL_SEC, "NX");
+      if (ok === null) return true;
+      return false;
+    } catch (err) {
+      console.warn(
+        "[Webhook] dedup redis:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
   if (processedMessages.has(messageId)) return true;
   if (processedMessages.size >= MAX_CACHE_SIZE) {
     const iter = processedMessages.values();
@@ -51,6 +98,17 @@ function isDuplicate(messageId: string): boolean {
   }
   processedMessages.add(messageId);
   return false;
+}
+
+async function instantAckForOffice(officeId: string): Promise<string> {
+  try {
+    const agent = await AIAgentRepository.getByOfficeId(officeId);
+    const custom = agent?.customerAckMessage?.trim();
+    if (custom) return custom;
+  } catch {
+    // use default
+  }
+  return DEFAULT_ACK_MESSAGE;
 }
 
 function elapsed(start: number): number {
@@ -82,6 +140,11 @@ export async function POST(request: NextRequest) {
       payload = JSON.parse(bodyText);
     } catch {
       return NextResponse.json({ ok: true });
+    }
+
+    if (isWahaJsonPayload(payload)) {
+      const unauthorized = rejectUnlessWebhookSecretHeader(request);
+      if (unauthorized) return unauthorized;
     }
 
     // ── WAHA: session.status ──────────────────────────────
@@ -138,7 +201,7 @@ export async function POST(request: NextRequest) {
       const messageId = (p.id as string) || `waha_${Date.now()}`;
 
       if (!from || !text) return NextResponse.json({ ok: true });
-      if (isDuplicate(messageId)) return NextResponse.json({ ok: true });
+      if (await isDuplicateMessage(messageId)) return NextResponse.json({ ok: true });
 
       console.log(`[Webhook] ← message from=${from} session=${sessionName} +${elapsed(webhookStart)}ms`);
 
@@ -154,7 +217,8 @@ export async function POST(request: NextRequest) {
 
       MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, { officeId, route: "waha" });
 
-      const ackPromise = WhatsAppService.sendMessage(from, ACK_MESSAGE, officeId)
+      const ackText = await instantAckForOffice(officeId);
+      const ackPromise = WhatsAppService.sendMessage(from, ackText, officeId)
         .then(() => console.log(`[Webhook] ✓ ack sent to ${from} +${elapsed(webhookStart)}ms`))
         .catch((err: unknown) => console.warn(`[Webhook] ✗ ack failed:`, err));
 
@@ -189,71 +253,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, queued: false });
     }
 
-    // ── Evolution compat: connection.update ───────────────
-    if (payload?.event === "connection.update" && payload?.instance) {
-      const instanceName = payload.instance as string;
-      const data = payload.data as Record<string, unknown> | undefined;
-      const isOpen = data?.state === "open";
-      const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
-      if (session) {
-        const wasPreviouslyConnected = session.sessionStatus === "connected";
-        await WhatsAppSessionRepository.updateStatus(session.id, isOpen ? "connected" : "disconnected");
-        if (!isOpen) trackWhatsAppIncident(session.officeId, instanceName, "instance_disconnected", { wasConnected: wasPreviouslyConnected });
-        if (isOpen && !wasPreviouslyConnected) trackWhatsAppOnboarding(session.officeId, "whatsapp_connected");
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    // ── Evolution compat: messages.upsert ─────────────────
-    if (payload?.event === "messages.upsert" && payload?.instance) {
-      const instanceName = payload.instance as string;
-      const data = payload.data as Record<string, unknown> | undefined;
-      const messages = data?.messages as Record<string, unknown>[] | undefined;
-      const msg = messages?.[0];
-      const key = msg?.key as Record<string, unknown> | undefined;
-      if (!msg || key?.fromMe) return NextResponse.json({ ok: true });
-
-      const from = (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") ?? "";
-      const msgBody = msg.message as Record<string, unknown> | undefined;
-      const text = (msgBody?.conversation as string) ||
-        ((msgBody?.extendedTextMessage as Record<string, unknown>)?.text as string) || "";
-      const messageId = (key?.id as string) || `evo_${Date.now()}`;
-
-      if (!from || !text || isDuplicate(messageId)) return NextResponse.json({ ok: true });
-
-      const session = await WhatsAppSessionRepository.getByInstanceId(instanceName);
-      if (!session) return NextResponse.json({ ok: true });
-
-      const officeId = session.officeId;
-      MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, { officeId, route: "evolution-compat" });
-      WhatsAppService.sendMessage(from, ACK_MESSAGE, officeId).catch(() => {});
-
-      try {
-        await Promise.race([
-          enqueueMessage({ messageId, phone: from, message: text, officeId,
-            businessPhone: session.phoneNumber, timestamp: new Date().toISOString(),
-            route: "evolution-compat", instanceName }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ENQUEUE_TIMEOUT_MS)),
-        ]);
-      } catch {
-        await InlineProcessor.process({ messageId, phone: from, message: text,
-          officeId, businessPhone: session.phoneNumber, ackSent: true }).catch(() => {});
-      }
-      return NextResponse.json({ ok: true });
-    }
-
     // ── Legacy secret-based ───────────────────────────────
     const searchParams = request.nextUrl.searchParams;
     const secret = searchParams.get("secret");
     if (secret && secret === WEBHOOK_SECRET) {
       const message = WhatsAppService.parseIncomingMessage(payload);
-      if (!message || isDuplicate(message.id)) return NextResponse.json({ success: true });
+      if (!message || (await isDuplicateMessage(message.id)))
+        return NextResponse.json({ success: true });
 
       const tenant = await TenantService.getTenantByWebhook(secret);
       if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
 
       MetricsService.track(METRIC.MESSAGES_RECEIVED, 1, { officeId: tenant.id, route: "legacy" });
-      WhatsAppService.sendMessage(message.phone, ACK_MESSAGE, tenant.id).catch(() => {});
+      const ackLegacy = await instantAckForOffice(tenant.id);
+      WhatsAppService.sendMessage(message.phone, ackLegacy, tenant.id).catch(() => {});
 
       try {
         await Promise.race([

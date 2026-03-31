@@ -21,6 +21,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 
 interface MediaFile {
@@ -374,9 +375,16 @@ export default function MediaLibraryPage() {
                 onClick={() => setSelectedFile(file)}
                 className="bg-[#0D1117] border border-[#21262d] rounded-xl overflow-hidden hover:border-primary/30 cursor-pointer transition-all group relative"
               >
-                <div className="aspect-square bg-[#161b22] flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-[#161b22] flex items-center justify-center overflow-hidden relative">
                   {isImage ? (
-                    <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                    <Image
+                      src={file.url}
+                      alt={file.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, 16vw"
+                      unoptimized
+                    />
                   ) : (
                     <FileIcon className="w-12 h-12 text-gray-500" />
                   )}
@@ -426,9 +434,16 @@ export default function MediaLibraryPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-10 rounded-lg bg-[#161b22] flex items-center justify-center overflow-hidden relative">
                           {file.type.startsWith('image') ? (
-                            <img src={file.url} alt="" className="w-full h-full object-cover" />
+                            <Image
+                              src={file.url}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              unoptimized
+                            />
                           ) : (
                             <FileIcon className="w-5 h-5 text-gray-400" />
                           )}
@@ -501,11 +516,16 @@ export default function MediaLibraryPage() {
               </div>
               <div className="p-6">
                 {selectedFile.type.startsWith('image') ? (
-                  <img
-                    src={selectedFile.url}
-                    alt={selectedFile.name}
-                    className="w-full max-h-[400px] object-contain rounded-xl bg-[#161b22] mb-4"
-                  />
+                  <div className="relative mb-4 h-[400px] w-full rounded-xl bg-[#161b22]">
+                    <Image
+                      src={selectedFile.url}
+                      alt={selectedFile.name}
+                      fill
+                      className="object-contain rounded-xl"
+                      sizes="(max-width: 768px) 100vw, 672px"
+                      unoptimized
+                    />
+                  </div>
                 ) : selectedFile.type.startsWith('video') ? (
                   <video
                     src={selectedFile.url}

@@ -16,6 +16,8 @@ export interface AIAgent {
   officeId: string;
   agentName: string;
   greetingMessage: string;
+  /** Instant webhook ack to customer; empty → platform default */
+  customerAckMessage: string | null;
   officeDescription: string;
   tone: AIAgentTone;
   language: AIAgentLanguage;
@@ -28,6 +30,7 @@ export interface AIAgent {
 export interface AIAgentUpdateInput {
   agentName?: string;
   greetingMessage?: string;
+  customerAckMessage?: string | null;
   officeDescription?: string;
   tone?: AIAgentTone;
   language?: AIAgentLanguage;

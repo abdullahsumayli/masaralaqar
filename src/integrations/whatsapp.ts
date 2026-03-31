@@ -21,6 +21,7 @@ import {
   wahaSyncWebhooks,
 } from "@/lib/waha-client";
 import { WhatsAppMessage } from "@/types/message";
+import { timingSafeEqual } from "node:crypto";
 import { isCircuitOpen } from "@/lib/circuit-breaker";
 import { trackWhatsAppIncident } from "@/services/whatsapp-incident.service";
 
@@ -112,7 +113,7 @@ export async function checkInstanceStatus(
   }
 }
 
-/** Same shape previously returned for Evolution `connectionState` checks. */
+/** Live connection payload shape for dashboard/status routes. */
 export async function getLiveConnectionPayload(sessionName: string) {
   if (!wahaConfigured()) return null;
   try {
@@ -421,37 +422,6 @@ export class WhatsAppService {
         };
       }
 
-      const data = payload?.data as Record<string, unknown> | undefined;
-      if (
-        payload?.event === "messages.upsert" &&
-        data?.messages
-      ) {
-        const messages = data.messages as Record<string, unknown>[];
-        const msg = messages[0];
-        if (!msg) return null;
-        const key = msg.key as Record<string, unknown> | undefined;
-        if (key?.fromMe) return null;
-
-        const phone =
-          (key?.remoteJid as string)?.replace("@s.whatsapp.net", "") || "";
-        const msgBody = msg.message as Record<string, unknown> | undefined;
-        const text =
-          (msgBody?.conversation as string) ||
-          ((msgBody?.extendedTextMessage as Record<string, unknown>)
-            ?.text as string) ||
-          "";
-        const id = (key?.id as string) || `msg_${Date.now()}`;
-
-        if (!phone || !text) return null;
-
-        return {
-          id,
-          phone,
-          text,
-          timestamp: new Date().toISOString(),
-          media: undefined,
-        };
-      }
       return null;
     } catch (error) {
       console.error("[WhatsApp] parseIncomingMessage error:", error);
@@ -459,12 +429,21 @@ export class WhatsAppService {
     }
   }
 
+  /** Compare provided token to secret (timing-safe). Not used for WAHA JSON path (header checked in route). */
   static verifyWebhookSignature(
     _payload: string,
-    _signature: string,
-    _secret: string,
+    providedToken: string,
+    secret: string,
   ): boolean {
-    return true;
+    if (!providedToken?.trim() || !secret) return false;
+    try {
+      const a = Buffer.from(providedToken, "utf8");
+      const b = Buffer.from(secret, "utf8");
+      if (a.length !== b.length) return false;
+      return timingSafeEqual(a, b);
+    } catch {
+      return false;
+    }
   }
 }
 

@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
     }
     // ---------------------------------
 
+    const office = await OfficeService.getOfficeByUserId(user.id);
+
     const body = await request.json();
 
     const {
@@ -102,8 +104,6 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    const office = await OfficeService.getOfficeByUserId(user.id);
 
     // Create property record
     const { data, error } = await supabaseAdmin
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (office?.id) {
-      invalidatePropertiesCache(office.id);
+      await invalidatePropertiesCache(office.id);
     }
 
     return NextResponse.json({
