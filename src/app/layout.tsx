@@ -1,10 +1,60 @@
 import type { Metadata, Viewport } from 'next'
+import {
+  Cairo,
+  IBM_Plex_Sans,
+  IBM_Plex_Sans_Arabic,
+  JetBrains_Mono,
+  Sora,
+} from 'next/font/google'
 import { Suspense } from 'react'
 import './globals.css'
 import { ReferralCookieHandler } from '@/components/affiliate/ReferralCookieHandler'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import { AppBranding } from '@/components/AppBranding'
 import { WhatsAppButton } from '@/components/WhatsAppButton'
+
+const fontCairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-cairo',
+  display: 'swap',
+})
+
+const fontIbmArabic = IBM_Plex_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-ibm-arabic',
+  display: 'swap',
+})
+
+const fontIbm = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm',
+  display: 'swap',
+})
+
+const fontSora = Sora({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sora',
+  display: 'swap',
+})
+
+const fontJetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+})
+
+const fontVariables = [
+  fontCairo.variable,
+  fontIbmArabic.variable,
+  fontIbm.variable,
+  fontSora.variable,
+  fontJetbrains.variable,
+].join(' ')
 
 export const viewport: Viewport = {
   themeColor: '#F1F5F9',
@@ -97,10 +147,8 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className="dark">
+    <html lang="ar" dir="rtl" className={`dark ${fontVariables}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

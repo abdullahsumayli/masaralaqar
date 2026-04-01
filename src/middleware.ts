@@ -5,6 +5,18 @@ import { NextResponse, type NextRequest } from "next/server";
 initSentry();
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // No Supabase session refresh for external webhooks / payment redirects — avoids
+  // an extra round-trip on high-frequency or unauthenticated routes.
+  if (
+    pathname.startsWith("/api/webhook/") ||
+    pathname === "/api/payment/callback" ||
+    pathname.startsWith("/api/payments/callback")
+  ) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

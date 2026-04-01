@@ -73,11 +73,11 @@ const config: Config = {
         error:    '#F87171',
       },
       fontFamily: {
-        cairo:        ['Cairo', 'sans-serif'],
-        sora:         ['Sora', 'sans-serif'],
-        'ibm-arabic': ['IBM Plex Sans Arabic', 'sans-serif'],
-        ibm:          ['IBM Plex Sans', 'sans-serif'],
-        jetbrains:    ['JetBrains Mono', 'monospace'],
+        cairo:        ['var(--font-cairo)', 'sans-serif'],
+        sora:         ['var(--font-sora)', 'sans-serif'],
+        'ibm-arabic': ['var(--font-ibm-arabic)', 'sans-serif'],
+        ibm:          ['var(--font-ibm)', 'sans-serif'],
+        jetbrains:    ['var(--font-jetbrains)', 'monospace'],
       },
       animation: {
         'fade-in':     'fadeIn 0.5s ease-in-out',

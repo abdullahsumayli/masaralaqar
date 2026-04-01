@@ -1,6 +1,8 @@
 "use client";
 import { MQSetupStepper } from "@/components/dashboard/mq-setup-stepper";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Check,
@@ -41,12 +43,26 @@ interface SessionData {
 const POLL_INTERVAL_MS = 3000;
 const QR_EXPIRY_MS = 45_000;
 const QR_COUNTDOWN_S = Math.floor(QR_EXPIRY_MS / 1000);
+/** Avoid infinite spinner if GET /api/whatsapp/connect hangs (WAHA / cold start). */
+const CONNECT_STATUS_TIMEOUT_MS = 28_000;
 
 // ── Page ────────────────────────────────────────────────────────
+type LiveSessionStatus = "connecting" | "connected" | "disconnected";
+
+function deriveLiveStatus(
+  s: OnboardingStep,
+  sessionStatus: string | undefined,
+): LiveSessionStatus {
+  if (s === "connected" || sessionStatus === "connected") return "connected";
+  if (s === "creating" || s === "qr") return "connecting";
+  return "disconnected";
+}
+
 export default function WhatsAppPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [step, setStep] = useState<OnboardingStep>("loading");
+  const stepRef = useRef<OnboardingStep>("loading");
   const [session, setSession] = useState<SessionData | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
@@ -70,23 +86,58 @@ export default function WhatsAppPage() {
 
   // ── Initial load ──────────────────────────────────────────────
   const fetchStatus = useCallback(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      CONNECT_STATUS_TIMEOUT_MS,
+    );
     try {
-      const res = await fetch("/api/whatsapp/connect");
-      if (!res.ok) return;
+      const res = await fetch("/api/whatsapp/connect", {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        let message = "تعذّر تحميل حالة الواتساب.";
+        try {
+          const errBody = (await res.json()) as { error?: string };
+          if (errBody?.error && typeof errBody.error === "string") {
+            message = errBody.error;
+          }
+        } catch {
+          /* ignore non-JSON */
+        }
+        setError(message);
+        setStep("disconnected");
+        return;
+      }
       const data = await res.json();
       const isConnected =
         data.whatsappStatus === "connected" ||
         data.session?.sessionStatus === "connected";
       if (data.session) setSession(data.session);
       setStep(isConnected ? "connected" : "disconnected");
-    } catch {
+      setError("");
+    } catch (e) {
+      const aborted =
+        e instanceof Error && (e.name === "AbortError" || e.message === "canceled");
+      setError(
+        aborted
+          ? "انتهت مهلة الاتصال بالخادم. تحقق من الشبكة ثم حدّث الصفحة أو حاول لاحقاً."
+          : "تعذّر تحميل حالة الواتساب. حاول تحديث الصفحة.",
+      );
       setStep("disconnected");
+    } finally {
+      clearTimeout(timeoutId);
     }
   }, []);
 
   useEffect(() => {
     if (user) fetchStatus();
   }, [user, fetchStatus]);
+
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   // ── Cleanup ───────────────────────────────────────────────────
   useEffect(() => {
@@ -102,7 +153,7 @@ export default function WhatsAppPage() {
     stopPolling();
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch("/api/whatsapp/connect");
+        const res = await fetch("/api/whatsapp/connect", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         const isConnected =
@@ -131,6 +182,41 @@ export default function WhatsAppPage() {
       pollRef.current = null;
     }
   }
+
+  // عند العودة للتبويب أثناء عرض QR — إعادة فحص فورية (تفادي بقاء الواجهة عالقة بعد المسح)
+  useEffect(() => {
+    if (step !== "qr") return;
+
+    const refreshIfConnected = async () => {
+      try {
+        const res = await fetch("/api/whatsapp/connect", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const isConnected =
+          data.whatsappStatus === "connected" ||
+          data.session?.sessionStatus === "connected";
+        if (isConnected) {
+          if (data.session) setSession(data.session);
+          setStep("connected");
+          stopPolling();
+          clearQrTimer();
+          clearQrCountdown();
+          setQrCode(null);
+          setPairingCode(null);
+          setQrExpired(false);
+          void sendTestMessage();
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const onVis = () => {
+      if (document.visibilityState === "visible") void refreshIfConnected();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [step]);
 
   // ── QR expiry timer ───────────────────────────────────────────
   function startQrTimer() {
@@ -176,6 +262,86 @@ export default function WhatsAppPage() {
     }
   }
 
+  function clearWaTimersAndQr() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (qrTimerRef.current) {
+      clearTimeout(qrTimerRef.current);
+      qrTimerRef.current = null;
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setQrSecondsLeft(null);
+    setQrCode(null);
+    setPairingCode(null);
+    setQrExpired(false);
+  }
+
+  // Supabase Realtime: تحديث فوري عند تغيّر الجلسة من webhook WAHA
+  useEffect(() => {
+    const officeId = profile?.office_id;
+    if (!user || !officeId) return;
+
+    const channel = supabase
+      .channel(`whatsapp_sessions:${officeId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "whatsapp_sessions",
+          filter: `office_id=eq.${officeId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setSession(null);
+            setStep("disconnected");
+            clearWaTimersAndQr();
+            return;
+          }
+
+          const row = payload.new as Record<string, unknown> | undefined;
+          if (!row || typeof row.session_status !== "string") return;
+
+          const st = row.session_status as SessionData["sessionStatus"];
+          setSession((prev) => ({
+            phoneNumber: (row.phone_number as string) || prev?.phoneNumber || "",
+            sessionStatus: st,
+            instanceId: (row.instance_id as string) ?? prev?.instanceId ?? null,
+            lastConnectedAt:
+              (row.last_connected_at as string) ?? prev?.lastConnectedAt ?? null,
+          }));
+
+          if (st === "connected") {
+            setStep("connected");
+            clearWaTimersAndQr();
+            void sendTestMessage();
+            return;
+          }
+
+          if (st === "disconnected") {
+            if (
+              stepRef.current === "connected" ||
+              stepRef.current === "qr" ||
+              stepRef.current === "creating"
+            ) {
+              setStep("disconnected");
+            }
+            clearWaTimersAndQr();
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, profile?.office_id]);
+
   // ── Connect handler ───────────────────────────────────────────
   const handleConnect = async () => {
     if (phoneNumber.trim() && !/^05\d{8}$/.test(phoneNumber.trim())) {
@@ -191,6 +357,7 @@ export default function WhatsAppPage() {
     try {
       const res = await fetch("/api/whatsapp/connect", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phoneNumber: phoneNumber.trim() || undefined,
@@ -256,6 +423,7 @@ export default function WhatsAppPage() {
     try {
       const res = await fetch("/api/whatsapp/connect", {
         method: "POST",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phoneNumber: phoneNumber.trim() || undefined,
@@ -285,7 +453,10 @@ export default function WhatsAppPage() {
     if (!confirm("هل أنت متأكد من فصل الواتساب؟")) return;
     setDisconnecting(true);
     try {
-      const res = await fetch("/api/whatsapp/connect", { method: "DELETE" });
+      const res = await fetch("/api/whatsapp/connect", {
+        method: "DELETE",
+        cache: "no-store",
+      });
       if (res.ok) {
         setSession(null);
         setQrCode(null);
@@ -309,9 +480,56 @@ export default function WhatsAppPage() {
     );
   }
 
+  const liveStatus = deriveLiveStatus(step, session?.sessionStatus);
+
   return (
     <div className="min-h-full bg-surface">
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {step !== "loading" && (
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm",
+              liveStatus === "connected" &&
+                "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+              liveStatus === "connecting" &&
+                "border-amber-500/30 bg-amber-500/10 text-amber-200",
+              liveStatus === "disconnected" &&
+                "border-border bg-card text-text-secondary",
+            )}
+            role="status"
+            aria-live="polite"
+          >
+            {liveStatus === "connected" && (
+              <>
+                <Wifi className="h-4 w-4 shrink-0 text-emerald-400" />
+                <span className="font-medium text-text-primary">متصل</span>
+                <span className="text-text-muted">
+                  — جلسة واتساب النشطة للمكتب
+                </span>
+              </>
+            )}
+            {liveStatus === "connecting" && (
+              <>
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-400" />
+                <span className="font-medium text-text-primary">جاري الربط</span>
+                <span className="text-text-muted">
+                  {step === "qr"
+                    ? "— امسح رمز QR أو انتظر التحديث التلقائي"
+                    : "— جاري تجهيز الجلسة على الخادم"}
+                </span>
+              </>
+            )}
+            {liveStatus === "disconnected" && (
+              <>
+                <MessageCircle className="h-4 w-4 shrink-0 text-text-muted" />
+                <span className="font-medium text-text-primary">غير متصل</span>
+                <span className="text-text-muted">
+                  — اربط واتساب لتفعيل الرد الآلي
+                </span>
+              </>
+            )}
+          </div>
+        )}
         {step !== "loading" && (
           <div className="bg-card rounded-2xl border border-border shadow-mq-card p-5 sm:p-6">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-4 text-center">

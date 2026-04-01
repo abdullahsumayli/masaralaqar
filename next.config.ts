@@ -18,7 +18,17 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     mdxRs: true,
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      'recharts',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-label',
+      '@radix-ui/react-navigation-menu',
+      '@radix-ui/react-tabs',
+    ],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
