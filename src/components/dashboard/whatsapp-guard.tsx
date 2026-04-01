@@ -1,10 +1,12 @@
 "use client";
 
 import { MQSetupStepper } from "@/components/dashboard/mq-setup-stepper";
+import { useAuth } from "@/hooks/useAuth";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { Loader2, MessageSquareWarning } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Pages that are accessible WITHOUT a WhatsApp connection.
@@ -22,59 +24,124 @@ function isAllowedPath(pathname: string): boolean {
   );
 }
 
+function isConnectedPayload(data: {
+  whatsappStatus?: string | null;
+  session?: { sessionStatus?: string } | null;
+}): boolean {
+  return (
+    data.whatsappStatus === "connected" ||
+    data.session?.sessionStatus === "connected"
+  );
+}
+
 /**
  * Wraps dashboard children. Checks if the office has an active WhatsApp
  * session; if not, blocks access and shows a redirect prompt.
  *
- * The check fires once on mount and caches the result for the session.
- * Pages in ALLOWED_WITHOUT_WA are always rendered.
+ * Re-fetches on every route change (so leaving ربط الواتساب picks up the new state)
+ * and subscribes to Supabase Realtime on whatsapp_sessions like the WhatsApp page.
  */
 export function WhatsAppGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { profile } = useAuth();
+  const officeId = profile?.office_id;
+
   const [status, setStatus] = useState<
     "loading" | "connected" | "disconnected"
   >("loading");
 
+  const prevPathRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const prev = prevPathRef.current;
+    prevPathRef.current = pathname;
+
+    const enteringProtectedFromExempt =
+      prev !== null &&
+      isAllowedPath(prev) &&
+      !isAllowedPath(pathname);
+
+    if (enteringProtectedFromExempt) {
+      setStatus("loading");
+    }
+
     let cancelled = false;
 
     async function check() {
       try {
-        const res = await fetch("/api/whatsapp/connect");
+        const res = await fetch("/api/whatsapp/connect", {
+          cache: "no-store",
+        });
         if (!res.ok) {
           if (!cancelled) setStatus("disconnected");
           return;
         }
         const data = await res.json();
-        const isConnected =
-          data.whatsappStatus === "connected" ||
-          data.session?.sessionStatus === "connected";
-        if (!cancelled) setStatus(isConnected ? "connected" : "disconnected");
+        if (!cancelled) {
+          setStatus(isConnectedPayload(data) ? "connected" : "disconnected");
+        }
       } catch {
         if (!cancelled) setStatus("disconnected");
       }
     }
 
-    check();
+    void check();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [pathname]);
 
-  // Re-check when navigating back from /dashboard/whatsapp after connecting
   useEffect(() => {
-    if (status === "disconnected" && !isAllowedPath(pathname)) {
-      fetch("/api/whatsapp/connect")
-        .then((r) => r.json())
-        .then((data) => {
-          const isConnected =
-            data.whatsappStatus === "connected" ||
-            data.session?.sessionStatus === "connected";
-          if (isConnected) setStatus("connected");
+    if (!officeId) return;
+
+    const sb = getSupabaseBrowserClient();
+    const channel = sb
+      .channel(`wa_guard_status:${officeId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "whatsapp_sessions",
+          filter: `office_id=eq.${officeId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setStatus("disconnected");
+            return;
+          }
+          const row = payload.new as { session_status?: string } | undefined;
+          if (!row || typeof row.session_status !== "string") return;
+          if (row.session_status === "connected") setStatus("connected");
+          else setStatus("disconnected");
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void sb.removeChannel(channel);
+    };
+  }, [officeId]);
+
+  useEffect(() => {
+    const onWa = () => {
+      void fetch("/api/whatsapp/connect", { cache: "no-store" })
+        .then((res) => {
+          if (!res.ok) {
+            setStatus("disconnected");
+            return null;
+          }
+          return res.json();
         })
-        .catch(() => {});
-    }
-  }, [pathname, status]);
+        .then((data) => {
+          if (!data) return;
+          setStatus(isConnectedPayload(data) ? "connected" : "disconnected");
+        })
+        .catch(() => setStatus("disconnected"));
+    };
+    window.addEventListener("mq-wa-session-changed", onWa);
+    return () => window.removeEventListener("mq-wa-session-changed", onWa);
+  }, []);
 
   // Always allow exempt pages
   if (isAllowedPath(pathname)) {

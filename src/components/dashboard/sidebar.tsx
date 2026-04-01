@@ -62,20 +62,84 @@ const SUB_LABELS: Record<string, string> = {
   enterprise: "مؤسسات",
 };
 
-/* ─── WhatsApp status hook ─────────────────────────────────────── */
-function useWhatsAppStatus() {
+/* ─── WhatsApp status hook ───────────────────────────────────────
+   Was one-shot fetch only — sidebar stayed "غير متصل" after linking until full reload.
+   Now: refetch when office resolves, Supabase Realtime on whatsapp_sessions, and on tab focus. */
+function useWhatsAppStatus(officeId: string | undefined) {
   const [connected, setConnected] = useState<boolean | null>(null);
-  useEffect(() => {
-    fetch("/api/whatsapp/connect")
-      .then((r) => r.json())
-      .then((d) => {
-        const isConnected =
-          d.whatsappStatus === "connected" ||
-          d.session?.sessionStatus === "connected";
-        setConnected(isConnected);
-      })
-      .catch(() => setConnected(false));
+
+  const applyFromApiJson = useCallback((d: {
+    whatsappStatus?: string | null;
+    session?: { sessionStatus?: string } | null;
+  }) => {
+    const isConnected =
+      d.whatsappStatus === "connected" ||
+      d.session?.sessionStatus === "connected";
+    setConnected(isConnected);
   }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const r = await fetch("/api/whatsapp/connect", { cache: "no-store" });
+      if (!r.ok) {
+        setConnected(false);
+        return;
+      }
+      const d = await r.json();
+      applyFromApiJson(d);
+    } catch {
+      setConnected(false);
+    }
+  }, [applyFromApiJson]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh, officeId]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    const onWaUi = () => void refresh();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("mq-wa-session-changed", onWaUi);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("mq-wa-session-changed", onWaUi);
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!officeId) return;
+
+    const sb = getSupabaseBrowserClient();
+    const channel = sb
+      .channel(`sidebar_wa_status:${officeId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "whatsapp_sessions",
+          filter: `office_id=eq.${officeId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            setConnected(false);
+            return;
+          }
+          const row = payload.new as { session_status?: string } | undefined;
+          if (row?.session_status === "connected") setConnected(true);
+          else if (row?.session_status) setConnected(false);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void sb.removeChannel(channel);
+    };
+  }, [officeId]);
+
   return connected;
 }
 
@@ -145,7 +209,7 @@ export function DashboardSidebar(
 ) {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
-  const waStatus = useWhatsAppStatus();
+  const waStatus = useWhatsAppStatus(profile?.office_id);
   const [collapsed, setCollapsed] = useState(false);
 
   const handleSignOut = useCallback(async () => {

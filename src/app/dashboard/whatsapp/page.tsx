@@ -46,6 +46,13 @@ const QR_COUNTDOWN_S = Math.floor(QR_EXPIRY_MS / 1000);
 /** Avoid infinite spinner if GET /api/whatsapp/connect hangs (WAHA / cold start). */
 const CONNECT_STATUS_TIMEOUT_MS = 28_000;
 
+/** Sidebar listens — updates badge without full reload if Realtime lags */
+function broadcastWaSessionUiRefresh() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("mq-wa-session-changed"));
+  }
+}
+
 // ── Page ────────────────────────────────────────────────────────
 type LiveSessionStatus = "connecting" | "connected" | "disconnected";
 
@@ -137,6 +144,12 @@ export default function WhatsAppPage() {
 
   useEffect(() => {
     stepRef.current = step;
+  }, [step]);
+
+  useEffect(() => {
+    if (step === "connected" || step === "disconnected") {
+      broadcastWaSessionUiRefresh();
+    }
   }, [step]);
 
   // ── Cleanup ───────────────────────────────────────────────────
