@@ -8,7 +8,7 @@ import {
   Share2,
 } from "lucide-react";
 import Link from "next/link";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { signOut } from "@/lib/auth";

@@ -4,7 +4,11 @@
  */
 
 export function wahaBaseUrl(): string {
-  return (process.env.WAHA_API_URL || "").replace(/\/$/, "");
+  const raw =
+    process.env.WAHA_API_URL?.trim() ||
+    process.env.WAHA_URL?.trim() ||
+    "";
+  return raw.replace(/\/$/, "");
 }
 
 export function wahaApiKey(): string {
@@ -49,17 +53,38 @@ export async function wahaFetchSession(
 }
 
 export function wahaStatusToOpen(state: string): boolean {
-  return String(state).toUpperCase() === "WORKING";
+  const u = String(state).toUpperCase();
+  return u === "WORKING" || u === "AUTHENTICATED" || u === "CONNECTED";
 }
 
-/** Map WAHA session.status to { instance.state } for dashboard/status callers. */
+/**
+ * جلسة مصدّقة فعلياً: إما status=WORKING أو وجود me.id (يعالج خلل WAHA/WEBJS حيث يبقى
+ * SCAN_QR_CODE في الـ API رغم نجاح الربط — انظر وثائق WAHA وحقل me في GET session).
+ */
+export function wahaSessionIsAuthenticated(
+  sessionJson: Record<string, unknown> | null,
+): boolean {
+  if (!sessionJson) return false;
+  const st = String(sessionJson.status ?? "");
+  if (wahaStatusToOpen(st)) return true;
+  const me = sessionJson.me;
+  if (me && typeof me === "object") {
+    const id = (me as Record<string, unknown>).id;
+    if (id !== undefined && id !== null && String(id).trim().length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Map WAHA session to { instance.state } for dashboard/status callers. */
 export function wahaLivePayload(sessionJson: Record<string, unknown> | null): {
   instance: { state: string };
 } | null {
   if (!sessionJson) return null;
-  const st = String(sessionJson.status ?? "");
+  const open = wahaSessionIsAuthenticated(sessionJson);
   return {
-    instance: { state: wahaStatusToOpen(st) ? "open" : "close" },
+    instance: { state: open ? "open" : "close" },
   };
 }
 

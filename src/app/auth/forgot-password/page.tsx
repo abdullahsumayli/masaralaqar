@@ -8,7 +8,7 @@ import {
   Loader2,
   Mail,
 } from "lucide-react";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import Link from "next/link";
 import { useState } from "react";
 

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },

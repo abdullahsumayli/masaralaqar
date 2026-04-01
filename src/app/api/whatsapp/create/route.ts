@@ -36,15 +36,12 @@ export async function POST(request: NextRequest) {
     }
 
     const instanceName = instanceNameForOffice(profile.office_id);
-    const ok = await ensureInstanceExists(
+    const ensured = await ensureInstanceExists(
       instanceName,
       "[whatsapp/create]",
     );
-    if (!ok) {
-      return NextResponse.json(
-        { error: "تعذر إنشاء/تجهيز جلسة WAHA" },
-        { status: 502 },
-      );
+    if (!ensured.ok) {
+      return NextResponse.json({ error: ensured.hint }, { status: 502 });
     }
 
     console.log("[whatsapp/create] session ensured:", instanceName);

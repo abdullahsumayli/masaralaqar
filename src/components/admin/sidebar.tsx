@@ -22,7 +22,7 @@ import {
     Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import { usePathname, useRouter } from "next/navigation";
 
 const menuItems = [

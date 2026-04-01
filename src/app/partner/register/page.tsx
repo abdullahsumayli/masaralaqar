@@ -9,7 +9,7 @@ import {
   Mail,
   User,
 } from "lucide-react";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

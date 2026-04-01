@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Mail, Phone, MapPin, Twitter, Linkedin, MessageCircle, ArrowLeft } from 'lucide-react'
-import { MqLogo } from '@/components/mq/MqLogo'
+import { MqLogo } from '@/components/branding/MqLogo'
 
 const quickLinks = [
   { href: '/products', label: 'المنتجات' },

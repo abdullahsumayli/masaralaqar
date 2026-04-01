@@ -14,7 +14,7 @@ import {
     Search
 } from "lucide-react";
 import Link from "next/link";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import { useState } from "react";
 
 const fadeInUp = {

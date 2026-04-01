@@ -59,9 +59,6 @@ export async function GET() {
 
     let session = await WhatsAppSessionService.getSessionByOffice(office.id);
 
-    // Always use the canonical instance name (office_{officeId}).
-    // Never rely on session.instanceId — it may be stale (e.g. old "saqr" sessions
-    // from Evolution API era) and cause polling to check the wrong WAHA session.
     const instanceName = instanceNameForOffice(office.id);
 
     let whatsappStatus: string | null = null;
@@ -75,7 +72,6 @@ export async function GET() {
         if (session) {
           if (session.sessionStatus !== "connected" || session.instanceId !== instanceName) {
             await WhatsAppSessionService.markConnected(session.id);
-            // Also fix the instanceId in case it's stale
             if (session.instanceId !== instanceName) {
               await WhatsAppSessionService.connectPhone({
                 officeId: office.id,
@@ -188,15 +184,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!status) {
-      const ready = await ensureInstanceExists(instanceName, logPrefix);
-      if (!ready) {
+      const ensured = await ensureInstanceExists(instanceName, logPrefix);
+      if (!ensured.ok) {
         trackWhatsAppOnboarding(office.id, "whatsapp_failed", {
           reason: "session_creation_failed",
         });
-        return NextResponse.json(
-          { error: "فشل في إنشاء الجلسة — تحقق من WAHA" },
-          { status: 500 },
-        );
+        return NextResponse.json({ error: ensured.hint }, { status: 500 });
       }
     } else {
       console.log(`${logPrefix} reconnect — state=${status.state}`);
@@ -236,7 +229,6 @@ export async function POST(request: NextRequest) {
 
     trackWhatsAppOnboarding(office.id, "whatsapp_qr_shown");
 
-    // Save/update session in DB — this also fixes any stale instanceId (e.g. "saqr")
     await WhatsAppSessionService.connectPhone({
       officeId: office.id,
       phoneNumber: normalized || "pending",
@@ -279,7 +271,7 @@ export async function DELETE() {
       );
 
     const session = await WhatsAppSessionService.getSessionByOffice(office.id);
-    const instanceName = session?.instanceId || instanceNameForOffice(office.id);
+    const instanceName = instanceNameForOffice(office.id);
 
     try {
       await deleteWhatsappInstance(instanceName);

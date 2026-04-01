@@ -1,5 +1,5 @@
 -- Ensure office_id has a unique constraint for upsert operations
--- One session per office (shared instance "saqr")
+-- One session per office (WAHA session name = office_{office_id})
 
 DO $$
 BEGIN

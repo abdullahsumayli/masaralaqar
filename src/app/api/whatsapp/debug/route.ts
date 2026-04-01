@@ -12,6 +12,7 @@ import {
   syncSessionWebhook,
 } from "@/integrations/whatsapp";
 import { getRedisConnectionOptions } from "@/lib/redis";
+import { wahaBaseUrl } from "@/lib/waha-client";
 import { supabaseAdmin } from "@/lib/supabase";
 import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { instanceNameForOffice } from "@/lib/whatsapp-session";
@@ -86,10 +87,7 @@ export async function GET(request: NextRequest) {
 
   if (fix === "webhook" && targetOfficeId) {
     try {
-      const session =
-        await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
-      const instanceName =
-        session?.instanceId || instanceNameForOffice(targetOfficeId);
+      const instanceName = instanceNameForOffice(targetOfficeId);
       const result = await syncSessionWebhook(instanceName);
       return NextResponse.json({
         success: true,
@@ -117,8 +115,11 @@ export async function GET(request: NextRequest) {
   const recommendations = results.recommendations as string[];
 
   // 1. Check env variables
+  const wahaUrlResolved = wahaBaseUrl();
   checks.env = {
-    WAHA_API_URL: process.env.WAHA_API_URL ? "✅ set" : "❌ missing",
+    WAHA_API_URL: process.env.WAHA_API_URL ? "✅ set" : "—",
+    WAHA_URL: process.env.WAHA_URL ? "✅ set (alias)" : "—",
+    WAHA_base_resolved: wahaUrlResolved ? "✅" : "❌",
     WAHA_API_KEY: process.env.WAHA_API_KEY ? "✅ set" : "❌ missing",
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "✅ set" : "❌ missing",
     REDIS_URL: process.env.REDIS_URL ? "✅ set" : "—",
@@ -129,8 +130,8 @@ export async function GET(request: NextRequest) {
 
   if (!process.env.WAHA_API_KEY)
     issues.push("WAHA_API_KEY not set");
-  if (!process.env.WAHA_API_URL)
-    issues.push("WAHA_API_URL not set");
+  if (!wahaUrlResolved)
+    issues.push("WAHA base URL missing — set WAHA_API_URL or WAHA_URL");
   if (!process.env.OPENAI_API_KEY)
     issues.push("OPENAI_API_KEY not set — AI replies won't work");
   if (!process.env.REDIS_URL && !process.env.REDIS_URI)
@@ -169,7 +170,7 @@ export async function GET(request: NextRequest) {
 
       const instanceChecks: Record<string, unknown>[] = [];
       for (const s of sessions.slice(0, 5)) {
-        const instName = s.instanceId || instanceNameForOffice(s.officeId);
+        const instName = instanceNameForOffice(s.officeId);
         try {
           const live = await getLiveConnectionPayload(instName);
           instanceChecks.push({
@@ -196,10 +197,7 @@ export async function GET(request: NextRequest) {
   // 3. Check webhook config for a specific office or first available
   if (targetOfficeId) {
     try {
-      const session =
-        await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
-      const instName =
-        session?.instanceId || instanceNameForOffice(targetOfficeId);
+      const instName = instanceNameForOffice(targetOfficeId);
       const webhook = await getSessionWebhookDebug(instName);
       checks.webhook = { instanceName: instName, config: webhook };
     } catch (err) {
@@ -255,10 +253,7 @@ export async function POST(request: NextRequest) {
 
   if (fix === "webhook" && targetOfficeId) {
     try {
-      const session =
-        await WhatsAppSessionRepository.getByOfficeId(targetOfficeId);
-      const instanceName =
-        session?.instanceId || instanceNameForOffice(targetOfficeId);
+      const instanceName = instanceNameForOffice(targetOfficeId);
       const result = await syncSessionWebhook(instanceName);
       return NextResponse.json({
         success: true,

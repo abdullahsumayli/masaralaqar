@@ -23,6 +23,7 @@
  */
 
 import { WhatsAppService } from "@/integrations/whatsapp";
+import { wahaStatusToOpen } from "@/lib/waha-client";
 import { captureError } from "@/lib/sentry";
 import { getRedisClient } from "@/lib/redis";
 import { enqueueMessage } from "@/queues/message.queue";
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
       const sessionName = payload.session as string;
       const p = payload.payload as Record<string, unknown> | undefined;
       const wahaStatus = p?.status as string | undefined;
-      const isOpen = wahaStatus === "WORKING";
+      const isOpen = wahaStatusToOpen(wahaStatus ?? "");
 
       console.log(`[Webhook] ← session.status session=${sessionName} status=${wahaStatus} +${elapsed(webhookStart)}ms`);
 

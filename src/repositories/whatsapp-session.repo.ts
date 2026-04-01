@@ -2,6 +2,7 @@
  * WhatsApp Session Repository — طبقة الوصول لجلسات الواتساب
  */
 
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { supabaseAdmin } from "@/lib/supabase";
 import type {
   WhatsAppSession,
@@ -102,7 +103,8 @@ export class WhatsAppSessionRepository {
         {
           office_id: input.officeId,
           phone_number: input.phoneNumber,
-          instance_id: input.instanceId || null,
+          instance_id:
+            input.instanceId?.trim() || instanceNameForOffice(input.officeId),
           api_token: input.apiToken || null,
           session_status: "pending",
           updated_at: new Date().toISOString(),
@@ -120,7 +122,8 @@ export class WhatsAppSessionRepository {
           {
             office_id: input.officeId,
             phone_number: input.phoneNumber,
-            instance_id: input.instanceId || null,
+            instance_id:
+              input.instanceId?.trim() || instanceNameForOffice(input.officeId),
             api_token: input.apiToken || null,
             session_status: "pending",
             updated_at: new Date().toISOString(),

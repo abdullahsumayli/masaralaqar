@@ -6,6 +6,7 @@
 
 import { getServerUser } from "@/lib/supabase-server";
 import { getUserProfile } from "@/lib/auth";
+import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import { supabaseAdmin } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
@@ -94,7 +95,7 @@ export async function GET() {
     }
 
     const rows: WhatsAppMonitorRow[] = sessions.map((s) => {
-      const instanceName = (s.instance_id as string) || `office_${s.office_id}`;
+      const instanceName = instanceNameForOffice(s.office_id as string);
       const instIncidents = incidentsByInstance.get(instanceName) ?? [];
       const failureCount = instIncidents.filter(
         (i) => i.eventType === "reconnect_failed",

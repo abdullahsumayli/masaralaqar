@@ -23,7 +23,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/reports":              "التقارير",
   "/dashboard/settings":             "الإعدادات",
   "/dashboard/recommendations":      "التوصيات",
-  "/dashboard/connect-whatsapp":     "ربط الواتساب",
   "/dashboard/subscription":         "الاشتراك والباقات",
   "/dashboard/subscription/checkout": "إتمام الاشتراك",
   "/dashboard/billing":             "الفواتير",

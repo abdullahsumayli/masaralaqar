@@ -12,7 +12,6 @@ import { useEffect, useState } from "react";
  */
 const ALLOWED_WITHOUT_WA = [
   "/dashboard/whatsapp",
-  "/dashboard/connect-whatsapp",
   "/dashboard/settings",
   "/dashboard/subscription",
 ];

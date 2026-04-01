@@ -23,7 +23,7 @@
 | AI | OpenAI (GPT-4o-mini) |
 | Payments | Moyasar + Bank Transfer |
 | Media | Cloudinary |
-| Deploy | EasyPanel (Hostinger VPS) + Vercel |
+| Deploy | Vercel (Next.js) + VPS/Docker لـ WAHA وRedis/worker حسب الإعداد |
 
 ---
 
@@ -62,13 +62,16 @@ masaralaqar/
 │  │  │  └─ whatsapp-sessions/ ← جلسات واتساب
 │  │  └─ api/              ← API routes
 │  ├─ components/
-│  │  └─ dashboard/sidebar.tsx  ← Sidebar (profile-aware, collapse, WA status)
+│  │  ├─ dashboard/sidebar.tsx  ← Sidebar (profile-aware, collapse, WA status)
+│  │  └─ branding/MqLogo.tsx    ← شعار MQ
 │  ├─ services/            ← Business logic
 │  ├─ repositories/        ← Data access layer
 │  ├─ integrations/        ← whatsapp.ts, openai.ts
+│  ├─ workers/             ← BullMQ consumer (message.worker.ts)
+│  ├─ queues/              ← BullMQ queue definitions
 │  └─ lib/                 ← waha-client.ts, moyasar.ts, payments.ts, redis.ts...
-├─ server/                 ← Express bot server (MQ WhatsApp)
-└─ supabase/               ← Migrations + RLS policies
+├─ supabase/migrations/    ← المرجعية الوحيدة لمخطط DB
+└─ scripts/                ← سكربتات تشغيل يدوية (اختياري)
 ```
 
 ---
@@ -82,6 +85,16 @@ API Key  : يُرسل في الـ header باسم X-Api-Key
 Session  : لكل مكتب اسم جلسة `office_{officeId}` (من instanceNameForOffice)
 Webhook  : {NEXT_PUBLIC_URL}/api/webhook/whatsapp — أحداث message و session.status
 ```
+
+---
+
+## SaaS متعدد المستأجرين (Multi-tenancy)
+
+- **المكتب**: `offices` + `users.office_id` — بيانات العقارات والعملاء والرسائل تُفلتر بـ `office_id` (انظر migrations من `019` وما بعدها).
+- **جلسة WAHA**: اسم ثابت `office_{uuid}` — إنشاء الجلسة عبر `POST /api/sessions` على WAHA من `wahaCreateSession` / `ensureInstanceExists`.
+- **Webhook → BullMQ**: `POST /api/webhook/whatsapp` يضع الرسائل في الطابور (`enqueueMessage`) مع fallback `InlineProcessor` إن تعذر Redis.
+- **Worker**: `npm run worker` — `src/workers/message.worker.ts` يستهلك الطابور ويحدّث Supabase.
+- **Realtime**: جدول `whatsapp_sessions` مُدرَج في `supabase_realtime` (migration `042`)؛ صفحة `/dashboard/whatsapp` تشترك لتحديث **متصل / جاري الربط / غير متصل** فور تغيّر `session_status` من الـ webhook.
 
 ---
 
@@ -147,10 +160,7 @@ GET  /api/admin/subscribers      ← المشتركين (admin, paginated)
 npm install
 npm run dev
 
-# Bot server
-cd server && npm install && npm run dev
-
-# Worker (BullMQ) — في EasyPanel container منفصل
+# Worker (BullMQ) — شغّله على خادم طويل الأمد (Docker/VPS) يصل إلى REDIS_URL
 npm run worker
 ```
 

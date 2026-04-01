@@ -2,7 +2,6 @@
  * WhatsApp — WAHA (multi-tenant). One session per office: office_{officeId}.
  */
 
-import { WhatsAppSessionRepository } from "@/repositories/whatsapp-session.repo";
 import { instanceNameForOffice } from "@/lib/whatsapp-session";
 import {
   defaultWebhookUrl,
@@ -17,7 +16,7 @@ import {
   wahaSendImage,
   wahaSendText,
   wahaStartSession,
-  wahaStatusToOpen,
+  wahaSessionIsAuthenticated,
   wahaSyncWebhooks,
 } from "@/lib/waha-client";
 import { WhatsAppMessage } from "@/types/message";
@@ -48,24 +47,15 @@ interface CachedInstance {
 
 const instanceCache = new Map<string, CachedInstance>();
 
-async function resolveInstanceName(officeId: string): Promise<string> {
+/** WAHA session name is always office_{officeId}; never read stale instance_id from DB. */
+function resolveInstanceName(officeId: string): string {
   const cached = instanceCache.get(officeId);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
     return cached.instanceName;
   }
-
-  try {
-    const session = await WhatsAppSessionRepository.getByOfficeId(officeId);
-    const instanceName =
-      session?.instanceId || instanceNameForOffice(officeId);
-    instanceCache.set(officeId, {
-      instanceName,
-      ts: Date.now(),
-    });
-    return instanceName;
-  } catch {
-    return instanceNameForOffice(officeId);
-  }
+  const instanceName = instanceNameForOffice(officeId);
+  instanceCache.set(officeId, { instanceName, ts: Date.now() });
+  return instanceName;
 }
 
 export function invalidateInstanceCache(officeId: string): void {
@@ -102,7 +92,7 @@ export async function checkInstanceStatus(
     const s = await wahaFetchSession(sessionName);
     if (!s) return null;
     const st = String(s.status ?? "");
-    const open = wahaStatusToOpen(st);
+    const open = wahaSessionIsAuthenticated(s);
     return {
       state: open ? "open" : String(st).toLowerCase(),
       instance: s,
@@ -140,11 +130,53 @@ export async function getSessionWebhookDebug(sessionName: string) {
   return config?.webhooks ?? null;
 }
 
+/** User-facing Arabic hint from WAHA/network errors (logged in full server-side). */
+function wahaEnsureFailureHint(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const m = msg.toLowerCase();
+  if (msg.includes("401") || m.includes("Unauthorized")) {
+    return "مفتاح WAHA غير صحيح أو مرفوض — راجع WAHA_API_KEY في بيئة التشغيل";
+  }
+  if (msg.includes("403") || m.includes("Forbidden")) {
+    return "الوصول إلى WAHA مرفوض — راجع المفتاح وإعدادات الحماية على خادم WAHA";
+  }
+  if (
+    m.includes("econnrefused") ||
+    m.includes("enotfound") ||
+    m.includes("fetch failed") ||
+    m.includes("network") ||
+    m.includes("timed out") ||
+    m.includes("timeout") ||
+    m.includes("etimedout")
+  ) {
+    return "تعذر الوصول لخادم WAHA من تطبيقك. إذا كان الموقع على استضافة سحابية فلا تضع localhost في WAHA_API_URL — استخدم عنواناً عاماً يصل إليه خادم Next.js (نفس الشبكة/VPN أو نطاق عام).";
+  }
+  if (
+    /create session 5\d\d/.test(msg) ||
+    /start 5\d\d/.test(msg) ||
+    m.includes("502") ||
+    m.includes("503") ||
+    m.includes("504")
+  ) {
+    return "خادم WAHA غير متاح أو يعيد خطأ مؤقتاً — تحقق من تشغيل الحاوية وسجلات WAHA";
+  }
+  return "فشل في إنشاء الجلسة — راجع سجلات الخادم وتأكد أن WAHA يعمل وأن WAHA_API_URL صحيح";
+}
+
+export type EnsureInstanceResult =
+  | { ok: true }
+  | { ok: false; hint: string };
+
 export async function ensureInstanceExists(
   sessionName: string,
   logPrefix = "[WAHA]",
-): Promise<boolean> {
-  if (!wahaConfigured()) return false;
+): Promise<EnsureInstanceResult> {
+  if (!wahaConfigured()) {
+    return {
+      ok: false,
+      hint: "إعدادات WAHA غير مكتملة (WAHA_API_URL و WAHA_API_KEY)",
+    };
+  }
 
   let s = await wahaFetchSession(sessionName).catch(() => null);
   const webhookUrl = defaultWebhookUrl();
@@ -155,10 +187,10 @@ export async function ensureInstanceExists(
       await wahaCreateSession(sessionName, webhookUrl);
       await wahaStartSession(sessionName);
       await sleep(2000);
-      return true;
+      return { ok: true };
     } catch (err) {
       console.error(`${logPrefix} create failed:`, err);
-      return false;
+      return { ok: false, hint: wahaEnsureFailureHint(err) };
     }
   }
 
@@ -179,7 +211,7 @@ export async function ensureInstanceExists(
   }
 
   console.log(`${logPrefix} session ${sessionName} ready status=${st}`);
-  return true;
+  return { ok: true };
 }
 
 export async function getSessionQR(sessionName: string, _phoneNumber?: string) {
@@ -308,7 +340,7 @@ export class WhatsAppService {
     message: string,
     officeId: string,
   ): Promise<boolean> {
-    const sessionName = await resolveInstanceName(officeId);
+    const sessionName = resolveInstanceName(officeId);
     const formattedPhone = formatPhoneNumber(recipientPhone);
     const chatId = phoneToChatId(formattedPhone);
     const logPrefix = `[WhatsApp] office_id=${officeId} session=${sessionName} sendMessage`;
@@ -363,7 +395,7 @@ export class WhatsAppService {
     caption: string,
     officeId: string,
   ): Promise<boolean> {
-    const sessionName = await resolveInstanceName(officeId);
+    const sessionName = resolveInstanceName(officeId);
     const formattedPhone = formatPhoneNumber(recipientPhone);
     const chatId = phoneToChatId(formattedPhone);
     const logPrefix = `[WhatsApp] office_id=${officeId} session=${sessionName} sendMedia`;

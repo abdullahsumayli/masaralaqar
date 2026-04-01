@@ -47,9 +47,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Resolve instance name from session or derive it
-    const instanceName =
-      session.instanceId || instanceNameForOffice(profile.office_id);
+    const instanceName = instanceNameForOffice(profile.office_id);
 
     let liveState: string = "unknown";
     try {

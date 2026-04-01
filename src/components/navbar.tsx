@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { MqLogo } from "@/components/mq/MqLogo";
+import { MqLogo } from "@/components/branding/MqLogo";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { KnowledgeDropdown } from "@/components/nav/KnowledgeDropdown";

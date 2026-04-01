@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   office_id UUID NOT NULL REFERENCES offices(id) ON DELETE CASCADE,
   phone_number TEXT NOT NULL DEFAULT '',
-  instance_id TEXT DEFAULT 'saqr',
+  instance_id TEXT DEFAULT NULL,
   session_status TEXT NOT NULL DEFAULT 'pending'
     CHECK (session_status IN ('pending', 'connected', 'disconnected')),
   api_token TEXT,

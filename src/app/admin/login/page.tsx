@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react'
-import { MqLogo } from '@/components/mq/MqLogo'
+import { MqLogo } from '@/components/branding/MqLogo'
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/lib/auth'
 

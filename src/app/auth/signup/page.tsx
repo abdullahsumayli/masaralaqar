@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Mail, Lock, User, Loader2, AlertCircle, CheckCircle, Eye, EyeOff, ArrowRight, Shield } from 'lucide-react'
-import { MqLogo } from '@/components/mq/MqLogo'
+import { MqLogo } from '@/components/branding/MqLogo'
 import { signUp } from '@/lib/auth'
 import { getReferralCookie, clearReferralCookie } from '@/lib/referral'
 

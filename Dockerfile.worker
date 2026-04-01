@@ -2,7 +2,7 @@
 #
 # Builds a lightweight container that runs the BullMQ worker process.
 # The worker dequeues jobs from Upstash Redis and processes them through
-# the AI engine, sending replies via Evolution API.
+# the AI engine, sending replies via WAHA (WhatsApp HTTP API).
 #
 # Build:   docker build -f Dockerfile.worker -t masaralaqar-worker .
 # Run:     docker run --env-file .env -p 3001:3001 masaralaqar-worker
